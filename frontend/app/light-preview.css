@@ -34,3 +34,9 @@
 .spotify-design .word-cue{background:#f8fafd;box-shadow:inset 0 0 0 1px #e6ecf4}.spotify-design .word-cue.guided{box-shadow:inset 0 0 0 1px #326fdd}.spotify-design .audio-progress-panel{border-color:#e0e8f3}.spotify-design .audio-progress-track{background:#e0e7f1}.spotify-design .spoken-word{background:#edf1f7;border-color:#dce3ed;color:#42546d}.spotify-design .spoken-word.current-word{background:#dbe8ff;border-color:#92b6f4;color:#2258ac}.spotify-design .spoken-word.past-word{background:#f7f8fa;color:#8490a0}.spotify-design .spoken-word:hover:not(:disabled):not(.current-word){background:#e1e8f3}.spotify-design .word-timing-label{color:#7a889c}.spotify-design .mic-orb{background:#eaf0fa;color:#4276bf}.spotify-design .error-banner,.spotify-design .mic-orb.pulsing{background:#fff0f3;color:#bd3b59}.spotify-design .alignment-action,.spotify-design .unreliable-result{background:#fff5e7;color:#9c661e}.spotify-design .alignment-action p{color:#9c661e}.spotify-design .history-list>button.selected-trial{background:#edf3fe}.spotify-design .practice-cta{background:#edf2fa;box-shadow:none}.spotify-design .practice-cta h3{font-weight:700;color:#354c6d}
 @media(max-width:640px){.studio-sidebar{background:#fff;box-shadow:0 -1px 0 #e7eaf0}.studio-sidebar nav a[aria-current]{color:#326fdd}.studio-home{padding-bottom:0}.sidebar-caption{margin-bottom:24px}}
 .feature-art>span{color:#fff}.spotify-design .practice-cta p,.spotify-design .results-note{color:#748299}
+
+.spotify-design .practice-reference-copy { min-width:0; }
+.spotify-design .practice-reference-guidance { margin:10px 0 16px; color:#e3ebf9; font-size:14px; line-height:1.6; }
+.spotify-design .practice-reference .practice-reference-meta { color:#b8c9e5; font-size:12px; }
+.spotify-design .practice-reference audio { flex-shrink:0; }
+@media(max-width:640px) { .spotify-design .practice-reference-guidance { font-size:13px; } }
