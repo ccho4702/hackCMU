@@ -1,3 +1,12 @@
 fastapi[standard]
 python-dotenv
 elevenlabs
+
+# --- scoring/shadow_score (쉐도잉 점수) ---
+# torch는 설치가 크다(2GB급). CPU 빌드면 충분: pip install torch torchaudio --index-url https://download.pytorch.org/whl/cpu
+torch>=2.3
+torchaudio>=2.3
+librosa>=0.10
+soundfile
+scipy
+numpy
