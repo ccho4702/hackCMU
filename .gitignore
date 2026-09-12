@@ -25,3 +25,6 @@ frontend/.next/
 frontend/node_modules/
 frontend/coverage/
 *.tsbuildinfo
+
+# Public project demo; local recordings remain ignored.
+!/assets/demo.mp4

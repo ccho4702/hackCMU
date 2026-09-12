@@ -1,4 +1,4 @@
-# Mellonaires — Presentation Delivery Analysis
+# Optune — MediaPipe Delivery Analysis
 
 Instrumentation system for **quantitative analysis of a speaker's observable facial delivery** from an uploaded presentation video.
 
