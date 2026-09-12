@@ -39,7 +39,11 @@ test('reference playback highlights the current word',async({page})=>{
   await expect(page.getByRole('button',{name:'Hello',exact:true})).toBeVisible();
   await page.getByLabel('TTS reference').evaluate(audio=>{Object.defineProperty(audio,'currentTime',{configurable:true,writable:true,value:.55});audio.dispatchEvent(new Event('seeked'));});
   await expect(page.locator('.current-word')).toHaveText('world.');
-  await expect(page.locator('.word-cue strong')).toHaveText('world.');
+  await expect(page.locator('.word-cue > strong')).toHaveText('world.');
+  await expect(page.locator('.duration-title strong')).toContainText('0.50');
+  await expect(page.locator('.word-timestamps')).toContainText('Start 0.50s');
+  await expect(page.locator('.word-timestamps')).toContainText('End 1.00s');
+  await expect(page.getByRole('progressbar', { name: 'Current word duration progress' })).toHaveAttribute('aria-valuenow', '10');
 });
 
 test('microphone trial scores, keeps history, and can be repeated',async({page})=>{
@@ -78,5 +82,6 @@ test('real reference timing and saved scoring results render',async({page})=>{
   await expect(page.locator('.spoken-word').first()).toBeVisible();
   const reliable=page.locator('.history-list button').filter({hasText:'Pronunciation'}).first();
   if(await reliable.count()) {await reliable.click();await expect(page.locator('.score-axis')).toHaveCount(5);}
+  await page.evaluate(()=>window.scrollTo(0,0));
   await page.screenshot({path:'test-results/practice-real.png',fullPage:true});
 });

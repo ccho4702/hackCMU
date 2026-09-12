@@ -43,6 +43,13 @@ def health():
     return {"status": "ok"}
 
 
+@api.get("/capabilities")
+def capabilities():
+    from starlette.routing import WebSocketRoute
+    return {"landmarks": any(isinstance(route, WebSocketRoute) and route.path == "/api/ws/landmarks"
+                              for route in app.routes), "recording_pipeline": True, "voice_practice": True}
+
+
 class EchoRequest(BaseModel):
     message: str
 

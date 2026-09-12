@@ -151,3 +151,13 @@ for alignment. The imported normalizer was fixed to exclude CTC blank characters
 Scoring runs locally and makes no Gemini or ElevenLabs generation calls. The numerical
 scores are experimental reference comparisons; real microphone conditions can affect
 absolute scores. Keep one backend worker for the local cache/locks.
+
+
+## Frontend integration
+
+`GET /api/capabilities` reports whether `/api/ws/landmarks` is registered. The Live
+Session UI retains the main-branch overlay design and disables its controls when no
+landmark backend is available. Camera + microphone recording still uses the complete
+analysis pipeline. Successful uploads navigate to `/evaluation?run=<run_id>`.
+Voice Practice displays the active word’s start, end, target duration, and remaining
+time with a progress bar; trial playback labels its own measured duration separately.

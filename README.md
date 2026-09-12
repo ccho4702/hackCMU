@@ -81,11 +81,12 @@ npm run dev
 
 Frontend: **http://localhost:3000** · API docs: **http://localhost:8000/docs**
 
-Click **Start recording** to capture camera and microphone together, then **Stop & analyze**.
+Open **Go to Streaming**, then click **Start recording** to capture camera and microphone
+together. **Stop & analyze** uploads the recording and opens its Evaluation page.
 The browser uploads the recording and follows progress until the original video, delivery
 notes, original/revised script tabs, and generated audio are ready. Existing recordings
 can also be uploaded. Camera capture requires localhost or HTTPS. Recordings stop
-automatically at 90 seconds. The last run restores on reload; `/?run=<run_id>` opens a saved run.
+automatically at 90 seconds. The last run restores on reload; `/evaluation?run=<run_id>` opens a saved run.
 
 ## Try the pipeline
 
@@ -148,3 +149,13 @@ reference timing; it does not claim to recognize speech live.
 New TTS responses include timing in the same ElevenLabs request. Earlier recordings
 can prepare timing once and reuse it. Scoring is local and requires an initial ~1.2GB
 model download. See the [backend guide](backend/README.md#voice-practice-and-word-timing).
+
+
+## Frontend flow
+
+The UI follows the blue Live Session design from `main` (`40c5e1d`).
+`/streaming` records camera + microphone and retains the overlay controls; `/evaluation`
+shows progress, original video, feedback, scripts, and TTS; `/practice` provides timed
+voice trials. The backend reports optional landmark support through `/api/capabilities`,
+so unavailable live overlays do not block recording or the post-session analysis.
+The current word cue shows start/end timestamps, target duration, and a duration bar.

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import Link from "next/link";
+import StudioHeader from "@/components/StudioHeader";
 import { apiGet, apiPost, apiUpload } from "@/lib/api";
 import { clockTime, recordingError } from "@/lib/recording";
 import { activeWordAt, audioRecordingOptions, scoreLabel, SCORE_AXES } from "@/lib/practice";
@@ -33,6 +33,9 @@ export default function Practice() {
   const words = mode === "trial" ? (score?.words || []).filter(w => w.user?.t0 != null).map(w => ({ text: w.text, t0: w.user.t0, t1: w.user.t1 })) : session?.words || [];
   const active = activeWordAt(words, time);
   const next = words.findIndex(w => w.t0 > time);
+  const cueWord = active >= 0 ? words[active] : next >= 0 ? words[next] : null;
+  const wordDuration = cueWord ? Math.max(0, cueWord.t1 - cueWord.t0) : 0;
+  const wordProgress = cueWord && wordDuration > 0 ? Math.min(100, Math.max(0, (time - cueWord.t0) / wordDuration * 100)) : 0;
   const cue = active >= 0 ? words[active]?.text : next >= 0 ? words[next]?.text : time > 0 ? "Nice work." : "Ready?";
 
   useEffect(() => {
@@ -179,16 +182,16 @@ export default function Practice() {
   }
 
   return <div className="app-shell">
-    <header className="topbar"><Link className="brand" href="/">rehearse<span className="brand-dot">.</span></Link><Link className="text-button" href={session ? `/?run=${session.run_id}` : "/"}>← Back to your rehearsal</Link></header>
+    <StudioHeader title="Voice Practice" subtitle="Follow your reference and improve each trial" active="practice" runId={session?.run_id}/>
     <main className="workspace practice-workspace">
-      <section className="practice-intro"><p className="eyebrow">VOICE PRACTICE / YOUR NEXT TAKE</p><h1>Make the words<br/><em>your own.</em></h1><p>Listen to your reference. Read the same script.<br/>See what changes with every try.</p></section>
+      <section className="practice-intro"><p className="eyebrow">VOICE PRACTICE / YOUR NEXT TAKE</p><h1>Practice your next take.</h1><p>Listen to your reference. Read the same script.<br/>See what changes with every try.</p></section>
       {error && <div className="error-banner" role="alert"><p>{error}</p></div>}
       {!session && !error && <p className="muted">Loading your script and reference voice…</p>}
       {session && <>
         <section className="practice-reference"><div><p className="eyebrow">YOUR TTS REFERENCE</p><h2>The voice to practice with</h2><p>{Math.round(session.duration_seconds)} seconds · same script, every trial</p></div><audio ref={refAudio} controls src={session.reference_audio_url} aria-label="TTS reference" onPlay={() => { if (busy) { refAudio.current.pause(); return; } trialAudio.current?.pause(); setMode("reference"); setTime(refAudio.current.currentTime); }} onSeeked={() => { setMode("reference"); setTime(refAudio.current.currentTime); }}/></section>
         <div className="practice-grid">
           <section className="practice-script-card"><div className="card-heading"><div><span className="step-number">01</span><h2>Follow the script</h2></div><span className="count-pill">{mode === "trial" ? "YOUR TRIAL TIMING" : phase === "recording" ? "REFERENCE PACE GUIDE" : "REFERENCE TIMING"}</span></div>
-            <div className={`word-cue ${phase === "recording" ? "guided" : ""}`} aria-live="off"><span>{phase === "countdown" ? "GET READY" : active >= 0 ? "NOW" : "UP NEXT"}</span><strong>{phase === "countdown" ? countdown : words.length ? cue : "Read naturally."}</strong><small>{phase === "recording" ? "Follow the reference timing. Your microphone is recording." : mode === "trial" ? "Aligned to your recorded voice" : "Play the reference to see each word light up"}</small></div>
+            <div className={`word-cue ${phase === "recording" ? "guided" : ""}`} aria-live="off"><span>{phase === "countdown" ? "GET READY" : active >= 0 ? "NOW" : "UP NEXT"}</span><strong>{phase === "countdown" ? countdown : words.length ? cue : "Read naturally."}</strong><small>{phase === "recording" ? "Follow the reference timing. Your microphone is recording." : mode === "trial" ? "Aligned to your recorded voice" : "Play the reference to see each word light up"}</small>{cueWord && phase !== "countdown" && <div className="word-duration-panel"><div className="duration-title"><span>{mode === "trial" ? "Your word duration" : "Target word duration"}</span><strong>{wordDuration.toFixed(2)}<small> seconds</small></strong></div><div className="word-duration-track" role="progressbar" aria-label="Current word duration progress" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(wordProgress)}><i style={{width:`${wordProgress}%`}}/></div><div className="word-timestamps"><span>Start <b>{cueWord.t0.toFixed(2)}s</b></span><span>End <b>{cueWord.t1.toFixed(2)}s</b></span><span>{active >= 0 ? `${Math.max(0, cueWord.t1 - time).toFixed(2)}s remaining` : `Starts in ${Math.max(0, cueWord.t0 - time).toFixed(2)}s`}</span></div></div>}</div>
             <div className="word-script" aria-label="Practice script">{words.length ? words.map((word,index) => <button key={`${index}-${word.text}`} ref={node => { wordElements.current[index] = node; }} disabled={busy} className={`spoken-word ${active === index ? "current-word" : word.t1 <= time ? "past-word" : ""}`} onClick={() => listenFrom(index)} aria-current={active === index ? "true" : undefined}>{word.text}</button>) : <p>{session.script}</p>}</div>
             {!session.words.length && <div className="alignment-action"><p>This earlier TTS recording needs word timing for the guided highlight.</p><button className="button secondary-button" onClick={getTiming} disabled={aligning || busy}>{aligning ? "Preparing word timing…" : "Prepare word highlights"}</button></div>}
             <p className="practice-footnote">The recording guide follows the reference clock; it does not detect your words live. After scoring, replay your trial to follow your actual word timing.</p>

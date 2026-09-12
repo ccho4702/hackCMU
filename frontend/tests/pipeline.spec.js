@@ -47,11 +47,11 @@ async function stubPipeline(page, failure = false) {
 test("record, stop, upload once, render results, and release camera/microphone", async ({ page }) => {
   await fakeCamera(page);
   const uploads = await stubPipeline(page);
-  await page.goto("/");
+  await page.goto("/streaming");
   await page.getByRole("button", { name: "Start recording", exact: true }).click();
   await expect(page.getByRole("button", { name: "Stop & analyze" })).toBeVisible();
   await page.getByRole("button", { name: "Stop & analyze" }).click();
-  await expect(page.getByText("Rehearsal complete", { exact: true })).toBeVisible();
+  await expect(page.getByText("Complete", { exact: true })).toBeVisible();
   await expect(page.getByRole("tabpanel")).toContainText("I have an idea to share.");
   await page.getByRole("tab", { name: "Original transcript" }).click();
   await expect(page.getByRole("tabpanel")).toContainText("Um, I has an idea.");
@@ -63,26 +63,26 @@ test("record, stop, upload once, render results, and release camera/microphone",
 test("denied camera access offers upload without submitting a job", async ({ page }) => {
   await fakeCamera(page, true);
   const uploads = await stubPipeline(page);
-  await page.goto("/");
+  await page.goto("/streaming");
   await page.getByRole("button", { name: "Start recording", exact: true }).click();
-  await expect(page.locator(".error-banner")).toContainText("Camera or microphone access was denied");
+  await expect(page.getByRole("alert", { name: "Recording error" })).toContainText("Camera or microphone access was denied");
   expect(uploads()).toBe(0);
 });
 
 test("uploaded recording preserves partial results on TTS failure", async ({ page }) => {
   const uploads = await stubPipeline(page, true);
-  await page.goto("/");
+  await page.goto("/streaming");
   await page.locator('input[type="file"]').setInputFiles({ name: "take.mov", mimeType: "video/quicktime", buffer: Buffer.from("test video") });
   await expect(page.locator(".error-banner")).toContainText("Voice access is unavailable");
   await expect(page.getByRole("tabpanel")).toContainText("I have an idea to share.");
-  await expect(page.getByRole("button", { name: "Analyze again" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Try a new recording" })).toBeVisible();
   expect(uploads()).toBe(1);
 });
 
 test("a saved job restores after reload without a second upload", async ({ page }) => {
   const uploads = await stubPipeline(page);
-  await page.goto(`/?run=${runId}`);
-  await expect(page.getByText("Rehearsal complete", { exact: true })).toBeVisible();
+  await page.goto(`/evaluation?run=${runId}`);
+  await expect(page.getByText("Complete", { exact: true })).toBeVisible();
   await page.reload();
   await expect(page.getByRole("tabpanel")).toContainText("I have an idea to share.");
   expect(uploads()).toBe(0);
@@ -90,7 +90,7 @@ test("a saved job restores after reload without a second upload", async ({ page 
 
 test("mobile layout fits the viewport", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.goto("/");
+  await page.goto("/streaming");
   await expect(page.getByRole("button", { name: "Start recording", exact: true })).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
 });
@@ -99,8 +99,8 @@ test("real saved run loads its transcript, revision, and playable audio", async 
   test.skip(!process.env.REAL_RUN_ID, "Set REAL_RUN_ID to inspect an existing completed run; no generation requests are made.");
   let generationCalls = 0;
   page.on("request", request => { if (request.url().endsWith("/api/pipeline")) generationCalls++; });
-  await page.goto(`/?run=${process.env.REAL_RUN_ID}`);
-  await expect(page.getByText("Rehearsal complete", { exact: true })).toBeVisible();
+  await page.goto(`/evaluation?run=${process.env.REAL_RUN_ID}`);
+  await expect(page.getByText("Complete", { exact: true })).toBeVisible();
   await expect(page.getByRole("tabpanel")).not.toBeEmpty();
   await expect(page.getByLabel("Original recording")).toBeVisible();
   const audio = page.getByLabel("Improved speech");
@@ -112,4 +112,15 @@ test("real saved run loads its transcript, revision, and playable audio", async 
   await page.screenshot({ path: "test-results/real-run-desktop.png", fullPage: true });
   await page.setViewportSize({ width: 390, height: 844 });
   await page.screenshot({ path: "test-results/real-run-mobile.png", fullPage: true });
+});
+
+test("main frontend navigation and streaming layout remain available", async ({ page }) => {
+  await page.route("**/api/capabilities", route => route.fulfill({ json: { landmarks: false } }));
+  await page.goto("/");
+  await page.getByRole("link", { name: "Go to Streaming" }).click();
+  await expect(page).toHaveURL(/\/streaming$/);
+  await expect(page.getByRole("heading", { name: "Live Session", exact: true })).toBeVisible();
+  await expect(page.getByRole("switch", { name: "Show mask" })).toBeDisabled();
+  await expect(page.getByRole("button", { name: "Start recording", exact: true })).toBeEnabled();
+  await page.screenshot({ path: "test-results/main-streaming-desktop.png", fullPage: true });
 });
