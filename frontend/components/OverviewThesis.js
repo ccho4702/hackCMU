@@ -35,7 +35,7 @@ export default function OverviewThesis() {
 
       <div className="overview-thesis-loop">
         <p>
-          We turned that into <strong>numbers</strong> — an <strong>objective function</strong> and <strong>decision variables</strong>. The product is the loop: <strong>record</strong>, get scored, <strong>practice</strong> against a reference, get scored again. Each take is an <strong>iteration</strong>, and the timestamps tell you which second to fix.
+          We turned that into <strong>numbers</strong> — an <strong>objective function</strong> and <strong>decision variables</strong>. <br/> The product is the loop: <strong>record</strong>, get scored, <strong>practice</strong> against a reference, get scored again. Each take is an <strong>iteration</strong>, and the timestamps tell you which second to fix.
         </p>
         <ol>
           <li>Record</li>
