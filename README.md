@@ -27,9 +27,11 @@ an audio reference that reads the improved script in the speaker's cloned voice.
 | **Hear the improvement** | The revised script spoken with a cloned reference voice | ElevenLabs IVC + TTS |
 
 <p align="center">
-  <a href="docs/pipeline.svg"><img src="docs/pipeline.png" alt="How one rehearsal becomes a better take: sign in, live session, coaching pipeline, what you see, practice loop, leaderboard" width="100%"></a>
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/pipeline-dark.png">
+    <img src="docs/pipeline-light.png" alt="Pipeline: sign in, live session with MediaPipe feedback, rehearsal video, Gemini video analysis, audio to ElevenLabs Scribe and voice clone, Gemini script revision, ElevenLabs TTS, coaching / improved script / practice audio, practice trials, five measures, leaderboard" width="820">
+  </picture>
 </p>
-<p align="center"><sub>Ribbon width marks the main path; colors mark who does the work. Open <code>docs/pipeline.html</code> locally for zoom and pan, or regenerate with <code>python docs/build_pipeline_diagram.py</code>.</sub></p>
 
 The normal flow makes **two Gemini generation requests**: one for visual and vocal delivery analysis
 and one that improves the ElevenLabs transcript. ElevenLabs makes one ASR request

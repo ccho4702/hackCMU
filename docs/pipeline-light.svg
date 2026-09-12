@@ -1,0 +1,103 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 1270" width="1200" height="1270" font-family="'Pretendard', 'Inter', -apple-system, 'Helvetica Neue', Arial, sans-serif">
+<defs>
+<marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#8C959F"/></marker>
+<marker id="arrowScore" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#A08BD6"/></marker>
+</defs>
+<rect width="1200" height="1270" fill="#FFFFFF"/>
+<text x="90" y="52" font-size="26" font-weight="800" fill="#1F2328" letter-spacing="-0.4">How one rehearsal becomes a better take</text>
+<path d="M600.0,164 L600.0,200" fill="none" stroke="#8C959F" stroke-width="2.5" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<path d="M750,237.0 L810,237.0" fill="none" stroke="#8C959F" stroke-width="2.5" stroke-linejoin="round" marker-end="url(#arrow)" stroke-dasharray="7 6"/>
+<path d="M600.0,274 L600.0,310" fill="none" stroke="#8C959F" stroke-width="2.5" stroke-linejoin="round" marker-end="url(#arrow)"/><text x="612.0" y="297.0" text-anchor="start" font-size="13" font-style="italic" fill="#59636E" paint-order="stroke" stroke="#FFFFFF" stroke-width="5" stroke-linejoin="round">upload the take</text>
+<path d="M600.0,384 L600.0,402.0 Q600.0,412.0 590.0,412.0 L250.0,412.0 Q240.0,412.0 240.0,422.0 L240.0,440" fill="none" stroke="#8C959F" stroke-width="2.5" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<path d="M600.0,384 L600.0,402.0 Q600.0,412.0 610.0,412.0 L950.0,412.0 Q960.0,412.0 960.0,422.0 L960.0,440" fill="none" stroke="#8C959F" stroke-width="2.5" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<path d="M240.0,514 L240.0,550" fill="none" stroke="#8C959F" stroke-width="2.5" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<path d="M960.0,514 L960.0,522.0 Q960.0,532.0 950.0,532.0 L610.0,532.0 Q600.0,532.0 600.0,542.0 L600.0,550" fill="none" stroke="#8C959F" stroke-width="2.5" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<path d="M960.0,514 L960.0,550" fill="none" stroke="#8C959F" stroke-width="2.5" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<path d="M600.0,624 L600.0,660" fill="none" stroke="#8C959F" stroke-width="2.5" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<path d="M960.0,624 L960.0,660" fill="none" stroke="#8C959F" stroke-width="2.5" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<path d="M750,697.0 L810,697.0" fill="none" stroke="#8C959F" stroke-width="2.5" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<path d="M600.0,734 L600.0,770" fill="none" stroke="#8C959F" stroke-width="2.5" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<path d="M960.0,734 L960.0,770" fill="none" stroke="#8C959F" stroke-width="2.5" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<path d="M960.0,844 L960.0,857.0 Q960.0,867.0 950.0,867.0 L610.0,867.0 Q600.0,867.0 600.0,877.0 L600.0,890" fill="none" stroke="#8C959F" stroke-width="2.5" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<path d="M600.0,964 L600.0,1000" fill="none" stroke="#8C959F" stroke-width="2.5" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<path d="M600.0,1092 L600.0,1128" fill="none" stroke="#8C959F" stroke-width="2.5" stroke-linejoin="round" marker-end="url(#arrow)"/><text x="612.0" y="1115.0" text-anchor="start" font-size="13" font-style="italic" fill="#59636E" paint-order="stroke" stroke="#FFFFFF" stroke-width="5" stroke-linejoin="round">trial score</text>
+<path d="M450,1046.0 C340,1046.0 340,927.0 450,927.0" fill="none" stroke="#A08BD6" stroke-width="2.5" stroke-dasharray="7 6" marker-end="url(#arrowScore)"/><text x="364.2" y="991.5" text-anchor="middle" font-size="13" font-style="italic" fill="#59636E">next take</text>
+<rect x="450" y="90" width="300" height="74" rx="12" fill="#FFFFFF" stroke="#D0D7DE" stroke-width="1.5"/>
+<rect x="450" y="90" width="7" height="74" rx="3.5" fill="#6C8EB5"/>
+<text x="474" y="121" font-size="20" font-weight="700" fill="#1F2328">Sign in</text>
+<text x="474" y="144" font-size="13.5" fill="#59636E">name + email · no password</text>
+<rect x="450" y="200" width="300" height="74" rx="12" fill="#FFFFFF" stroke="#D0D7DE" stroke-width="1.5"/>
+<rect x="450" y="200" width="7" height="74" rx="3.5" fill="#6C8EB5"/>
+<text x="474" y="231" font-size="20" font-weight="700" fill="#1F2328">Live session</text>
+<text x="474" y="254" font-size="13.5" fill="#59636E">camera · mic · MediaRecorder</text>
+<rect x="810" y="200" width="300" height="74" rx="12" fill="#FFFFFF" stroke="#D0D7DE" stroke-width="1.5"/>
+<rect x="810" y="200" width="7" height="74" rx="3.5" fill="#E0A93F"/>
+<text x="834" y="231" font-size="20" font-weight="700" fill="#1F2328">MediaPipe feedback</text>
+<text x="834" y="254" font-size="13.5" fill="#59636E">frames → gaze · head pose · blink</text>
+<rect x="450" y="310" width="300" height="74" rx="12" fill="#FFFFFF" stroke="#D0D7DE" stroke-width="1.5"/>
+<rect x="450" y="310" width="7" height="74" rx="3.5" fill="#8B949E"/>
+<text x="474" y="341" font-size="20" font-weight="700" fill="#1F2328">Rehearsal video</text>
+<text x="474" y="364" font-size="13.5" fill="#59636E">+ language · accent</text>
+<rect x="90" y="440" width="300" height="74" rx="12" fill="#FFFFFF" stroke="#D0D7DE" stroke-width="1.5"/>
+<rect x="90" y="440" width="7" height="74" rx="3.5" fill="#5FA86A"/>
+<text x="114" y="471" font-size="20" font-weight="700" fill="#1F2328">Gemini video</text>
+<text x="114" y="494" font-size="13.5" fill="#59636E">nonverbal + vocal, timestamped</text>
+<rect x="810" y="440" width="300" height="74" rx="12" fill="#FFFFFF" stroke="#D0D7DE" stroke-width="1.5"/>
+<rect x="810" y="440" width="7" height="74" rx="3.5" fill="#8B949E"/>
+<text x="834" y="471" font-size="20" font-weight="700" fill="#1F2328">Extract audio</text>
+<text x="834" y="494" font-size="13.5" fill="#59636E">ffmpeg · 16 kHz mono</text>
+<rect x="90" y="550" width="300" height="74" rx="12" fill="#FFFFFF" stroke="#C9A57A" stroke-width="1.5"/>
+<rect x="90" y="550" width="7" height="74" rx="3.5" fill="#C9A57A"/>
+<text x="114" y="581" font-size="20" font-weight="700" fill="#1F2328">Timestamped coaching</text>
+<text x="114" y="604" font-size="13.5" fill="#59636E">nonverbal · vocal · click to seek</text>
+<rect x="450" y="550" width="300" height="74" rx="12" fill="#FFFFFF" stroke="#D0D7DE" stroke-width="1.5"/>
+<rect x="450" y="550" width="7" height="74" rx="3.5" fill="#E07A50"/>
+<text x="474" y="581" font-size="20" font-weight="700" fill="#1F2328">ElevenLabs Scribe</text>
+<text x="474" y="604" font-size="13.5" fill="#59636E">transcript</text>
+<rect x="810" y="550" width="300" height="74" rx="12" fill="#FFFFFF" stroke="#D0D7DE" stroke-width="1.5"/>
+<rect x="810" y="550" width="7" height="74" rx="3.5" fill="#E07A50"/>
+<text x="834" y="581" font-size="20" font-weight="700" fill="#1F2328">Voice clone</text>
+<text x="834" y="604" font-size="13.5" fill="#59636E">your voice · cached per user</text>
+<rect x="450" y="660" width="300" height="74" rx="12" fill="#FFFFFF" stroke="#D0D7DE" stroke-width="1.5"/>
+<rect x="450" y="660" width="7" height="74" rx="3.5" fill="#5FA86A"/>
+<text x="474" y="691" font-size="20" font-weight="700" fill="#1F2328">Gemini script</text>
+<text x="474" y="714" font-size="13.5" fill="#59636E">issues + improved script</text>
+<rect x="810" y="660" width="300" height="74" rx="12" fill="#FFFFFF" stroke="#D0D7DE" stroke-width="1.5"/>
+<rect x="810" y="660" width="7" height="74" rx="3.5" fill="#E07A50"/>
+<text x="834" y="691" font-size="20" font-weight="700" fill="#1F2328">ElevenLabs TTS</text>
+<text x="834" y="714" font-size="13.5" fill="#59636E">with word timestamps</text>
+<rect x="450" y="770" width="300" height="74" rx="12" fill="#FFFFFF" stroke="#C9A57A" stroke-width="1.5"/>
+<rect x="450" y="770" width="7" height="74" rx="3.5" fill="#C9A57A"/>
+<text x="474" y="801" font-size="20" font-weight="700" fill="#1F2328">Improved script</text>
+<text x="474" y="824" font-size="13.5" fill="#59636E">original vs revised</text>
+<rect x="810" y="770" width="300" height="74" rx="12" fill="#FFFFFF" stroke="#C9A57A" stroke-width="1.5"/>
+<rect x="810" y="770" width="7" height="74" rx="3.5" fill="#C9A57A"/>
+<text x="834" y="801" font-size="20" font-weight="700" fill="#1F2328">Practice audio</text>
+<text x="834" y="824" font-size="13.5" fill="#59636E">improved script in your voice</text>
+<rect x="450" y="890" width="300" height="74" rx="12" fill="#FFFFFF" stroke="#D0D7DE" stroke-width="1.5"/>
+<rect x="450" y="890" width="7" height="74" rx="3.5" fill="#A08BD6"/>
+<text x="474" y="921" font-size="20" font-weight="700" fill="#1F2328">Practice trials</text>
+<text x="474" y="944" font-size="13.5" fill="#59636E">mic only · same script · repeat</text>
+<rect x="450" y="1000" width="300" height="92" rx="12" fill="#FFFFFF" stroke="#D0D7DE" stroke-width="1.5"/>
+<rect x="450" y="1000" width="7" height="92" rx="3.5" fill="#A08BD6"/>
+<text x="474" y="1031" font-size="20" font-weight="700" fill="#1F2328">Five measures</text>
+<text x="474" y="1054" font-size="13.5" fill="#59636E">pronunciation · pace · rhythm</text>
+<text x="474" y="1072" font-size="13.5" fill="#59636E">intonation · emphasis · words to revisit</text>
+<rect x="450" y="1128" width="300" height="74" rx="12" fill="#FFFFFF" stroke="#E3B341" stroke-width="2.5"/>
+<rect x="450" y="1128" width="7" height="74" rx="3.5" fill="#E3B341"/>
+<text x="474" y="1159" font-size="20" font-weight="700" fill="#1F2328">👑 Leaderboard</text>
+<text x="474" y="1182" font-size="13.5" fill="#59636E">best take per recording · your history</text>
+<rect x="90" y="1226" width="12" height="12" rx="3" fill="#5FA86A"/>
+<text x="108" y="1237" font-size="12.5" fill="#59636E">Gemini</text>
+<rect x="172" y="1226" width="12" height="12" rx="3" fill="#E07A50"/>
+<text x="190" y="1237" font-size="12.5" fill="#59636E">ElevenLabs</text>
+<rect x="282" y="1226" width="12" height="12" rx="3" fill="#E0A93F"/>
+<text x="300" y="1237" font-size="12.5" fill="#59636E">MediaPipe</text>
+<rect x="385" y="1226" width="12" height="12" rx="3" fill="#8B949E"/>
+<text x="403" y="1237" font-size="12.5" fill="#59636E">Local</text>
+<rect x="460" y="1226" width="12" height="12" rx="3" fill="#A08BD6"/>
+<text x="478" y="1237" font-size="12.5" fill="#59636E">Local scoring</text>
+<rect x="591" y="1226" width="12" height="12" rx="3" fill="#C9A57A"/>
+<text x="609" y="1237" font-size="12.5" fill="#59636E">What you see</text>
+<text x="1110" y="1237" text-anchor="end" font-size="12.5" fill="#59636E">files · artifacts/runs/{run_id} &#183; MongoDB Atlas · users, runs, practice_trials</text>
+</svg>
