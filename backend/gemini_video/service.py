@@ -11,11 +11,11 @@ import sys
 import time
 import uuid
 
-import google.auth
-from google.auth.transport.requests import AuthorizedSession
 from google.auth.exceptions import GoogleAuthError
 from requests.exceptions import RequestException
 from backend.common.config import google_project
+from backend.common.gemini import session as gemini_session, generate_endpoint
+from backend.common.language import Language, NAMES, resolve_language
 from backend.common.media import ffmpeg_path
 from backend.common.logging import log_event, save_json
 
@@ -114,7 +114,8 @@ def video_duration(path):
 
 
 def run_analysis(path, output, project, model, duration, session, max_attempts=3,
-                 retry_delay=2, sleep=time.sleep, timeout=240):
+                 retry_delay=2, sleep=time.sleep, timeout=240, language: Language | None = None):
+    language = resolve_language(language)
     if not 1 <= max_attempts <= 10 or retry_delay < 0 or duration <= 0:
         raise ValueError("Invalid attempt count, delay, or duration")
     output.mkdir(parents=True, exist_ok=True)
@@ -122,7 +123,8 @@ def run_analysis(path, output, project, model, duration, session, max_attempts=3
     run_dir = output / "presentation-analysis-runs" / run_id
     run_dir.mkdir(parents=True)
     log_path = run_dir / "attempts.jsonl"
-    prompt = PROMPT + f"\nVideo duration: {duration:.3f} seconds. No end_time may exceed it.\n"
+    base_prompt = PROMPT.replace("Korean", NAMES[language]) if language else PROMPT
+    prompt = base_prompt + f"\nVideo duration: {duration:.3f} seconds. No end_time may exceed it.\n"
     (run_dir / "prompt.txt").write_text(prompt, encoding="utf-8")
     (output / "presentation-analysis-prompt.txt").write_text(prompt, encoding="utf-8")
     body = {
@@ -138,8 +140,8 @@ def run_analysis(path, output, project, model, duration, session, max_attempts=3
             "maxOutputTokens": 8192,
         },
     }
-    endpoint = f"https://aiplatform.googleapis.com/v1/projects/{project}/locations/global/publishers/google/models/{model}:generateContent"
-    meta = {"run_id": run_id, "project": project, "requested_model": model,
+    endpoint = generate_endpoint(project, model)
+    meta = {"run_id": run_id, "project": project, "requested_model": model, "language": language,
             "submitted_video": str(path), "duration_seconds": duration,
             "sampling_fps": 4, "audio_included": True, "max_attempts": max_attempts,
             "attempt_count": 0, "retry_count": 0, "status": "running",
@@ -245,14 +247,14 @@ def main():
     parser.add_argument("--input", type=Path, default=ROOT / "outputs/presentation-analysis-input.mp4")
     parser.add_argument("--output-dir", type=Path, default=ROOT / "outputs")
     parser.add_argument("--max-attempts", type=int, choices=range(1, 11), default=3, help="Total attempts including the first request (default: 3)")
+    parser.add_argument("--language", choices=("en", "ko"), help="Feedback language; omitted retains legacy Korean")
     args = parser.parse_args()
     path = args.input.resolve()
     duration = video_duration(path)
-    credentials, _ = google.auth.default(scopes=["https://www.googleapis.com/auth/cloud-platform"])
-    with AuthorizedSession(credentials) as session:
+    with gemini_session() as session:
         return run_analysis(path, args.output_dir.resolve(),
                             google_project(), os.getenv("GEMINI_VIDEO_MODEL", "gemini-3.8-flash"),
-                            duration, session, max_attempts=args.max_attempts)
+                            duration, session, max_attempts=args.max_attempts, language=args.language)
 
 
 if __name__ == "__main__":

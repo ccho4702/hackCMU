@@ -174,3 +174,111 @@ from the original analysis workspace into Evaluation.
 
 Validation: `backend/.venv/bin/pytest -c backend/pytest.ini backend/tests`.
 Frontend unit tests: `cd frontend && npm test`; browser tests: `npm run test:e2e`.
+
+## Google Cloud authentication
+
+Gemini requests always use Google Cloud (`aiplatform.googleapis.com`), including
+API-key mode. The AI Studio Gemini Developer API is intentionally not supported
+here: its usage is excluded from the $300 Google Cloud Welcome credit program.
+Credit eligibility still depends on the project's linked billing account and
+remaining eligible credits. Authentication configuration does not upgrade billing.
+
+Default configuration in `backend/.env`:
+
+```dotenv
+GEMINI_AUTH_MODE=adc
+GOOGLE_CLOUD_PROJECT=your-project-id
+GOOGLE_CLOUD_LOCATION=global
+```
+
+For a teammate or a deployment, put the complete service-account JSON on one line
+in `backend/.env`, enclosed in single quotes:
+
+```dotenv
+GEMINI_AUTH_MODE=adc
+GOOGLE_CLOUD_PROJECT=your-project-id
+GOOGLE_SERVICE_ACCOUNT_JSON='{"type":"service_account","project_id":"your-project-id","private_key":"-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n","client_email":"backend@your-project-id.iam.gserviceaccount.com","token_uri":"https://oauth2.googleapis.com/token"}'
+```
+
+Use the complete downloaded JSON, not the abbreviated example above. Preserve the
+literal `\n` escapes inside the private-key JSON string. The backend parses these
+credentials directly; it does not need a local Google login or a separate JSON file.
+It checks that the key's project matches `GOOGLE_CLOUD_PROJECT` and fails on invalid
+credentials instead of falling back to a developer's user login.
+
+Alternatively, leave `GOOGLE_SERVICE_ACCOUNT_JSON` empty and set
+`GOOGLE_APPLICATION_CREDENTIALS` to a service-account JSON file outside the repository.
+If neither is configured, ADC uses the standard local or deployed Cloud identity.
+Share secrets privately and keep `.env` out of Git. Changing identity does not change
+the linked billing account or activate paid billing. To check authentication with one
+small generation request, run `python -m backend.experiments.check_gemini` from the
+repository root.
+
+If your project's administrator permits service-account-bound Vertex API keys:
+
+```dotenv
+GEMINI_AUTH_MODE=vertex_api_key
+VERTEX_API_KEY=your-cloud-vertex-key
+GOOGLE_CLOUD_PROJECT=the-project-that-owns-the-key
+```
+
+The key determines the billed project in key mode; `GOOGLE_CLOUD_PROJECT` is used
+for request metadata and quota attribution, and must match the key's project.
+Use a key restricted to `aiplatform.googleapis.com`. Do not substitute an AI Studio
+key. Video analysis and script analysis use the same authentication selection;
+missing keys or invalid modes fail instead of silently falling back to ADC.
+Keys are transmitted in headers, not query strings. Never commit `.env` or keys,
+and never put them in frontend environment variables.
+
+Google documentation: [Cloud API keys](https://docs.cloud.google.com/gemini-enterprise-agent-platform/models/start/api-keys?usertype=standard),
+[Free Trial coverage](https://docs.cloud.google.com/free/docs/free-cloud-features).
+
+## MongoDB API from gmin
+
+The unified server also includes fake login, TTS reference uploads, per-sentence
+and full-recording trials, and reference-scoped ranking from gmin. See [API.md](API.md)
+for setup and contracts. `MONGODB_URI` is optional; without it, the current local
+coaching flow works and DB endpoints report that MongoDB is unconfigured.
+These APIs do not automatically migrate existing file-based runs or change frontend
+behavior. Run database tests with the dependencies in `requirements-test.txt`.
+
+## English and Korean
+
+Optional `language=en` or `language=ko` is accepted by the multipart pipeline,
+video analysis, script-video analysis, ASR and TTS endpoints. For text-only script
+analysis, include `language` in the JSON body. `GET /api/languages` advertises
+supported languages and the scoring limitation. Invalid request language codes
+return HTTP 422 before any provider call. The frontend should send the language
+selected by the user with each request. There is no server-wide language setting.
+Omission is supported only for backward compatibility with existing clients.
+
+```bash
+curl http://localhost:8000/api/pipeline \
+  -F 'file=@test-input.mov' -F 'user_id=demo-user' -F 'language=ko'
+
+curl http://localhost:8000/api/script/analyze \
+  -H 'Content-Type: application/json' \
+  -d '{"script":"Hello everyone. Today I will introduce our project.","language":"en"}'
+```
+
+The selected language describes the recording/script language and controls Gemini
+feedback and the improved script. `original_script` stays verbatim. Gemini uses
+explicit language instructions; this is a generative instruction, not a guaranteed
+language validator. ASR receives `eng`/`kor`. With the default
+`eleven_multilingual_v2`, TTS infers language from the revised text: that model
+supports English and Korean but does **not** support forcing `language_code`.
+Other configured TTS models receive the selected ISO language code. For standalone
+TTS calls, supply a script already written in the selected language.
+
+When no language is selected, existing behavior is retained: Korean feedback,
+original-language improved script, and automatic ASR/TTS language inference. Selected
+language is saved in run manifests and provider metadata. The frontend upload and live-analysis screens let the user select English or Korean
+before starting. The selection is retained for retries of the same analysis.
+
+**Practice pronunciation scoring remains English-only.** Korean analysis, script
+revision, TTS and generated word timing are supported; the existing MMS pronunciation
+scorer is not a Korean scorer, and practice creation continues to reject unsupported
+scripts rather than producing misleading scores.
+
+Provider references: [ASR language hint](https://elevenlabs.io/docs/api-reference/speech-to-text/convert),
+[TTS language parameter limitations](https://elevenlabs.io/docs/api-reference/text-to-speech/convert-with-timestamps).

@@ -4,7 +4,7 @@ from __future__ import annotations
 from bson import ObjectId
 from fastapi import Header, HTTPException
 
-import db
+from backend import db
 
 
 def parse_oid(s: str, what: str = "id") -> ObjectId:
@@ -19,4 +19,4 @@ def current_user_id(x_user_id: str = Header(..., alias="X-User-Id")) -> str:
     oid = parse_oid(x_user_id, "X-User-Id")
     if not db.users().find_one({"_id": oid}, {"_id": 1}):
         raise HTTPException(status_code=401, detail="존재하지 않는 사용자입니다. 다시 로그인하세요")
-    return x_user_id
+    return str(oid)

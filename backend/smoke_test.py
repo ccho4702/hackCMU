@@ -7,8 +7,7 @@ API 스모크 테스트. 서버를 따로 띄우지 않고 TestClient 로 전체
 오디오는 macOS `say` 로 만든다. 실제 Atlas DB 에 쓰고 끝나면 지운다 (--keep 이면 남긴다).
 응답 예시를 examples/*.json 에 남긴다. 프론트가 응답 모양을 볼 때 이걸 보면 된다.
 
-    cd backend
-    python smoke_test.py [--keep]
+    python -m backend.smoke_test [--keep]
 """
 import argparse
 import json
@@ -44,14 +43,14 @@ def main():
     a = ap.parse_args()
 
     tmp = Path(tempfile.mkdtemp(prefix="smoke_"))
-    ex = Path("examples")
+    ex = Path(__file__).resolve().parent / "examples"
     ex.mkdir(exist_ok=True)
 
     def dump(name, obj):
         (ex / f"{name}.json").write_text(json.dumps(obj, ensure_ascii=False, indent=2))
 
     from fastapi.testclient import TestClient
-    from main import app
+    from backend.main import app
 
     with TestClient(app) as c:
         # 1. 로그인
@@ -123,7 +122,7 @@ def main():
         assert t3["status"] == "ready" and t3["summary"] is None
 
         # 6. 목록 + best
-        L = c.get("/api/trials", headers=H, params={"question": QUESTION}).json()
+        L = c.get("/api/trials", headers=H, params={"question": QUESTION, "reference_id": ref["id"]}).json()
         dump("trial_list", L)
         print("list        ", [(x["id"][-4:], x["kind"], (x["summary"] or {}).get("overall"), "BEST" if x["best"] else "") for x in L["trials"]])
         assert L["best_trial_id"] in (t1["id"], t2["id"])
@@ -155,8 +154,7 @@ def main():
         if a.keep:
             print("kept        user", user["user_id"], "(DB 와 data/ 에 남김)")
         else:
-            import db
-            import media
+            from backend import db, media
             db.trials().delete_many({"user_id": user["user_id"]})
             db.references().delete_many({"user_id": user["user_id"]})
             db.users().delete_one({"email": EMAIL})

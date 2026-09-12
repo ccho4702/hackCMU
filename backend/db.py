@@ -17,18 +17,20 @@ from datetime import datetime, timezone
 from functools import lru_cache
 
 from bson import ObjectId
-from dotenv import load_dotenv
+from backend.common.config import ROOT  # loads backend/.env consistently
+from fastapi import HTTPException
 from pymongo import ASCENDING, DESCENDING, MongoClient
 
-load_dotenv()
+def configured() -> bool:
+    return bool(os.getenv("MONGODB_URI", "").strip())
 
 
 @lru_cache(maxsize=1)
 def client() -> MongoClient:
     uri = os.environ.get("MONGODB_URI")
     if not uri:
-        raise RuntimeError("MONGODB_URI 가 backend/.env 에 없습니다")
-    return MongoClient(uri, serverSelectionTimeoutMS=8000)
+        raise HTTPException(503, "MongoDB is not configured. Set MONGODB_URI in backend/.env.")
+    return MongoClient(uri, serverSelectionTimeoutMS=3000, connectTimeoutMS=3000, timeoutMS=5000)
 
 
 def db():
@@ -54,6 +56,7 @@ def ensure_indexes() -> None:
     references().create_index([("user_id", ASCENDING), ("created_at", DESCENDING)])
     trials().create_index([("user_id", ASCENDING), ("created_at", DESCENDING)])
     trials().create_index([("user_id", ASCENDING), ("question", ASCENDING)])
+    trials().create_index([("user_id", ASCENDING), ("reference_id", ASCENDING), ("created_at", DESCENDING)])
 
 
 def now() -> datetime:
@@ -62,6 +65,10 @@ def now() -> datetime:
 
 def public(doc):
     """Mongo 문서를 JSON 응답용으로. _id → id(str), datetime → ISO 문자열. 재귀."""
+    if isinstance(doc, ObjectId):
+        return str(doc)
+    if isinstance(doc, datetime):
+        return doc.isoformat()
     if doc is None:
         return None
     if isinstance(doc, list):

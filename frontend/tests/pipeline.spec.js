@@ -54,9 +54,8 @@ test("record, stop, upload once, render results, and release camera/microphone",
   await expect(page.getByRole("button", { name: "Stop & analyze" })).toBeVisible();
   await page.getByRole("button", { name: "Stop & analyze" }).click();
   await expect(page.getByText("Complete", { exact: true })).toBeVisible();
-  await expect(page.getByRole("tabpanel")).toContainText("I have an idea to share.");
-  await page.getByRole("tab", { name: "Original transcript" }).click();
-  await expect(page.getByRole("tabpanel")).toContainText("Um, I has an idea.");
+  await expect(page.getByRole("region", { name: "Improved script", exact: true })).toContainText("I have an idea to share.");
+  await expect(page.getByRole("region", { name: "Original script", exact: true })).toContainText("Um, I has an idea.");
   await expect(page.getByLabel("Improved speech")).toHaveAttribute("src", manifest.outputs.tts_audio);
   expect(uploads()).toBe(1);
   expect(await page.evaluate(() => window.__stoppedTracks)).toBe(2);
@@ -76,7 +75,7 @@ test("uploaded recording preserves partial results on TTS failure", async ({ pag
   await page.goto("/streaming");
   await page.locator('input[type="file"]').setInputFiles({ name: "take.mov", mimeType: "video/quicktime", buffer: Buffer.from("test video") });
   await expect(page.locator(".error-banner")).toContainText("Voice access is unavailable");
-  await expect(page.getByRole("tabpanel")).toContainText("I have an idea to share.");
+  await expect(page.getByRole("region", { name: "Improved script", exact: true })).toContainText("I have an idea to share.");
   await expect(page.getByRole("link", { name: "Try a new recording" })).toBeVisible();
   expect(uploads()).toBe(1);
 });
@@ -86,7 +85,7 @@ test("a saved job restores after reload without a second upload", async ({ page 
   await page.goto(`/evaluation?run=${runId}`);
   await expect(page.getByText("Complete", { exact: true })).toBeVisible();
   await page.reload();
-  await expect(page.getByRole("tabpanel")).toContainText("I have an idea to share.");
+  await expect(page.getByRole("region", { name: "Improved script", exact: true })).toContainText("I have an idea to share.");
   expect(uploads()).toBe(0);
 });
 
@@ -103,7 +102,7 @@ test("real saved run loads its transcript, revision, and playable audio", async 
   page.on("request", request => { if (request.url().endsWith("/api/pipeline")) generationCalls++; });
   await page.goto(`/evaluation?run=${process.env.REAL_RUN_ID}`);
   await expect(page.getByText("Complete", { exact: true })).toBeVisible();
-  await expect(page.getByRole("tabpanel")).not.toBeEmpty();
+  await expect(page.getByRole("region", { name: "Improved script", exact: true })).not.toBeEmpty();
   await expect(page.getByLabel("Original recording")).toBeVisible();
   const audio = page.getByLabel("Improved speech");
   await expect(audio).toHaveAttribute("src", /reference_speech.mp3/);
@@ -148,7 +147,7 @@ test("main recorded-video flow keeps facial analysis and connects script evaluat
   await expect(page).toHaveURL(new RegExp(`/analysis/${analysisId}$`));
   expect(uploads()).toBe(1);
   await page.getByRole("link",{name:"Evaluation",exact:true}).click();
-  await expect(page.getByRole("tabpanel")).toContainText("I have an idea to share.");
+  await expect(page.getByRole("region", { name: "Improved script", exact: true })).toContainText("I have an idea to share.");
 });
 
 test("main live recording submits voice pipeline once and keeps the main review route", async ({page}) => {
@@ -166,5 +165,5 @@ test("legacy saved-run links redirect to the new evaluation page", async ({page}
   await stubPipeline(page);
   await page.goto(`/?run=${runId}`);
   await expect(page).toHaveURL(new RegExp(`/evaluation\\?run=${runId}$`));
-  await expect(page.getByRole("tabpanel")).toContainText("I have an idea to share.");
+  await expect(page.getByRole("region", { name: "Improved script", exact: true })).toContainText("I have an idea to share.");
 });

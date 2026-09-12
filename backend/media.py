@@ -1,70 +1,83 @@
-"""
-파일 저장과 ffmpeg 변환.
-
-경로는 DATA_DIR(.env, 기본 ./data) 기준 상대경로로 Mongo에 저장하고,
-main.py 가 /api/media/<상대경로> 로 정적 서빙한다.
-
-폴더 구조
-    data/{user_id}/references/{ref_id}/{sentence_id}.mp3      원본 TTS
-    data/{user_id}/references/{ref_id}/{sentence_id}.16k.wav  채점용
-    data/{user_id}/trials/{trial_id}/raw.webm                 원본 녹화
-    data/{user_id}/trials/{trial_id}/audio.wav                채점용 16k mono
-    data/{user_id}/trials/{trial_id}/sentences/{sid}.*        문장별 쉐도잉 녹음
-"""
+"""Mongo media paths are relative to DATA_DIR; only media files are served."""
 from __future__ import annotations
 
 import os
+import re
 import shutil
-import subprocess
 from pathlib import Path
-from typing import Optional
+from urllib.parse import quote
 
-from dotenv import load_dotenv
+from fastapi import HTTPException
+from backend.common.config import ROOT, artifacts_dir
+from backend.common.media import run_media_command
 
-load_dotenv()
+_configured = os.getenv("DATA_DIR")
+DATA_DIR = (ROOT / _configured).resolve() if _configured else artifacts_dir() / "db-media"
+EXTENSIONS = {".mp3", ".wav", ".m4a", ".aac", ".flac", ".ogg", ".mp4", ".webm", ".mov", ".mkv"}
 
-DATA_DIR = Path(os.environ.get("DATA_DIR", "./data")).resolve()
 
-
-def ensure_dir(rel_dir: str) -> Path:
-    p = DATA_DIR / rel_dir
-    p.mkdir(parents=True, exist_ok=True)
-    return p
+def valid_stem(value: str) -> bool:
+    return isinstance(value, str) and re.fullmatch(r"[A-Za-z0-9_-]{1,128}", value) is not None
 
 
 def abs_path(rel: str) -> Path:
-    return DATA_DIR / rel
+    base = DATA_DIR.resolve()
+    target = (base / rel).resolve()
+    if not target.is_relative_to(base) or target == base:
+        raise HTTPException(400, "Invalid media path")
+    return target
 
 
-def url(rel: Optional[str]) -> Optional[str]:
-    return f"/api/media/{rel}" if rel else None
+def ensure_dir(rel_dir: str) -> Path:
+    directory = abs_path(rel_dir)
+    directory.mkdir(parents=True, exist_ok=True)
+    return directory
+
+
+def url(rel: str | None) -> str | None:
+    return f"/api/media/{quote(rel, safe='/')}" if rel else None
 
 
 def save_upload(upload, rel_dir: str, stem: str) -> str:
-    """FastAPI UploadFile 을 저장하고 상대경로를 돌려준다. 확장자는 원본 파일명에서 가져온다."""
-    d = ensure_dir(rel_dir)
-    ext = Path(upload.filename or "").suffix.lower() or ".bin"
-    dst = d / f"{stem}{ext}"
-    with dst.open("wb") as f:
-        shutil.copyfileobj(upload.file, f)
-    return str(dst.relative_to(DATA_DIR))
+    if not valid_stem(stem):
+        raise HTTPException(400, "Invalid sentence ID")
+    ext = Path(upload.filename or "").suffix.lower()
+    if ext not in EXTENSIONS:
+        raise HTTPException(415, "Upload a supported audio or video file")
+    destination = abs_path(f"{rel_dir}/{stem}{ext}")
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    limit = int(os.getenv("MAX_UPLOAD_MB", "100")) * 1024 * 1024
+    size = 0
+    try:
+        with destination.open("wb") as stream:
+            while chunk := upload.file.read(1024 * 1024):
+                size += len(chunk)
+                if size > limit:
+                    raise HTTPException(413, "Recording exceeds MAX_UPLOAD_MB")
+                stream.write(chunk)
+        if not size:
+            raise HTTPException(400, "Recording is empty")
+    except Exception:
+        destination.unlink(missing_ok=True)
+        raise
+    return str(destination.relative_to(DATA_DIR.resolve()))
 
 
 def to_wav16k(rel_src: str, rel_dst: str) -> str:
-    """ffmpeg 로 16 kHz mono wav 변환. 채점 모듈 입력 규격."""
-    src, dst = DATA_DIR / rel_src, DATA_DIR / rel_dst
-    dst.parent.mkdir(parents=True, exist_ok=True)
-    subprocess.run(
-        ["ffmpeg", "-loglevel", "error", "-y", "-i", str(src), "-ar", "16000", "-ac", "1", str(dst)],
-        check=True,
-    )
-    return str(dst.relative_to(DATA_DIR))
+    source, destination = abs_path(rel_src), abs_path(rel_dst)
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    try:
+        run_media_command(["-y", "-i", str(source), "-vn", "-ar", "16000", "-ac", "1", "-c:a", "pcm_s16le", str(destination)])
+    except (ValueError, TimeoutError) as exc:
+        destination.unlink(missing_ok=True)
+        raise HTTPException(422, "Could not decode the recording") from exc
+    return str(destination.relative_to(DATA_DIR.resolve()))
 
 
 def duration_sec(rel: str) -> float:
     import soundfile as sf
-    return round(float(sf.info(str(DATA_DIR / rel)).duration), 3)
+    return round(float(sf.info(str(abs_path(rel))).duration), 3)
 
 
 def remove_dir(rel_dir: str) -> None:
-    shutil.rmtree(DATA_DIR / rel_dir, ignore_errors=True)
+    shutil.rmtree(abs_path(rel_dir), ignore_errors=True)

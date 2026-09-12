@@ -10,7 +10,7 @@ import sys
 import time
 import wave
 
-from google import genai
+from backend.common.gemini import client as gemini_client
 from google.genai import types
 
 
@@ -22,8 +22,7 @@ def main():
     output.mkdir(exist_ok=True)
     print(f"Project: {project}\nModel: {model}", flush=True)
     started = time.monotonic()
-    with genai.Client(vertexai=True, project=project, location="global",
-                      http_options=types.HttpOptions(api_version="v1beta1", timeout=120000)) as client:
+    with gemini_client(timeout_ms=120000, api_version="v1beta1") as client:
         response = client.models.generate_content(
             model=model,
             contents=f"자연스럽고 명확한 한국어로 다음 문장만 읽어주세요: {sentence}",

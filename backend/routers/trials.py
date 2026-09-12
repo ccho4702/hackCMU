@@ -23,12 +23,12 @@ import traceback
 from typing import Optional
 
 from bson import ObjectId
-from fastapi import APIRouter, BackgroundTasks, Depends, File, Form, HTTPException, UploadFile
+from fastapi import APIRouter, BackgroundTasks, Depends, File, Form, HTTPException, UploadFile, Query
 
-import db
-import media
-from routers.deps import current_user_id, parse_oid
-from summary import compute_summary
+from backend import db
+from backend import media
+from backend.routers.deps import current_user_id, parse_oid
+from backend.summary import compute_summary
 
 router = APIRouter(prefix="/api/trials", tags=["trials"])
 
@@ -72,7 +72,7 @@ def _reference_for(reference_id: Optional[str], user_id: str) -> Optional[dict]:
 # -----------------------------------------------------------------------------
 def _score_sentence(ref_sentence: dict, user_audio, note: dict) -> dict:
     """scoring.shadow_score 호출. import 를 여기서 하는 이유: torch 없는 환경에서도 서버는 뜨게."""
-    from scoring.shadow_score import score_shadowing
+    from backend.scoring.shadow_score import score_shadowing
     r = score_shadowing(
         media.abs_path(ref_sentence["wav"]), user_audio, ref_sentence["text"],
         gt_words=ref_sentence.get("words"),
@@ -82,7 +82,7 @@ def _score_sentence(ref_sentence: dict, user_audio, note: dict) -> dict:
 
 def score_full_recording(wav_rel: str, ref: dict) -> list[dict]:
     """전체 녹음을 개선본 스크립트 전체에 정렬한 뒤 문장별로 잘라 채점한다."""
-    from scoring.shadow_score import SR, align_words, encode, load_audio
+    from backend.scoring.shadow_score import SR, align_words, encode, load_audio
 
     y = load_audio(media.abs_path(wav_rel))
     full_text = " ".join(s["text"] for s in ref["script"])
@@ -132,7 +132,7 @@ def process_full_recording(trial_id: str) -> None:
     except Exception as e:
         traceback.print_exc()
         db.trials().update_one({"_id": t["_id"]}, {"$set": {
-            "status": "error", "error": {"code": "PIPELINE_FAILED", "message": str(e)},
+            "status": "error", "error": {"code": "PIPELINE_FAILED", "message": "Recording processing failed. See server logs."},
         }})
 
 
@@ -140,7 +140,7 @@ def process_full_recording(trial_id: str) -> None:
 # 엔드포인트
 # -----------------------------------------------------------------------------
 @router.post("")
-async def create_trial(
+def create_trial(
     background: BackgroundTasks,
     question: str = Form(...),
     kind: str = Form("original"),
@@ -161,7 +161,7 @@ async def create_trial(
         "user_id": user_id,
         "question": question,
         "kind": kind,
-        "reference_id": reference_id,
+        "reference_id": str(ref["_id"]) if ref else None,
         "created_at": db.now(),
         "status": "ready",
         "error": None,
@@ -184,7 +184,7 @@ def list_trials(
     question: Optional[str] = None,
     kind: Optional[str] = None,
     reference_id: Optional[str] = None,
-    limit: int = 50,
+    limit: int = Query(50, ge=1, le=200),
     user_id: str = Depends(current_user_id),
 ):
     """리더보드는 ?reference_id=&kind=shadow 로 조회한다. 같은 GT 기준 도전 기록만 모인다."""
@@ -194,11 +194,12 @@ def list_trials(
     if kind:
         q["kind"] = kind
     if reference_id:
-        q["reference_id"] = reference_id
+        q["reference_id"] = str(parse_oid(reference_id, "reference_id"))
     docs = list(db.trials().find(q, {"shadowing": 0, "metrics": 0}).sort("created_at", -1).limit(limit))
 
     scored = [d for d in docs if (d.get("summary") or {}).get("overall") is not None]
-    best_id = str(max(scored, key=lambda d: d["summary"]["overall"])["_id"]) if scored else None
+    # Scores from different GT references are not comparable.
+    best_id = str(max(scored, key=lambda d: d["summary"]["overall"])["_id"]) if scored and reference_id else None
 
     items = []
     for d in docs:
@@ -222,7 +223,7 @@ def delete_trial(trial_id: str, user_id: str = Depends(current_user_id)):
 
 
 @router.post("/{trial_id}/sentences/{sentence_id}")
-async def upload_sentence(
+def upload_sentence(
     trial_id: str,
     sentence_id: str,
     file: UploadFile = File(...),
@@ -245,7 +246,7 @@ async def upload_sentence(
         entry = _score_sentence(s, media.abs_path(wav), {"segment": None, "wav": wav})
     except Exception as e:
         traceback.print_exc()
-        raise HTTPException(status_code=500, detail=f"채점 실패: {e}")
+        raise HTTPException(status_code=500, detail="채점 실패. 서버 로그를 확인하세요.")
 
     order = {x["id"]: i for i, x in enumerate(ref["script"])}
     shadowing = [x for x in t.get("shadowing", []) if x["sentence_id"] != sentence_id] + [entry]

@@ -20,9 +20,10 @@ from typing import Optional
 from bson import ObjectId
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 
-import db
-import media
-from routers.deps import current_user_id, parse_oid
+from backend import db
+from backend import media
+from backend.routers.deps import current_user_id, parse_oid
+from backend.elevenlabs_tts.alignment import validate_words
 
 router = APIRouter(prefix="/api/references", tags=["references"])
 
@@ -35,7 +36,7 @@ def present(doc: dict) -> dict:
 
 
 @router.post("")
-async def create_reference(
+def create_reference(
     question: str = Form(...),
     script: str = Form(...),
     voice_id: Optional[str] = Form(None),
@@ -44,7 +45,17 @@ async def create_reference(
 ):
     try:
         items = json.loads(script)
-        assert isinstance(items, list) and all("id" in x and "text" in x for x in items)
+        if not isinstance(items, list) or not 1 <= len(items) <= 100:
+            raise ValueError("Expected 1 to 100 sentences")
+        seen = set()
+        for item in items:
+            if not isinstance(item, dict) or not media.valid_stem(item.get("id")):
+                raise ValueError("Invalid sentence ID")
+            if item["id"] in seen or not isinstance(item.get("text"), str) or not item["text"].strip():
+                raise ValueError("Sentence IDs must be unique and text must not be empty")
+            seen.add(item["id"])
+            if item.get("words") is not None:
+                validate_words(item["words"])
     except Exception:
         raise HTTPException(status_code=400, detail='script 는 [{"id","text"}] JSON 배열이어야 합니다')
     if len(items) != len(audio):
@@ -52,29 +63,33 @@ async def create_reference(
 
     ref_id = ObjectId()
     rel_dir = f"{user_id}/references/{ref_id}"
-    out = []
-    for item, up in zip(items, audio):
-        sid = str(item["id"])
-        raw = media.save_upload(up, rel_dir, sid)
-        wav = media.to_wav16k(raw, f"{rel_dir}/{sid}.16k.wav")
-        out.append({
-            "id": sid,
-            "text": item["text"],
-            "words": item.get("words"),
-            "audio": raw,
-            "wav": wav,
-            "duration_sec": media.duration_sec(wav),
-        })
+    try:
+        out = []
+        for item, up in zip(items, audio):
+            sid = str(item["id"])
+            raw = media.save_upload(up, rel_dir, sid)
+            wav = media.to_wav16k(raw, f"{rel_dir}/{sid}.16k.wav")
+            out.append({
+                "id": sid,
+                "text": item["text"],
+                "words": item.get("words"),
+                "audio": raw,
+                "wav": wav,
+                "duration_sec": media.duration_sec(wav),
+            })
 
-    doc = {
-        "_id": ref_id,
-        "user_id": user_id,
-        "question": question,
-        "voice_id": voice_id,
-        "created_at": db.now(),
-        "script": out,
-    }
-    db.references().insert_one(doc)
+        doc = {
+            "_id": ref_id,
+            "user_id": user_id,
+            "question": question,
+            "voice_id": voice_id,
+            "created_at": db.now(),
+            "script": out,
+        }
+        db.references().insert_one(doc)
+    except Exception:
+        media.remove_dir(rel_dir)
+        raise
     return present(doc)
 
 

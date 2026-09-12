@@ -10,7 +10,7 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from pymongo import ReturnDocument
 
-import db
+from backend import db
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 

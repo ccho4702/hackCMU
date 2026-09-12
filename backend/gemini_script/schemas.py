@@ -1,7 +1,10 @@
+from backend.common.language import Language
+
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 
 class ScriptRequest(BaseModel):
+    language: Language | None = None
     script: str = Field(min_length=1, max_length=30000)
 
     @field_validator("script")
