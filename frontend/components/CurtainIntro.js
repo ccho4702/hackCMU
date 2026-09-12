@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useRef } from "react";
+import { useLayoutEffect, useRef } from "react";
 import { ArrowDown, ArrowDownRight } from "lucide-react";
 
 export default function CurtainIntro() {
@@ -9,9 +9,13 @@ export default function CurtainIntro() {
   const quote = useRef(null);
   const fabric = useRef(null);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const node = intro.current;
+    const quoteNode = quote.current;
+    const fabricNode = fabric.current;
+    if (!node || !quoteNode || !fabricNode) return;
     const motion = matchMedia("(prefers-reduced-motion: reduce)");
+    let disposed = false;
     let frame = 0;
     let previousTime = 0;
     let current = 0;
@@ -20,12 +24,14 @@ export default function CurtainIntro() {
     let height = node.offsetHeight;
 
     const paint = () => {
+      if (disposed) return;
       // Only compositor properties change; no inherited CSS variables or SVG redraws.
-      quote.current.style.transform = motion.matches ? "none" : `translate3d(0,${-current * 26}px,0)`;
-      quote.current.style.opacity = motion.matches ? "1" : String(Math.max(0, 1 - current * 1.35));
-      fabric.current.style.transform = motion.matches ? "none" : `translate3d(0,${current * 48}px,0)`;
+      quoteNode.style.transform = motion.matches ? "none" : `translate3d(0,${-current * 26}px,0)`;
+      quoteNode.style.opacity = motion.matches ? "1" : String(Math.max(0, 1 - current * 1.35));
+      fabricNode.style.transform = motion.matches ? "none" : `translate3d(0,${current * 48}px,0)`;
     };
     const tick = (now) => {
+      if (disposed) return;
       const dt = Math.min(64, previousTime ? now - previousTime : 16);
       previousTime = now;
       current += (target - current) * (1 - Math.exp(-dt / 110));
@@ -35,6 +41,7 @@ export default function CurtainIntro() {
       if (!frame) previousTime = 0;
     };
     const schedule = () => {
+      if (disposed) return;
       target = Math.min(1, Math.max(0, (window.scrollY - top) / height));
       node.dataset.offscreen = String(target >= 1);
       if (motion.matches) { current = target; paint(); return; }
@@ -46,6 +53,8 @@ export default function CurtainIntro() {
     window.addEventListener("resize", resize);
     motion.addEventListener("change", schedule);
     return () => {
+      // Layout cleanup runs before React detaches these nodes during navigation.
+      disposed = true;
       cancelAnimationFrame(frame);
       window.removeEventListener("scroll", schedule);
       window.removeEventListener("resize", resize);

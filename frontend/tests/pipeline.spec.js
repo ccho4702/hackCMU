@@ -115,7 +115,10 @@ test("real saved run loads its transcript, revision, and playable audio", async 
   await audio.evaluate(element => element.load());
   await expect.poll(() => audio.evaluate(element => Number.isFinite(element.duration) && element.duration > 0)).toBe(true);
   expect(generationCalls).toBe(0);
+  // Safari honors preload="metadata" and need not decode a frame until playback.
+  await page.getByLabel("Original recording").evaluate(async element => { element.muted = true; await element.play(); });
   await expect.poll(() => page.getByLabel("Original recording").evaluate(element => element.readyState >= 2)).toBe(true);
+  await page.getByLabel("Original recording").evaluate(element => element.pause());
   await page.screenshot({ path: "test-results/real-run-desktop.png", fullPage: true });
   await page.setViewportSize({ width: 390, height: 844 });
   await page.screenshot({ path: "test-results/real-run-mobile.png", fullPage: true });

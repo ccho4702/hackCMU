@@ -1347,7 +1347,7 @@ footer {
 }
 
 @media (max-width:640px) {
-  .live-camera-stage { min-height: 320px; }
+  .live-camera-stage { min-height: 320px; width: 100%; min-width: 0; max-width: 100%; }
 }
 
 /* A word's duration determines its box; only overflowing text is resized. */
