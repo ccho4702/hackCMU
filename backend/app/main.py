@@ -73,7 +73,7 @@ def create_app() -> FastAPI:
     application.include_router(live.router, prefix="/api/v1", tags=["live"])
     from backend.api import api as coaching_api
     application.include_router(coaching_api)
-    from backend.routers import auth, references, trials, storage
+    from backend.routers import auth, references, trials, storage, history
     from pymongo.errors import PyMongoError
     from fastapi.responses import JSONResponse
 
@@ -81,7 +81,7 @@ def create_app() -> FastAPI:
         return JSONResponse(status_code=503, content={"detail": "MongoDB is unavailable. Check server database configuration."})
 
     application.add_exception_handler(PyMongoError, mongo_error_handler)
-    for router in (auth.router, references.router, trials.router, storage.router):
+    for router in (auth.router, references.router, trials.router, storage.router, history.router):
         application.include_router(router)
     return application
 

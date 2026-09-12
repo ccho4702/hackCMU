@@ -57,6 +57,8 @@ def ensure_indexes() -> None:
     trials().create_index([("user_id", ASCENDING), ("created_at", DESCENDING)])
     trials().create_index([("user_id", ASCENDING), ("question", ASCENDING)])
     trials().create_index([("user_id", ASCENDING), ("reference_id", ASCENDING), ("created_at", DESCENDING)])
+    from backend import history
+    history.ensure_indexes()
 
 
 def now() -> datetime:

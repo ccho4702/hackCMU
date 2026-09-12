@@ -10,6 +10,7 @@ from backend.common.media import save_upload
 from backend.elevenlabs_tts.service import get_client
 from backend.pipeline.service import process_recording
 from backend.common.logging import save_json
+from backend import history
 
 router = APIRouter(tags=["Presentation pipeline"])
 OUTPUT_FILES = {"reference_alignment.json", "nonverbal_feedback.json", "script_feedback.json", "transcript.json", "improved_script.txt", "reference_speech.mp3"}
@@ -64,6 +65,7 @@ def pipeline(file: UploadFile, background_tasks: BackgroundTasks,
     manifest = {"run_id": run_id, "language": language, "status": "queued", "stage": "queued", "outputs": {},
                 "source_filename": source.name}
     save_json(source.parent.parent / "manifest.json", manifest)
+    history.record_run(run_id, user_id, language)   # 누구 영상인지 Mongo 에 기록 (미설정이면 no-op)
     background_tasks.add_task(process_in_background, source, user_id, noisy_environment, client, language)
     return {**public_manifest(manifest), "status_url": f"/api/runs/{run_id}"}
 

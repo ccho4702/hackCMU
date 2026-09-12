@@ -1,4 +1,5 @@
 import { startPipeline } from "@/lib/coaching-api";
+import { pipelineUserId } from "@/lib/session";
 
 export async function beginCoaching(file, analysisId, language) {
   const key = `mellonaires.coaching.${analysisId}`;
@@ -7,11 +8,7 @@ export async function beginCoaching(file, analysisId, language) {
   try {
     const selectedLanguage = language ?? localStorage.getItem(`${key}.language`) ?? "en";
     localStorage.setItem(`${key}.language`, selectedLanguage);
-    let userId = localStorage.getItem("rehearse.userId");
-    if (!userId) {
-      userId = crypto.randomUUID();
-      localStorage.setItem("rehearse.userId", userId);
-    }
+    const userId = pipelineUserId();
     const job = await startPipeline(file, userId, selectedLanguage);
     localStorage.setItem(key, job.run_id);
     localStorage.setItem("rehearse.lastRun", job.run_id);

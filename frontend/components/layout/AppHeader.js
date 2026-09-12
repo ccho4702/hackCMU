@@ -5,11 +5,13 @@ import { usePathname } from "next/navigation";
 import { ArrowLeft, AudioLines } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { UserMenu } from "@/components/layout/UserMenu";
 
 const NAV = [
   { href: "/live", label: "Live" },
   { href: "/evaluation", label: "Evaluation", keepsRun: true },
   { href: "/practice", label: "Practice", keepsRun: true },
+  { href: "/leaderboard", label: "History" },
 ];
 
 // Sticky header shared by every page (same look as the /streaming live session).
@@ -63,7 +65,10 @@ export function AppHeader({ title, subtitle, right, mock, runId }) {
           })}
         </nav>
 
-        {right ? <div className="flex flex-wrap items-center gap-2">{right}</div> : null}
+        <div className="flex flex-wrap items-center gap-2">
+          {right}
+          <UserMenu />
+        </div>
       </div>
     </header>
   );
