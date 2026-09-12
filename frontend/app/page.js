@@ -1,111 +1,32 @@
 "use client";
-
 import Image from "next/image";
-
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
-import { ArrowRight, Camera, Mic } from "lucide-react";
-import { Card, PageShell } from "@/components/ui/studio";
+import { ArrowUpRight, Mic2, Video, Upload, Play, AudioLines } from "lucide-react";
+import { PageShell } from "@/components/ui/studio";
 import { UploadPanel } from "@/components/upload/UploadPanel";
 
-export default function HomePage() {
-  const router = useRouter();
-  useEffect(() => {
-    const run = new URLSearchParams(window.location.search).get("run");
-    if (run && /^[a-f0-9]{32}$/.test(run)) router.replace(`/evaluation?run=${run}`);
-  }, [router]);
-  const [mode, setMode] = useState("choose");
-
-  return (
-    <PageShell>
-      <div className="flex flex-col w-full">
-        {/* 배너: 영상이 없어도(banner1.mov 는 .gitignore 대상) 높이가 유지되도록 텍스트를 흐름 안에 둔다 */}
-        <div className="relative overflow-hidden rounded-2xl bg-slate-950">
-          <video
-            src="/banner1.mov"
-            poster="/banner.png"
-            autoPlay
-            muted
-            loop
-            playsInline
-            className="absolute inset-0 h-full w-full object-cover"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-slate-950/85 via-slate-950/30 to-slate-950/10"/>
-          <div className="relative flex min-h-[260px] flex-col justify-end p-5 text-white sm:min-h-[360px] sm:p-10 lg:min-h-[420px] lg:p-14">
-            <span className="h-1 w-10 rounded-full bg-white sm:w-14" />
-            <h1 className="mt-4 sm:mt-6">
-              <Image src="/optune-logo-white.png" alt="Optune" width={1326} height={680} priority className="h-12 w-auto drop-shadow-lg sm:h-20 lg:h-24" />
-            </h1>
-            <p className="mt-3 max-w-md text-base font-semibold text-shadow-md sm:mt-5 sm:text-xl lg:text-2xl">
-              Optimize your voice. Hear your best.
-            </p>
-          </div>
-        </div>
-        <HomeCard
-          href="/live"
-          icon={<Camera className="size-6" />}
-          eyebrow="Live session"
-          live
-          title="Start Recording"
-          description="Turn on your camera and get real-time feedback on your delivery."
-        />
-        <HomeCard
-          href="/practice"
-          icon={<Mic className="size-6" />}
-          eyebrow="Voice practice"
-          tone="navy"
-          title="Practice Your Next Take"
-          description="Read your improved script along with your own reference voice, then compare pronunciation, pace, and rhythm on every trial."
-        />
+export default function HomePage(){
+  const router=useRouter();
+  const [upload,setUpload]=useState(false);
+  useEffect(()=>{const run=new URLSearchParams(window.location.search).get("run");if(run&&/^[a-f0-9]{32}$/.test(run))router.replace(`/evaluation?run=${run}`);},[router]);
+  return <PageShell><div className="studio-home">
+    <div className="studio-filter"><span className="selected">Overview</span><Link href="/leaderboard">Your sessions</Link></div>
+    <section className="studio-feature">
+      <div className="feature-art"><Image src="/studio-cover.jpg" alt="Blue flowing fabric" width={600} height={600} priority/><AudioLines size={54} strokeWidth={1.4}/><span>THE NEXT TAKE</span></div>
+      <div className="feature-copy"><span className="studio-kicker">YOUR PERSONAL SPEAKING STUDIO</span><h2>Sound more like<br/>your best self.</h2><p>Record your ideas. Find your rhythm. Turn a good rehearsal into a great delivery.</p><div className="feature-actions"><Link href="/live" className="studio-primary"><Play size={16} fill="currentColor"/> Start recording</Link><button className="studio-secondary" onClick={()=>setUpload(!upload)} aria-expanded={upload} aria-controls="studio-upload"><Upload size={16}/> Upload a video</button></div></div>
+    </section>
+    {upload&&<section id="studio-upload" className="studio-upload"><div className="studio-section-heading"><h2>Bring your own recording</h2><button onClick={()=>setUpload(false)} className="studio-secondary">Close</button></div><UploadPanel/></section>}
+    <section><div className="studio-section-heading"><h2>Find your next take</h2><span>ONE SESSION, THREE WAYS TO IMPROVE</span></div>
+      <div className="studio-collection">
+        <Link href="/live" className="studio-album"><div className="album-art album-record"><Video size={40}/><span>01 / RECORD</span><i><ArrowUpRight size={21}/></i></div><h3>Put your ideas on record</h3><p>Camera on. A fresh take starts here.</p></Link>
+        <Link href="/evaluation" className="studio-album"><div className="album-art album-review"><ListBars/><span>02 / REFINE</span><i><ArrowUpRight size={21}/></i></div><h3>Hear what could be better</h3><p>Delivery feedback. A clearer script.</p></Link>
+        <Link href="/practice" className="studio-album"><div className="album-art album-practice"><Mic2 size={40}/><span>03 / REHEARSE</span><i><ArrowUpRight size={21}/></i></div><h3>Make the words your own</h3><p>Listen, follow along, and try again.</p></Link>
       </div>
-    </PageShell>
-  );
-}
+    </section>
+    <section className="studio-list"><div className="studio-section-heading"><h2>Built around your voice</h2><span>YOUR REHEARSAL TOOLKIT</span></div>{[["01","See your delivery","Eye contact, gestures & posture","/evaluation"],["02","Shape your message","Choose a language & script style","/live"],["03","Find your rhythm","Reference audio & word-by-word practice","/practice"]].map(([n,title,detail,href])=><Link href={href} key={n}><span>{n}</span><strong>{title}</strong><p>{detail}</p><ArrowUpRight size={17}/></Link>)}</section>
 
-// Accent colors per card (full class names so Tailwind picks them up).
-const TONES = {
-  primary: {
-    card: "hover:ring-primary/40",
-    icon: "bg-primary/10 text-primary group-hover:bg-primary",
-    dot: "bg-primary",
-    arrow: "bg-primary",
-  },
-  navy: {
-    card: "hover:ring-blue-900/40",
-    icon: "bg-blue-900/10 text-blue-900 group-hover:bg-blue-900",
-    dot: "bg-blue-900",
-    arrow: "bg-blue-900",
-  },
-};
-
-function HomeCard({ href, icon, eyebrow, live = false, tone = "primary", title, description }) {
-  const colors = TONES[tone];
-  return (
-    <Link
-      href={href}
-      className={`group mt-5 flex items-center gap-4 rounded-2xl bg-[#f5f5f7] p-5 transition hover:ring-1 duration-200 hover:-translate-y-0.5 sm:gap-6 sm:p-8 ${colors.card}`}
-    >
-      <span
-        className={`grid size-12 shrink-0 place-items-center rounded-2xl transition-colors group-hover:text-white sm:size-14 ${colors.icon}`}
-      >
-        {icon}
-      </span>
-      <span className="min-w-0 flex-1">
-        <span className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-slate-500">
-          <span
-            className={`size-1.5 rounded-full ${live ? "animate-pulse bg-primary" : colors.dot}`}
-          />
-          {eyebrow}
-        </span>
-        <span className="mt-1 block text-lg font-semibold sm:text-xl">{title}</span>
-        <span className="mt-1 block text-sm text-slate-500">{description}</span>
-      </span>
-      <span
-        className={`grid size-10 shrink-0 place-items-center rounded-full text-white transition-transform group-hover:translate-x-1 sm:size-12 ${colors.arrow}`}
-      >
-        <ArrowRight className="size-5" />
-      </span>
-    </Link>
-  );
+  </div></PageShell>;
 }
+function ListBars(){return <div className="album-bars" aria-hidden="true">{[24,50,32,74,100,62,88,45,68,32,55,25].map((h,i)=><b key={i} style={{height:h}}/>)}</div>;}

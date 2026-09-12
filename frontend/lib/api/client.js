@@ -1,7 +1,9 @@
 export const API_BASE = resolveApiBase();
 
 function resolveApiBase() {
-  const configured = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000";
+  // Use Next rewrites by default so all requests share the active backend and origin.
+  const configured = process.env.NEXT_PUBLIC_API_BASE_URL ?? "";
+  if (!configured) return "";
   if (typeof window === "undefined") return configured;
   try {
     const url = new URL(configured);

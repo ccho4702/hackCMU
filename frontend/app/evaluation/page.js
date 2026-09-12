@@ -49,8 +49,8 @@ export default function Evaluation() {
       <div className="evaluation-grid">
         <section className="panel original-card"><div className="card-heading"><h2>Original recording</h2><span className="count-pill">CAMERA + AUDIO</span></div><video ref={player} controls playsInline preload="metadata" src={job.original_video_url} aria-label="Original recording"/></section>
         <div className="delivery-sections">
-          <DeliveryFeedback title="Nonverbal delivery" description="Gaze, gestures, posture, and body movement." items={feedback} pending={working} onSeek={seek} />
-          <DeliveryFeedback title="Vocal delivery" description="Intonation, loudness, pace, pauses, and articulation." items={vocalFeedback} pending={working} onSeek={seek} />
+          <DeliveryFeedback title="Nonverbal delivery" tone="nonverbal" description="Gaze, gestures, posture, and body movement." items={feedback} pending={working} onSeek={seek} />
+          <DeliveryFeedback title="Vocal delivery" tone="vocal" description="Intonation, loudness, pace, pauses, and articulation." items={vocalFeedback} pending={working} onSeek={seek} />
         </div>
       </div>
       <ReferenceVoice key={job.outputs?.tts_audio || "pending"} src={job.outputs?.tts_audio} failed={job.status === "failed"} />

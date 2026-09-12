@@ -5,9 +5,9 @@ import { cn } from "@/lib/utils";
 
 export function PageShell({ title, subtitle, right, mock, runId, className, children }) {
   return (
-    <div className="min-h-screen bg-white font-sans text-slate-900">
+    <div className="studio-shell min-h-screen">
       <AppHeader title={title} subtitle={subtitle} right={right} mock={mock} runId={runId} />
-      <main className={cn("mx-auto flex max-w-7xl flex-col gap-6 px-4 py-6 sm:px-6", className)}>
+      <main className={cn("studio-main flex flex-col gap-6", className)}>
         {children}
       </main>
     </div>

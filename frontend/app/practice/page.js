@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import StudioHeader from "@/components/StudioHeader";
+import AutoFitWord from "@/components/AutoFitWord";
 import Link from "next/link";
 import { apiGet, apiPost, apiUpload } from "@/lib/coaching-api";
 import { useRequireUser } from "@/lib/useUser";
@@ -215,7 +216,7 @@ export default function Practice() {
                 <button disabled={busy} className={`spoken-word ${active === index ? "current-word" : word.t1 <= time ? "past-word" : ""}`}
                   onClick={() => listenFrom(index)} aria-label={word.text} aria-current={active === index ? "true" : undefined}
                   aria-describedby={`word-timing-${index}`} title={`${timing} · Duration ${duration.toFixed(2)}s`}>
-                  <span className="word-box-text">{word.text}</span>
+                  <AutoFitWord>{word.text}</AutoFitWord>
                   <small id={`word-timing-${index}`} className="word-timing-label">{timing}</small>
                 </button>
               </span>;

@@ -150,3 +150,25 @@ test('trial playback uses the recorded durations instead of reference durations'
   const trialWidth=(await page.locator('.timed-word').first().boundingBox()).width;
   expect(trialWidth/referenceWidth).toBeCloseTo(2,1);
 });
+
+test('only overflowing words shrink to one line within their duration boxes', async ({page}) => {
+  const timing=[{text:'I',t0:0,t1:.2},{text:'communication',t0:.2,t1:.55},{text:'발표연습입니다',t0:.6,t1:1}];
+  await stub(page,false,timing);
+  await page.setViewportSize({width:1280,height:1000});
+  await page.goto(`/practice?run=${runId}`);
+  await expect(page.locator('.word-fit-text')).toHaveCount(3);
+  await page.evaluate(()=>document.fonts.ready);
+  for (const viewport of [{width:1280,height:1000},{width:390,height:844}]) {
+    await page.setViewportSize(viewport);
+    await expect.poll(()=>page.locator('.word-fit-text').nth(1).evaluate(el=>parseFloat(getComputedStyle(el).fontSize))).toBeLessThan(13);
+    expect(await page.locator('.word-fit-text').first().evaluate(el=>parseFloat(getComputedStyle(el).fontSize))).toBe(13);
+    for (const word of await page.locator('.word-box-text').all()) {
+      const bounds=await word.boundingBox();
+      const text=await word.locator('.word-fit-text').boundingBox();
+      expect(text.width).toBeLessThanOrEqual(bounds.width);
+      const lines=await word.locator('.word-fit-text').evaluate(el=>{const range=document.createRange();range.selectNodeContents(el);return range.getClientRects().length;});
+      expect(lines).toBe(1);
+    }
+    await page.screenshot({path:`/private/tmp/optune-fitted-words-${viewport.width}.png`,fullPage:true});
+  }
+});

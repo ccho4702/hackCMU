@@ -1,6 +1,6 @@
-export default function DeliveryFeedback({ title, description, items, pending, onSeek }) {
+export default function DeliveryFeedback({ title, description, items, pending, onSeek, tone = "nonverbal" }) {
   return (
-    <section className="panel feedback-card" aria-label={title}>
+    <section className="panel feedback-card" data-tone={tone} aria-label={title}>
       <div className="card-heading"><h2>{title}</h2>{items && <span className="count-pill">{items.length} moments</span>}</div>
       <p className="card-description">{description}</p>
       <div className="feedback-list">

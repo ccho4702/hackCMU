@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { Download, Pause, Play } from "lucide-react";
 
 function clock(seconds) {
@@ -15,6 +15,11 @@ export default function ReferenceVoice({ src, failed = false }) {
   const [duration, setDuration] = useState(0);
   const [position, setPosition] = useState(0);
   const [error, setError] = useState("");
+
+  const attachAudio = useCallback((node) => {
+    audio.current = node;
+    if (node && Number.isFinite(node.duration)) setDuration(node.duration);
+  }, []);
 
   async function toggle() {
     if (!audio.current) return;
@@ -33,10 +38,11 @@ export default function ReferenceVoice({ src, failed = false }) {
         <p>Listen to the revised script.</p>
       </div>
       {src ? <div className="reference-transport">
-        <audio ref={audio} src={src} preload="metadata" aria-label="Improved speech"
+        <audio ref={attachAudio} src={src} preload="metadata" aria-label="Improved speech"
           onDurationChange={(event) => setDuration(Number.isFinite(event.currentTarget.duration) ? event.currentTarget.duration : 0)}
           onTimeUpdate={(event) => setPosition(event.currentTarget.currentTime)}
-          onPlay={() => setPlaying(true)} onPause={() => { setPlaying(false); setWaiting(false); }}
+          onLoadedMetadata={(event) => setDuration(Number.isFinite(event.currentTarget.duration) ? event.currentTarget.duration : 0)}
+          onPlay={(event) => { setPlaying(true); setDuration(Number.isFinite(event.currentTarget.duration) ? event.currentTarget.duration : 0); }} onPause={() => { setPlaying(false); setWaiting(false); }}
           onPlaying={() => setWaiting(false)} onWaiting={() => setWaiting(true)}
           onEnded={() => { setPlaying(false); setWaiting(false); }}
           onError={() => { setPlaying(false); setWaiting(false); setError("Audio could not load. Try again or download it."); }} />

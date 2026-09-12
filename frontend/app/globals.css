@@ -1349,3 +1349,7 @@ footer {
 @media (max-width:640px) {
   .live-camera-stage { min-height: 320px; }
 }
+
+/* A word's duration determines its box; only overflowing text is resized. */
+.word-box-text { display:block; width:100%; min-width:0; white-space:nowrap; overflow-wrap:normal; text-align:center; }
+.word-fit-text { display:inline-block; white-space:nowrap; overflow-wrap:normal; font-size:13px; line-height:1.25; vertical-align:top; }
