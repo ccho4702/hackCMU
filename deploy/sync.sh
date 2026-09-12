@@ -21,7 +21,7 @@ done
 cd "$ROOT"
 IP="$(python3 deploy/provision.py wait --label "$LABEL" --timeout 30)"
 SITE_HOST="$IP"
-PUBLIC_ORIGIN="https://${IP},http://${IP},https://${IP}:443,http://${IP}:80,http://${IP}:3000"
+PUBLIC_ORIGIN="https://${IP},https://${IP}.sslip.io,http://${IP},https://${IP}:443,http://${IP}:80,http://${IP}:3000"
 CERT_DIR="$ROOT/deploy/certs"
 mkdir -p "$CERT_DIR"
 if [[ ! -f "$CERT_DIR/cert.pem" ]] || ! openssl x509 -in "$CERT_DIR/cert.pem" -noout -text 2>/dev/null | grep -q "$IP"; then
@@ -62,7 +62,8 @@ until docker info >/dev/null 2>&1; do
   sleep 5
 done
 PUBLIC_ORIGIN='${PUBLIC_ORIGIN}' SITE_HOST='${SITE_HOST}' docker compose -f docker-compose.yml -f docker-compose.prod.yml ${UP_ARGS[*]}
-docker compose -f docker-compose.yml -f docker-compose.prod.yml restart frontend
+PUBLIC_ORIGIN='${PUBLIC_ORIGIN}' SITE_HOST='${SITE_HOST}' docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --force-recreate caddy
+PUBLIC_ORIGIN='${PUBLIC_ORIGIN}' SITE_HOST='${SITE_HOST}' docker compose -f docker-compose.yml -f docker-compose.prod.yml restart frontend
 EOF
 
 echo "updated https://${IP}"

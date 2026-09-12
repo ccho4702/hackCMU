@@ -1,14 +1,18 @@
 {
-	auto_https off
 	default_sni {$SITE_HOST}
-	fallback_sni {$SITE_HOST}
 }
 
-http://{$SITE_HOST} {
-	redir https://{$SITE_HOST}{uri} 308
+{$SITE_HOST} {
+	tls {
+		issuer acme {
+			dir https://acme-v02.api.letsencrypt.org/directory
+			profile shortlived
+			disable_tlsalpn_challenge
+		}
+	}
+	reverse_proxy frontend:3000
 }
 
-https://{$SITE_HOST}, https:// {
-	tls /certs/cert.pem /certs/key.pem
+{$SITE_HOST}.sslip.io {
 	reverse_proxy frontend:3000
 }
