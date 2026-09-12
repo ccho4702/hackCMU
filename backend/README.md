@@ -65,7 +65,7 @@ artifacts/
       video/           Prompts, raw responses, attempts.jsonl, usage metadata
       asr/             Original ASR response, request count, status
       script/          Prompt, response, attempt log, usage metadata
-      elevenlabs/      Cache hit, clone/TTS request counts, status and timing
+      elevenlabs/      Clone/TTS/delete request counts, cleanup status and timing
     manifest.json
   experiments/
     inputs/            Original local test recordings
@@ -80,13 +80,22 @@ output filenames are served by the API.
 
 ## Request counts and retry behavior
 
-- Normal run: Gemini video 1 + ElevenLabs ASR 1 + Gemini script 1 + ElevenLabs IVC 1 + ElevenLabs TTS 1.
+- Normal run: Gemini video 1 + ElevenLabs ASR 1 + Gemini script 1 + ElevenLabs IVC 1 + ElevenLabs TTS 1 + ElevenLabs voice deletion 1.
 - Every recording creates a fresh IVC from that recording’s extracted audio, including
   repeated uploads by the same user. Legacy voice-cache files are not read or written.
 - The returned voice ID and sample hash are recorded in the run’s private
   `logs/elevenlabs/voice.json`; this is provenance, not a reusable voice cache.
 - A cloning error or verification requirement stops TTS. No old or default voice is substituted.
-- Each recording consumes a new voice slot; existing provider voices are not automatically deleted.
+- The temporary clone is deleted after MP3 and word timing are saved, or if TTS /
+  post-creation verification fails. Only the voice created by that invocation is deleted;
+  existing account voices are never listed or swept. Playback and practice use saved files.
+- Voice deletion retries transient errors up to 3 times (3-second request timeout).
+  Missing voices count as already cleaned; permission errors are not retried. Cleanup
+  failures preserve the TTS result / original error and are recorded in private
+  `logs/elevenlabs/voice_cleanup.json` and `meta.json` for recovery.
+- Deletion releases a voice slot, but does not reset monthly voice creation/edit quotas.
+  Concurrent requests need separate slots. Process termination or a creation timeout
+  without a returned voice ID can still leave an orphan requiring manual review.
 - `VIDEO_MAX_ATTEMPTS=3` allows 1 initial request plus 2 retries. Set it to `1` when
   you need exactly two Gemini generation attempts per successful video pipeline.
 - Gemini script and ElevenLabs SDK automatic retries are disabled. Failed stages and

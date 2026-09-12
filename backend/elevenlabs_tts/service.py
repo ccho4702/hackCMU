@@ -4,6 +4,7 @@ Generated speech is a practice reference; naturalness/pronunciation are not guar
 """
 import base64
 import hashlib
+import logging
 from backend.common.language import resolve_language
 import os
 from pathlib import Path
@@ -11,11 +12,51 @@ import uuid
 import time
 
 from elevenlabs.client import ElevenLabs
+from elevenlabs.core.api_error import ApiError
+import httpx
 
 from backend.common.config import artifacts_dir
 from backend.common.media import run_media_command
 from backend.common.logging import log_event, save_json
 from backend.elevenlabs_tts.alignment import character_to_words
+
+
+def cleanup_created_voice(voice_id, *, client, stats=None, log_dir=None):
+    """Delete only a voice owned by this invocation; never enumerate account voices.
+
+    Cleanup cannot turn saved speech into a failed run or mask the original error.
+    A failed deletion remains in the private run log for later recovery.
+    """
+    report = {"voice_id": voice_id, "status": "pending", "attempts": []}
+    for attempt in range(1, 4):
+        entry = {"attempt": attempt}
+        retryable = False
+        try:
+            client.voices.delete(voice_id=voice_id, request_options={"max_retries": 0, "timeout_in_seconds": 3})
+            entry["status"] = report["status"] = "deleted"
+        except Exception as exc:
+            code = exc.status_code if isinstance(exc, ApiError) else None
+            entry.update(status="failed", error_type=type(exc).__name__, http_status=code)
+            if code == 404:
+                entry["status"] = report["status"] = "already_deleted"
+            else:
+                report["status"] = "failed"
+                retryable = isinstance(exc, httpx.TransportError) or code in (408, 429) or (isinstance(code, int) and code >= 500)
+        report["attempts"].append(entry)
+        if report["status"] != "failed" or not retryable or attempt == 3:
+            break
+        time.sleep(0.25 * attempt)
+    if stats is not None:
+        stats.update(voice_cleanup_status=report["status"], voice_delete_requests=len(report["attempts"]))
+    if log_dir is not None:
+        try:
+            save_json(Path(log_dir) / "voice_cleanup.json", report)
+            log_event(Path(log_dir) / "events.jsonl", "voice_cleanup_finished", **report)
+        except OSError:
+            logging.getLogger(__name__).exception("Could not persist voice cleanup result")
+    if report["status"] == "failed":
+        logging.getLogger(__name__).warning("Voice cleanup failed; see private run log in %s", log_dir)
+    return report
 
 
 def get_client():
@@ -51,16 +92,21 @@ def create_voice(user_id: str, audio_path: str, noisy_environment=False, *, clie
             request_options={"max_retries": 0})
     if not isinstance(voice.voice_id, str) or not voice.voice_id.strip():
         raise ValueError("ElevenLabs did not return a voice_id")
-    requires_verification = bool(getattr(voice, "requires_verification", False))
-    if log_dir is not None:
-        # Private provenance only: never used to select a voice for a later run.
-        save_json(Path(log_dir) / "voice.json", {
-            "voice_id": voice.voice_id, "source": "current_recording",
-            "sample_sha256": sample_hash, "sample_bytes": sample_path.stat().st_size,
-            "requires_verification": requires_verification,
-        })
-    if requires_verification:
-        raise RuntimeError("ElevenLabs requires verification for this recording's voice; TTS was not generated")
+    try:
+        requires_verification = bool(getattr(voice, "requires_verification", False))
+        if log_dir is not None:
+            # Private provenance only: never used to select a voice for a later run.
+            save_json(Path(log_dir) / "voice.json", {
+                "voice_id": voice.voice_id, "source": "current_recording",
+                "sample_sha256": sample_hash, "sample_bytes": sample_path.stat().st_size,
+                "requires_verification": requires_verification,
+            })
+        if requires_verification:
+            raise RuntimeError("ElevenLabs requires verification for this recording's voice; TTS was not generated")
+    except BaseException:
+        # The caller has not received this ID yet, so creation owns cleanup here.
+        cleanup_created_voice(voice.voice_id, client=client, stats=stats, log_dir=log_dir)
+        raise
     return voice.voice_id
 
 
@@ -116,7 +162,9 @@ def run_pipeline(user_id: str, recording_path: str, improved_script: str,
     intermediate.mkdir(parents=True, exist_ok=True)
     logs.mkdir(parents=True, exist_ok=True)
     started = time.monotonic()
-    stats = {"status": "running", "language": language, "model": model, "voice_source": "current_recording", "clone_requests": 0, "tts_requests": 0}
+    stats = {"status": "running", "language": language, "model": model, "voice_source": "current_recording", "clone_requests": 0, "tts_requests": 0,
+             "voice_cleanup_status": "not_created", "voice_delete_requests": 0}
+    voice_id = None
     log_event(logs / "events.jsonl", "tts_stage_started")
     try:
         audio_path = str(prepared_audio_path) if prepared_audio_path else extract_audio(str(source), str(intermediate / "voice_sample.mp3"))
@@ -133,6 +181,8 @@ def run_pipeline(user_id: str, recording_path: str, improved_script: str,
         stats.update(status="failed", error_type=type(exc).__name__)
         raise
     finally:
+        if voice_id is not None:
+            cleanup_created_voice(voice_id, client=client, stats=stats, log_dir=logs)
         stats["elapsed_seconds"] = round(time.monotonic()-started, 2)
         save_json(logs / "meta.json", stats)
         log_event(logs / "events.jsonl", "tts_stage_finished", **stats)
