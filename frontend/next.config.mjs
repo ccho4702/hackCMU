@@ -14,6 +14,7 @@ const nextConfig = {
   experimental: {
     // Default is 30s; voice cloning + TTS can take longer than that.
     proxyTimeout: 120_000,
+    proxyClientMaxBodySize: "110mb",
   },
 };
 

@@ -1,0 +1,115 @@
+import { test, expect } from "@playwright/test";
+
+const runId = "a".repeat(32);
+const manifest = {
+  run_id: runId, status: "success", stage: "complete",
+  original_video_url: `/api/runs/${runId}/original`,
+  outputs: { tts_audio: `/api/runs/${runId}/outputs/reference_speech.mp3`, improved_script: `/api/runs/${runId}/outputs/improved_script.txt` },
+  results: {
+    transcript: { text: "Um, I has an idea." },
+    nonverbal_feedback: [{ start_time: "00:01.000", end_time: "00:03.000", content: "시선이 아래를 향합니다. 렌즈 부근으로 시선을 돌리세요." }],
+    script_feedback: { original_script: "Um, I has an idea.", improved_script: "I have an idea to share.", issues: [{ original: "I has", problem: "문법 오류", suggestion: "I have" }] },
+  },
+};
+
+async function fakeCamera(page, denied = false) {
+  await page.addInitScript(({ denied }) => {
+    window.__stoppedTracks = 0;
+    const tracks = ["video", "audio"].map(kind => ({ kind, stop: () => window.__stoppedTracks++ }));
+    Object.defineProperty(navigator, "mediaDevices", { configurable: true, value: { getUserMedia: async () => {
+      if (denied) throw new DOMException("Denied", "NotAllowedError");
+      return { getTracks: () => tracks, getAudioTracks: () => [tracks[1]], getVideoTracks: () => [tracks[0]] };
+    } } });
+    Object.defineProperty(HTMLMediaElement.prototype, "srcObject", { configurable: true, get() { return this.__stream; }, set(value) { this.__stream = value; } });
+    HTMLMediaElement.prototype.play = async () => {};
+    window.MediaRecorder = class {
+      static isTypeSupported(type) { return type === "video/mp4"; }
+      constructor(stream, options) { this.stream = stream; this.mimeType = options.mimeType; this.state = "inactive"; }
+      start() { this.state = "recording"; }
+      stop() { this.state = "inactive"; queueMicrotask(() => { this.ondataavailable?.({ data: new Blob(["recorded camera + audio"], { type: this.mimeType }) }); this.onstop?.(); }); }
+    };
+  }, { denied });
+}
+
+async function stubPipeline(page, failure = false) {
+  let uploads = 0;
+  await page.route("**/api/pipeline", async route => {
+    uploads++;
+    const body = route.request().postDataBuffer().toString();
+    expect(body).toContain('name="file"');
+    expect(body).toContain('name="user_id"');
+    await route.fulfill({ status: 202, json: { run_id: runId, status: "queued", stage: "queued", outputs: {} } });
+  });
+  await page.route(`**/api/runs/${runId}`, route => route.fulfill({ json: failure ? { ...manifest, status: "failed", stage: "speech_generation", error_message: "Voice access is unavailable.", outputs: { improved_script: manifest.outputs.improved_script } } : manifest }));
+  return () => uploads;
+}
+
+test("record, stop, upload once, render results, and release camera/microphone", async ({ page }) => {
+  await fakeCamera(page);
+  const uploads = await stubPipeline(page);
+  await page.goto("/");
+  await page.getByRole("button", { name: "Start recording", exact: true }).click();
+  await expect(page.getByRole("button", { name: "Stop & analyze" })).toBeVisible();
+  await page.getByRole("button", { name: "Stop & analyze" }).click();
+  await expect(page.getByText("Rehearsal complete", { exact: true })).toBeVisible();
+  await expect(page.getByRole("tabpanel")).toContainText("I have an idea to share.");
+  await page.getByRole("tab", { name: "Original transcript" }).click();
+  await expect(page.getByRole("tabpanel")).toContainText("Um, I has an idea.");
+  await expect(page.getByLabel("Improved speech")).toHaveAttribute("src", manifest.outputs.tts_audio);
+  expect(uploads()).toBe(1);
+  expect(await page.evaluate(() => window.__stoppedTracks)).toBe(2);
+});
+
+test("denied camera access offers upload without submitting a job", async ({ page }) => {
+  await fakeCamera(page, true);
+  const uploads = await stubPipeline(page);
+  await page.goto("/");
+  await page.getByRole("button", { name: "Start recording", exact: true }).click();
+  await expect(page.locator(".error-banner")).toContainText("Camera or microphone access was denied");
+  expect(uploads()).toBe(0);
+});
+
+test("uploaded recording preserves partial results on TTS failure", async ({ page }) => {
+  const uploads = await stubPipeline(page, true);
+  await page.goto("/");
+  await page.locator('input[type="file"]').setInputFiles({ name: "take.mov", mimeType: "video/quicktime", buffer: Buffer.from("test video") });
+  await expect(page.locator(".error-banner")).toContainText("Voice access is unavailable");
+  await expect(page.getByRole("tabpanel")).toContainText("I have an idea to share.");
+  await expect(page.getByRole("button", { name: "Analyze again" })).toBeVisible();
+  expect(uploads()).toBe(1);
+});
+
+test("a saved job restores after reload without a second upload", async ({ page }) => {
+  const uploads = await stubPipeline(page);
+  await page.goto(`/?run=${runId}`);
+  await expect(page.getByText("Rehearsal complete", { exact: true })).toBeVisible();
+  await page.reload();
+  await expect(page.getByRole("tabpanel")).toContainText("I have an idea to share.");
+  expect(uploads()).toBe(0);
+});
+
+test("mobile layout fits the viewport", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/");
+  await expect(page.getByRole("button", { name: "Start recording", exact: true })).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
+});
+
+test("real saved run loads its transcript, revision, and playable audio", async ({ page }) => {
+  test.skip(!process.env.REAL_RUN_ID, "Set REAL_RUN_ID to inspect an existing completed run; no generation requests are made.");
+  let generationCalls = 0;
+  page.on("request", request => { if (request.url().endsWith("/api/pipeline")) generationCalls++; });
+  await page.goto(`/?run=${process.env.REAL_RUN_ID}`);
+  await expect(page.getByText("Rehearsal complete", { exact: true })).toBeVisible();
+  await expect(page.getByRole("tabpanel")).not.toBeEmpty();
+  await expect(page.getByLabel("Original recording")).toBeVisible();
+  const audio = page.getByLabel("Improved speech");
+  await expect(audio).toHaveAttribute("src", /reference_speech.mp3/);
+  await audio.evaluate(element => element.load());
+  await expect.poll(() => audio.evaluate(element => Number.isFinite(element.duration) && element.duration > 0)).toBe(true);
+  expect(generationCalls).toBe(0);
+  await expect.poll(() => page.getByLabel("Original recording").evaluate(element => element.readyState >= 2)).toBe(true);
+  await page.screenshot({ path: "test-results/real-run-desktop.png", fullPage: true });
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.screenshot({ path: "test-results/real-run-mobile.png", fullPage: true });
+});
