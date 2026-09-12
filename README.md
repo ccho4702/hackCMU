@@ -27,90 +27,28 @@ an audio reference that reads the improved script in the speaker's cloned voice.
 | **Hear the improvement** | The revised script spoken with a cloned reference voice | ElevenLabs IVC + TTS |
 
 ```mermaid
-%%{init: {"theme": "base", "flowchart": {"curve": "basis", "nodeSpacing": 30, "rankSpacing": 46}, "themeVariables": {"fontFamily": "Pretendard, Inter, -apple-system, sans-serif", "fontSize": "13px", "primaryColor": "#eef2ff", "primaryBorderColor": "#4f6df5", "primaryTextColor": "#0f172a", "lineColor": "#94a3b8", "clusterBkg": "#f8fafc", "clusterBorder": "#cbd5e1", "edgeLabelBackground": "#ffffff"}}}%%
-flowchart TB
-    classDef page fill:#eef2ff,stroke:#4f6df5,stroke-width:1.5px,color:#0f172a
-    classDef local fill:#ffffff,stroke:#94a3b8,color:#0f172a
+flowchart LR
     classDef gemini fill:#e8f5ec,stroke:#1e8e3e,color:#0b3d1a
     classDef eleven fill:#fdf2f8,stroke:#db2777,color:#4a0b2e
-    classDef mediapipe fill:#fff4e6,stroke:#ea580c,color:#431407
-    classDef store fill:#f1f5f9,stroke:#475569,stroke-dasharray:5 3,color:#0f172a
-    classDef out fill:#fefce8,stroke:#ca8a04,color:#422006
+    classDef user fill:#eef2ff,stroke:#4f6df5,color:#0f172a
+    classDef crown fill:#fef3c7,stroke:#d97706,stroke-width:2px,color:#78350f
 
-    subgraph START["Start  ·  /login → /"]
-        direction LR
-        U([Sign in · name + email<br/>→ user_id, no password]):::page
-        UP[Upload a recording<br/>instead of going live]:::local
-        U --> UP
-    end
-
-    subgraph LIVE["① Live session  ·  /live"]
-        direction TB
-        CAM[Camera + microphone<br/>MediaRecorder keeps the take]:::local
-        MP[MediaPipe Face Landmarker<br/>gaze · head pose · blink · expression]:::mediapipe
-        OVR[Real-time overlay<br/>face mesh · rolling timeline · alerts]:::local
-        REV[Recorded review<br/>/analysis/analysisId]:::page
-        CAM -- JPEG frames --> MP --> OVR
-        CAM -- stop --> REV
-    end
-
-    subgraph PIPE["② Coaching pipeline  ·  POST /api/pipeline → run_id  (background)"]
-        direction TB
-        VID[Rehearsal video<br/>+ language · accent · user_id]:::local
-        AUD[Extract audio<br/>ffmpeg]:::local
-        GV[Gemini video understanding<br/>nonverbal + vocal feedback, timestamped]:::gemini
-        ASR[ElevenLabs Scribe<br/>transcript]:::eleven
-        GS[Gemini script revision<br/>issues + improved script]:::gemini
-        IVC[ElevenLabs Instant Voice Clone<br/>your voice, cached per user]:::eleven
-        TTS[ElevenLabs TTS with timestamps<br/>reference_speech.mp3 + word timing]:::eleven
-        VID --> GV
-        VID --> AUD
-        AUD --> ASR --> GS --> TTS
-        AUD --> IVC --> TTS
-    end
-
-    subgraph EVAL["③ Evaluation  ·  /evaluation?run="]
-        direction LR
-        E1[Delivery coaching<br/>nonverbal · vocal, click to seek]:::out
-        E2[Script comparison<br/>original vs revised]:::out
-        E3[Reference voice<br/>improved script in your voice]:::out
-    end
-
-    subgraph PRAC["④ Practice loop  ·  /practice?run="]
-        direction TB
-        REF[Reference playback<br/>word-by-word highlight from timing]:::local
-        MIC[Record a trial<br/>microphone only · same script]:::local
-        SC[Shadow scoring · local, no API calls<br/>MMS_FA forced alignment + F0 / energy]:::local
-        AX[Five measures<br/>pronunciation · pace · rhythm · intonation · emphasis]:::out
-        WD[Words to revisit<br/>unclear · rushed · dragged · missing stress]:::out
-        REF --> MIC --> SC --> AX --> WD
-        WD -. "next take" .-> MIC
-    end
-
-    subgraph HIST["⑤ History  ·  /leaderboard"]
-        direction LR
-        RUNS[My recordings<br/>status · script · trial count]:::out
-        LB[Leaderboard per recording<br/>rank · best take]:::out
-        RUNS --> LB
-    end
-
-    DB[("MongoDB Atlas<br/>users ← sign in · runs ← pipeline · practice_trials ← scoring")]:::store
-    FS[("artifacts/runs/run_id<br/>inputs · intermediates · outputs · trials")]:::store
-
-    U --> CAM
-    UP --> VID
-    CAM -- "upload the take" --> VID
-    GV --> E1
-    GS --> E2
-    TTS --> E3
-    E3 --> REF
-    PIPE -. files .-> FS
-    SC -. files .-> FS
-    AX -. "trial score" .-> DB
-    DB --> RUNS
+    L([🔑 Sign in]):::user --> V[📹 Live session<br/>MediaPipe feedback]:::user
+    V --> A[🎥 Rehearsal video]
+    A --> B[Gemini: visual + vocal analysis]:::gemini
+    A --> D[Extract audio]
+    D --> I[ElevenLabs ASR]:::eleven
+    I --> C[Gemini: script revision]:::gemini
+    C --> E[ElevenLabs voice clone + TTS]:::eleven
+    D --> E
+    B --> F[💬 Timestamped coaching]
+    C --> G[📝 Improved script]
+    E --> H[🔊 Practice audio]
+    H --> P[🎙️ Practice trials]
+    P --> S[📊 Five measures<br/>+ words to revisit]
+    S --> K[👑 Leaderboard<br/>best take per recording]:::crown
+    S -. next take .-> P
 ```
-
-_Colors: blue = page · green = Gemini · pink = ElevenLabs · orange = MediaPipe · yellow = what you see · dashed = storage. Scoring in ④ runs locally with no API calls._
 
 The normal flow makes **two Gemini generation requests**: one for visual and vocal delivery analysis
 and one that improves the ElevenLabs transcript. ElevenLabs makes one ASR request
