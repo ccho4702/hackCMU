@@ -26,3 +26,20 @@ def character_to_words(alignment):
     text = ''.join(chars)
     words = [{'text':m.group(), 't0':starts[m.start()], 't1':ends[m.end()-1]} for m in re.finditer(r'\S+', text)]
     return {'text':text, 'words':validate_words(words)}
+
+
+def remove_injected_accent_tag(alignment, tag):
+    """Remove only our leading unspoken control tag; preserve actual audio offsets."""
+    if not tag:
+        return alignment
+    chars = alignment.get('characters', [])
+    text = ''.join(chars)
+    if not text.lstrip().startswith(tag):
+        return alignment  # Some model responses already omit control tags.
+    end = len(text) - len(text.lstrip()) + len(tag)
+    while end < len(text) and text[end].isspace():
+        end += 1
+    keys = ('characters', 'character_start_times_seconds', 'character_end_times_seconds')
+    if any(len(alignment.get(key, [])) != len(chars) for key in keys):
+        raise ValueError('Character alignment arrays are inconsistent')
+    return {**alignment, **{key: alignment[key][end:] for key in keys}}

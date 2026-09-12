@@ -1,15 +1,17 @@
 import { startPipeline } from "@/lib/coaching-api";
 import { pipelineUserId } from "@/lib/session";
 
-export async function beginCoaching(file, analysisId, language) {
+export async function beginCoaching(file, analysisId, language, accent) {
   const key = `mellonaires.coaching.${analysisId}`;
   const existing = localStorage.getItem(key);
   if (existing) return existing;
   try {
     const selectedLanguage = language ?? localStorage.getItem(`${key}.language`) ?? "en";
+    const selectedAccent = selectedLanguage === "en" ? accent ?? localStorage.getItem(`${key}.accent`) ?? "original" : "original";
     localStorage.setItem(`${key}.language`, selectedLanguage);
+    localStorage.setItem(`${key}.accent`, selectedAccent);
     const userId = pipelineUserId();
-    const job = await startPipeline(file, userId, selectedLanguage);
+    const job = await startPipeline(file, userId, selectedLanguage, selectedAccent);
     localStorage.setItem(key, job.run_id);
     localStorage.setItem("rehearse.lastRun", job.run_id);
     localStorage.removeItem(`${key}.error`);

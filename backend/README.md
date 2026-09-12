@@ -325,9 +325,46 @@ calls: one joint visual/audio analysis returning two arrays, and one script revi
 
 ## Practice word duration display
 
-Each timed word has a translucent clickable box and a small start–end label in
-seconds (for example, `0.20–0.40s`). Box width uses 320 pixels per second of spoken
-duration, with a 64-pixel readability minimum and the available container width as
+Each timed word has a translucent clickable box and a small start–end label inside the lower edge in
+seconds (for example, `0.2–0.4s`). Box width uses 160 pixels per second of spoken
+duration, with a 56-pixel readability minimum and the available container width as
 a maximum. Widths and labels follow reference timing during guided practice and
 the selected trial's alignment during trial playback. Existing active-word tracking
 and click-to-seek behavior are retained.
+
+## Target accent for vocal feedback and TTS
+
+The frontend accepts a user-selected `accent` with English (`language=en`):
+`original` (default), `american`, `british`, `indian`, or `australian`. The same
+value is sent to Gemini's vocal analysis and the reference TTS stage. Gemini uses
+the selected accent as a practice target for pronunciation, stress, rhythm and
+intonation; it distinguishes intelligibility issues from optional differences to
+the target. It does not apply this target to visual/nonverbal feedback or rewrite
+the original transcript. Korean uses `original`; other combinations are rejected
+before generation. Selection is stored in run manifests and survives frontend retries.
+
+`original` keeps the configured TTS model and the clone's existing accent. An explicit
+English accent uses **Eleven v3 (`eleven_v3`)** with the same cached IVC voice ID and
+one of the provider's documented accent tags. V3 uses Natural stability (0.5), and
+its 5,000-character input limit includes the tag. No extra cloning or alignment
+request is introduced for an already cached voice. The saved improved script stays
+unchanged: only the TTS input receives the accent tag. An injected leading tag is
+removed from returned character alignment, without shifting audio timestamps, so it
+never appears as a word in Practice.
+
+Accent cues guide generation; their strength and voice similarity vary by source
+voice. Selecting an accent does not mean changing the speaker's nationality or
+judging their native accent as wrong. V3 model availability and charges follow the
+existing ElevenLabs account; Google Cloud credits do not cover ElevenLabs.
+Metadata records `accent`, `target_accent`, and the TTS model/requested accent.
+Existing saved speech is not regenerated when the selection changes.
+
+```bash
+curl http://localhost:8000/api/pipeline \
+  -F 'file=@test-input.mov' -F 'user_id=demo-user' \
+  -F 'language=en' -F 'accent=british'
+```
+
+`POST /api/video/analyze` and `POST /api/tts/generate` also accept `accent`.
+[ElevenLabs accent tags](https://elevenlabs.io/blog/eleven-v3-audio-tags-emulating-accents-with-precision)
+explain the supported direction and its voice-dependent behavior.

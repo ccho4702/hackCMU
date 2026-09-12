@@ -16,6 +16,7 @@ from requests.exceptions import RequestException
 from backend.common.config import google_project
 from backend.common.gemini import session as gemini_session, generate_endpoint
 from backend.common.language import Language, NAMES, resolve_language
+from backend.common.accent import Accent, ACCENT_NAMES, validate_accent
 from backend.common.media import ffmpeg_path
 from backend.common.logging import log_event, save_json
 
@@ -151,8 +152,9 @@ def video_duration(path):
 
 
 def run_analysis(path, output, project, model, duration, session, max_attempts=3,
-                 retry_delay=2, sleep=time.sleep, timeout=240, language: Language | None = None):
+                 retry_delay=2, sleep=time.sleep, timeout=240, language: Language | None = None, accent: Accent = 'original'):
     language = resolve_language(language)
+    accent = validate_accent(accent, language)
     if not 1 <= max_attempts <= 10 or retry_delay < 0 or duration <= 0:
         raise ValueError("Invalid attempt count, delay, or duration")
     output.mkdir(parents=True, exist_ok=True)
@@ -161,6 +163,15 @@ def run_analysis(path, output, project, model, duration, session, max_attempts=3
     run_dir.mkdir(parents=True)
     log_path = run_dir / "attempts.jsonl"
     base_prompt = PROMPT.replace("Korean", NAMES[language]) if language else PROMPT
+    if accent != 'original':
+        base_prompt += (f"\nThe user-selected practice target is {ACCENT_NAMES[accent]}. "
+            "For vocal_feedback only, use this target's pronunciation, stress, rhythm and intonation as a practice reference. "
+            "Separate an intelligibility problem from an optional stylistic difference to the chosen target. "
+            "For a target-specific suggestion, explicitly describe it as target-accent practice, not a speaking defect. "
+            "These are broad accent families with legitimate regional variation; do not impose one universal correct form. "
+            "Do not infer the speaker's nationality or label the speaker's original accent. "
+            "Base suggestions on clearly audible evidence, not stereotypes or spelling. "
+            "Do not apply the accent target to nonverbal_feedback.\n")
     prompt = base_prompt + f"\nVideo duration: {duration:.3f} seconds. No end_time may exceed it.\n"
     (run_dir / "prompt.txt").write_text(prompt, encoding="utf-8")
     (output / "presentation-analysis-prompt.txt").write_text(prompt, encoding="utf-8")
@@ -178,7 +189,7 @@ def run_analysis(path, output, project, model, duration, session, max_attempts=3
         },
     }
     endpoint = generate_endpoint(project, model)
-    meta = {"run_id": run_id, "project": project, "requested_model": model, "language": language,
+    meta = {"run_id": run_id, "project": project, "requested_model": model, "language": language, "target_accent": accent,
             "submitted_video": str(path), "duration_seconds": duration,
             "sampling_fps": 4, "audio_included": True, "assessment_scope": ["visual", "vocal"], "max_attempts": max_attempts,
             "attempt_count": 0, "retry_count": 0, "status": "running",
@@ -285,13 +296,14 @@ def main():
     parser.add_argument("--output-dir", type=Path, default=ROOT / "outputs")
     parser.add_argument("--max-attempts", type=int, choices=range(1, 11), default=3, help="Total attempts including the first request (default: 3)")
     parser.add_argument("--language", choices=("en", "ko"), help="Feedback language; omitted retains legacy Korean")
+    parser.add_argument("--accent", choices=("original", *ACCENT_NAMES), default="original")
     args = parser.parse_args()
     path = args.input.resolve()
     duration = video_duration(path)
     with gemini_session() as session:
         return run_analysis(path, args.output_dir.resolve(),
                             google_project(), os.getenv("GEMINI_VIDEO_MODEL", "gemini-3.8-flash"),
-                            duration, session, max_attempts=args.max_attempts, language=args.language)
+                            duration, session, max_attempts=args.max_attempts, language=args.language, accent=args.accent)
 
 
 if __name__ == "__main__":

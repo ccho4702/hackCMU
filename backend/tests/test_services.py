@@ -94,13 +94,16 @@ class ServiceTests(unittest.TestCase):
              patch('backend.pipeline.service.run_analysis', side_effect=fake_video) as visual, \
              patch('backend.pipeline.service.analyze_script', return_value=improved) as script, \
              patch('backend.pipeline.service.synthesize', side_effect=fake_tts) as speech:
-            result=process_recording(source,'demo',tts_client=Mock(),language='ko')
+            result=process_recording(source,'demo',tts_client=Mock(),language='en',accent='british')
         self.assertEqual(result['status'],'success')
         self.assertEqual(visual.call_count,1); self.assertEqual(script.call_count,1); self.assertEqual(speech.call_count,1)
         self.assertEqual(asr.call_count,1)
-        self.assertEqual(result['language'], 'ko')
+        self.assertEqual(result['language'], 'en')
+        self.assertEqual(result['accent'], 'british')
+        for call in (visual, speech):
+            self.assertEqual(call.call_args.kwargs['accent'], 'british')
         for call in (visual, asr, script, speech):
-            self.assertEqual(call.call_args.kwargs['language'], 'ko')
+            self.assertEqual(call.call_args.kwargs['language'], 'en')
         self.assertEqual(script.call_args.kwargs['script'],'hello')
         self.assertNotIn('video_path',script.call_args.kwargs)
         self.assertEqual(speech.call_args.args[2], 'Hello everyone.')
