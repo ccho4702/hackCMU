@@ -12,27 +12,6 @@ import { useWebcam } from "./useWebcam";
 import { pipelineUserId } from "@/lib/session";
 import { useRequireUser } from "@/lib/useUser";
 
-const CAMERA_STATUS = {
-  idle: { text: "Off", tone: "off" },
-  starting: { text: "Starting", tone: "pending" },
-  live: { text: "Live", tone: "ok" },
-  error: { text: "Error", tone: "error" },
-};
-
-const SERVER_STATUS = {
-  off: { text: "Off", tone: "off" },
-  connecting: { text: "Connecting", tone: "pending" },
-  connected: { text: "Connected", tone: "ok" },
-  disconnected: { text: "Reconnecting", tone: "error" },
-};
-
-const TONE_DOT = {
-  off: "bg-slate-300",
-  pending: "bg-amber-400 animate-pulse",
-  ok: "bg-emerald-500",
-  error: "bg-rose-500",
-};
-
 export default function StreamingPage() {
   useRequireUser();   // 로그인 없으면 /login 으로
   const router = useRouter();
@@ -132,7 +111,7 @@ export default function StreamingPage() {
     serverStatus === "connected" && result && !counts.pose && !counts.face && !counts.hands;
 
   return (
-    <div className="min-h-screen bg-[#f4f7ff] font-sans text-slate-900">
+    <div className="min-h-screen bg-white font-sans text-slate-900">
       <header className="sticky top-0 z-10 border-b border-slate-200/70 bg-white/80 backdrop-blur">
         <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3 px-4 py-3 sm:px-6">
           <div className="flex items-center gap-3">
@@ -149,16 +128,12 @@ export default function StreamingPage() {
             </div>
           </div>
           <nav className="flex items-center gap-4 text-xs font-medium text-slate-500" aria-label="Studio pages"><Link href="/streaming" className="text-primary" aria-current="page">Live Session</Link><Link href="/evaluation">Evaluation</Link><Link href="/practice">Voice Practice</Link></nav>
-          <div className="flex gap-2">
-            <StatusPill label="Camera" {...CAMERA_STATUS[cameraStatus]} />
-            <StatusPill label="Overlay" {...(landmarksAvailable ? SERVER_STATUS[serverStatus] : { text: "Unavailable", tone: "off" })} />
-          </div>
         </div>
       </header>
 
       <main className="mx-auto grid max-w-7xl gap-6 px-4 py-6 sm:px-6 lg:grid-cols-[minmax(0,1fr)_320px]">
         {/* ---------- Camera stage ---------- */}
-        <section className="relative aspect-video overflow-hidden rounded-3xl bg-slate-950 shadow-xl shadow-primary/10 ring-1 ring-slate-900/5">
+        <section className="relative aspect-video overflow-hidden rounded-3xl bg-slate-950 shadow-lg shadow-slate-900/10">
           {/* Mirrored like a selfie view; video and mask flip together so they stay aligned */}
           <div className="absolute inset-0 -scale-x-100">
             <video
@@ -292,7 +267,7 @@ function EmptyState({ starting, uploading, error, onStart }) {
         <button
           onClick={onStart}
           disabled={starting || uploading}
-          className="rounded-full bg-primary px-6 py-2.5 text-sm font-semibold text-white shadow-lg shadow-primary/40 transition-colors hover:bg-primary-hover disabled:opacity-60"
+          className="rounded-full bg-primary px-6 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-primary-hover disabled:opacity-60"
         >
           {uploading ? "Please wait…" : error ? "Try again" : "Start recording"}
         </button>
@@ -301,21 +276,11 @@ function EmptyState({ starting, uploading, error, onStart }) {
   );
 }
 
-function StatusPill({ label, text, tone }) {
-  return (
-    <span className="flex items-center gap-2 rounded-full bg-white px-3 py-1.5 text-xs ring-1 ring-slate-200">
-      <span className={`size-2 rounded-full ${TONE_DOT[tone]}`} />
-      <span className="text-slate-500">{label}</span>
-      <span className="font-medium text-slate-900">{text}</span>
-    </span>
-  );
-}
-
 function Card({ title, action, children }) {
   return (
-    <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200/70">
+    <div className="rounded-2xl bg-[#f5f5f7] p-5">
       <div className="mb-3 flex items-center justify-between">
-        <h2 className="text-xs font-semibold uppercase tracking-wider text-slate-500">{title}</h2>
+        <h2 className="text-[15px] font-semibold text-slate-900">{title}</h2>
         {action}
       </div>
       {children}
@@ -325,7 +290,7 @@ function Card({ title, action, children }) {
 
 function Stat({ label, value, unit }) {
   return (
-    <div className="rounded-xl bg-[#f4f7ff] px-3 py-3">
+    <div className="rounded-xl bg-white px-3 py-3">
       <p className="text-xs text-slate-500">{label}</p>
       <p className="mt-1 text-2xl font-semibold tabular-nums text-slate-900">
         {value}

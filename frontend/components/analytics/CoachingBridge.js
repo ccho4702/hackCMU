@@ -35,14 +35,14 @@ export function CoachingBridge({ analysisId }) {
     setBusy(false);
   }
   return (
-    <section className="flex flex-wrap items-center justify-between gap-4 rounded-2xl bg-[radial-gradient(ellipse_at_top_left,#132f6b_0%,#020617_80%)] p-5 text-white shadow-xl shadow-primary/10">
+    <section className="flex flex-wrap items-center justify-between gap-4 overflow-hidden rounded-2xl bg-slate-950 bg-[url(/banner_dark.png)] bg-cover bg-center p-5 text-white shadow-xl shadow-primary/10 sm:p-6">
       <div className="flex min-w-0 flex-1 items-start gap-4">
-        <div className="grid size-11 shrink-0 place-items-center rounded-xl bg-primary/20 text-[#8fb4ff] ring-1 ring-primary/40">
+        <div className="grid size-11 shrink-0 place-items-center rounded-xl bg-white/10 text-white ring-1 ring-white/20 backdrop-blur-md">
           <AudioLines className="size-5" />
         </div>
         <div className="min-w-0">
-          <p className="text-sm font-semibold">Script &amp; voice practice</p>
-          <p className="mt-1 text-xs leading-relaxed text-slate-400">
+          <p className="text-sm font-semibold text-shadow-md">Script &amp; voice practice</p>
+          <p className="mt-1 text-xs leading-relaxed text-slate-300 text-shadow-sm">
             {runId
               ? "Your delivery feedback, revised script, and voice reference can be followed in Evaluation as processing completes."
               : "Keep this facial analysis and add a revised script, TTS reference, and repeatable voice trials."}
@@ -71,7 +71,7 @@ export function CoachingBridge({ analysisId }) {
       </div>
       {runId ? (
         <Link
-          className="flex items-center gap-1.5 rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-primary/40 transition-colors hover:bg-primary-hover"
+          className="flex items-center gap-1.5 rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-primary-hover"
           href={`/evaluation?run=${runId}&analysis=${analysisId}`}
         >
           Open evaluation

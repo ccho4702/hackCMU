@@ -57,9 +57,9 @@ def create_reference(
             if item.get("words") is not None:
                 validate_words(item["words"])
     except Exception:
-        raise HTTPException(status_code=400, detail='script 는 [{"id","text"}] JSON 배열이어야 합니다')
+        raise HTTPException(status_code=400, detail='script must be a JSON array of [{"id","text"}]')
     if len(items) != len(audio):
-        raise HTTPException(status_code=400, detail=f"script {len(items)}문장, audio {len(audio)}개. 수가 같아야 합니다")
+        raise HTTPException(status_code=400, detail=f"script has {len(items)} sentences but {len(audio)} audio files; the counts must match")
 
     ref_id = ObjectId()
     rel_dir = f"{user_id}/references/{ref_id}"
@@ -106,5 +106,5 @@ def list_references(question: Optional[str] = None, user_id: str = Depends(curre
 def get_reference(ref_id: str, user_id: str = Depends(current_user_id)):
     doc = db.references().find_one({"_id": parse_oid(ref_id), "user_id": user_id})
     if not doc:
-        raise HTTPException(status_code=404, detail="reference 가 없습니다")
+        raise HTTPException(status_code=404, detail="Reference not found")
     return present(doc)

@@ -21,7 +21,7 @@ export function OverlayCard({ enabled, onEnabledChange, mode, onModeChange }) {
                 onClick={() => onModeChange(option.id)}
                 className={cn(
                   "flex w-full items-center gap-3 rounded-xl px-2 py-2 text-left text-sm transition-colors disabled:cursor-not-allowed",
-                  selected ? "bg-primary/5 font-medium text-primary" : "hover:bg-slate-50",
+                  selected ? "bg-primary/5 font-medium text-primary" : "hover:bg-white",
                 )}
               >
                 <span

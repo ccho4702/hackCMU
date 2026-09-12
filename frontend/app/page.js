@@ -50,6 +50,7 @@ export default function HomePage() {
           href="/practice"
           icon={<Mic className="size-6" />}
           eyebrow="Voice practice"
+          tone="navy"
           title="Practice Your Next Take"
           description="Read your improved script along with your own reference voice, then compare pronunciation, pace, and rhythm on every trial."
         />
@@ -58,26 +59,47 @@ export default function HomePage() {
   );
 }
 
-function HomeCard({ href, icon, eyebrow, live = false, title, description }) {
+// Accent colors per card (full class names so Tailwind picks them up).
+const TONES = {
+  primary: {
+    card: "hover:ring-primary/40",
+    icon: "bg-primary/10 text-primary group-hover:bg-primary",
+    dot: "bg-primary",
+    arrow: "bg-primary",
+  },
+  navy: {
+    card: "hover:ring-blue-900/40",
+    icon: "bg-blue-900/10 text-blue-900 group-hover:bg-blue-900",
+    dot: "bg-blue-900",
+    arrow: "bg-blue-900",
+  },
+};
+
+function HomeCard({ href, icon, eyebrow, live = false, tone = "primary", title, description }) {
+  const colors = TONES[tone];
   return (
     <Link
       href={href}
-      className="group mt-5 flex items-center gap-4 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200/70 transition duration-200 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-primary/10 hover:ring-primary/40 sm:gap-6 sm:p-8"
+      className={`group mt-5 flex items-center gap-4 rounded-2xl bg-[#f5f5f7] p-5 transition hover:ring-1 duration-200 hover:-translate-y-0.5 sm:gap-6 sm:p-8 ${colors.card}`}
     >
-      <span className="grid size-12 shrink-0 place-items-center rounded-2xl bg-primary/10 text-primary transition-colors group-hover:bg-primary group-hover:text-white sm:size-14">
+      <span
+        className={`grid size-12 shrink-0 place-items-center rounded-2xl transition-colors group-hover:text-white sm:size-14 ${colors.icon}`}
+      >
         {icon}
       </span>
       <span className="min-w-0 flex-1">
         <span className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-slate-500">
           <span
-            className={`size-1.5 rounded-full ${live ? "animate-pulse bg-purple-500" : "bg-primary"}`}
+            className={`size-1.5 rounded-full ${live ? "animate-pulse bg-primary" : colors.dot}`}
           />
           {eyebrow}
         </span>
         <span className="mt-1 block text-lg font-semibold sm:text-xl">{title}</span>
         <span className="mt-1 block text-sm text-slate-500">{description}</span>
       </span>
-      <span className="grid size-10 shrink-0 place-items-center rounded-full bg-primary text-white shadow-lg shadow-primary/30 transition-transform group-hover:translate-x-1 sm:size-12">
+      <span
+        className={`grid size-10 shrink-0 place-items-center rounded-full text-white transition-transform group-hover:translate-x-1 sm:size-12 ${colors.arrow}`}
+      >
         <ArrowRight className="size-5" />
       </span>
     </Link>

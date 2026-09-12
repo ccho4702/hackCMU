@@ -36,7 +36,7 @@ export function UploadPanel() {
   return (
     <div className="w-full">
       <div className="mb-4"><LanguageSelect value={language} onChange={setLanguage} accent={accent} onAccentChange={setAccent} disabled={busy} /></div>
-      <label className="group flex cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed border-primary/25 bg-[#f4f7ff] px-6 py-14 text-center transition-colors hover:border-primary/50 hover:bg-primary/5">
+      <label className="group flex cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed border-primary/25 bg-white px-6 py-14 text-center transition-colors hover:border-primary/50 hover:bg-primary/5">
         <span className="grid size-14 place-items-center rounded-2xl bg-primary/10 text-primary ring-1 ring-primary/30">
           <UploadCloud className="size-6" />
         </span>

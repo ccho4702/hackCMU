@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { LoaderCircle, TriangleAlert } from "lucide-react";
-import { ErrorNote, PageShell, Stage, StageMessage, StatusPill } from "@/components/ui/studio";
+import { ErrorNote, PageShell, Stage, StageMessage } from "@/components/ui/studio";
 import { formatClock, formatPercent } from "@/lib/analysis/format";
 
 export function ProgressScreen({ progress, error }) {
@@ -12,13 +12,6 @@ export function ProgressScreen({ progress, error }) {
       title="Session Review"
       subtitle="Analyzing your session"
       mock={progress?.mock}
-      right={
-        <StatusPill
-          label="Analysis"
-          text={error ? "Failed" : (progress?.status ?? "Queued")}
-          tone={error ? "error" : "pending"}
-        />
-      }
     >
       <Stage className="mx-auto w-full max-w-4xl">
         <StageMessage
@@ -37,7 +30,7 @@ export function ProgressScreen({ progress, error }) {
               <ErrorNote>{error}</ErrorNote>
               <Link
                 href="/"
-                className="rounded-full bg-primary px-6 py-2.5 text-sm font-semibold text-white shadow-lg shadow-primary/40 transition-colors hover:bg-primary-hover"
+                className="rounded-full bg-primary px-6 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-primary-hover"
               >
                 Back to upload
               </Link>

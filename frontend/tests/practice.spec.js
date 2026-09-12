@@ -9,7 +9,7 @@ test.beforeEach(async ({page}) => {
 
 const runId='b'.repeat(32);
 const words=[{text:'Hello',t0:0,t1:.4},{text:'world.',t0:.5,t1:1}];
-const goodScore={status:'ok',pronunciation_score:.84,rate_ratio:1.12,rhythm_score:.78,intonation_score:.91,stress_match:.82,word_diff:[{text:'world.',note:'늘어짐',gt_dur:.5,user_dur:.7}],words:words.map(w=>({text:w.text,user:{t0:w.t0+.1,t1:w.t1+.1}}))};
+const goodScore={status:'ok',pronunciation_score:.84,rate_ratio:1.12,rhythm_score:.78,intonation_score:.91,stress_match:.82,word_diff:[{text:'world.',note:'Drawn out',gt_dur:.5,user_dur:.7}],words:words.map(w=>({text:w.text,user:{t0:w.t0+.1,t1:w.t1+.1}}))};
 
 async function mockMic(page) {
   await page.addInitScript(()=>{

@@ -52,11 +52,11 @@ export default function LoginPage() {
           </div>
         </div>
         <form onSubmit={submit} className="flex flex-col gap-4">
-          <label className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+          <label className="text-sm font-medium text-slate-700">
             Name
             <input className={field} value={name} onChange={(e) => setName(e.target.value)} placeholder="Jimin Kim" autoComplete="name" required />
           </label>
-          <label className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+          <label className="text-sm font-medium text-slate-700">
             Email
             <input className={field} type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@andrew.cmu.edu" autoComplete="email" required />
           </label>
@@ -64,7 +64,7 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={busy}
-            className="mt-1 rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-primary/30 transition-colors hover:bg-primary-hover disabled:opacity-60"
+            className="mt-1 rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-primary-hover disabled:opacity-60"
           >
             {busy ? "Signing in…" : "Continue"}
           </button>

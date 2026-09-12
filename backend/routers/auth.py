@@ -25,7 +25,7 @@ def login(body: LoginBody):
     email = body.email.strip().lower()
     name = body.name.strip()
     if "@" not in email or not name:
-        raise HTTPException(status_code=400, detail="이름과 이메일이 필요합니다")
+        raise HTTPException(status_code=400, detail="Name and email are required")
     doc = db.users().find_one_and_update(
         {"email": email},
         {"$set": {"name": name}, "$setOnInsert": {"created_at": db.now()}},
