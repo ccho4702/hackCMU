@@ -8,12 +8,13 @@ import { PageShell } from "@/components/ui/studio";
 import { UploadPanel } from "@/components/upload/UploadPanel";
 import OverviewDemo from "@/components/OverviewDemo";
 import OverviewThesis from "@/components/OverviewThesis";
+import CurtainIntro from "@/components/CurtainIntro";
 
 export default function HomePage(){
   const router=useRouter();
   const [upload,setUpload]=useState(false);
   useEffect(()=>{const run=new URLSearchParams(window.location.search).get("run");if(run&&/^[a-f0-9]{32}$/.test(run))router.replace(`/evaluation?run=${run}`);},[router]);
-  return <PageShell><div className="studio-home">
+  return <><CurtainIntro /><div id="studio-content" tabIndex={-1}><PageShell><div className="studio-home">
     <div className="studio-filter"><span className="selected">Overview</span><Link href="/leaderboard">Your sessions</Link></div>
     <section className="studio-feature">
       <div className="feature-art"><Image src="/studio-cover.jpg" alt="Blue flowing fabric" width={600} height={600} priority/><AudioLines size={54} strokeWidth={1.4}/><span>THE NEXT TAKE</span></div>
@@ -31,6 +32,6 @@ export default function HomePage(){
     </section>
     <section className="studio-list"><div className="studio-section-heading"><h2>Built around your voice</h2><span>YOUR REHEARSAL TOOLKIT</span></div>{[["01","See your delivery","Eye contact, gestures & posture","/evaluation"],["02","Shape your message","Choose a language & script style","/live"],["03","Find your rhythm","Reference audio & word-by-word practice","/practice"]].map(([n,title,detail,href])=><Link href={href} key={n}><span>{n}</span><strong>{title}</strong><p>{detail}</p><ArrowUpRight size={17}/></Link>)}</section>
 
-  </div></PageShell>;
+  </div></PageShell></div></>;
 }
 function ListBars(){return <div className="album-bars" aria-hidden="true">{[24,50,32,74,100,62,88,45,68,32,55,25].map((h,i)=><b key={i} style={{height:h}}/>)}</div>;}
