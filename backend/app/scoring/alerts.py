@@ -181,6 +181,10 @@ class AlertTracker:
     def all_alerts(self) -> list[DeliveryAlert]:
         return list(self.history)
 
+    def timeline_alerts(self) -> list[DeliveryAlert]:
+        """Closed alerts plus currently open ones, for timeline visualization."""
+        return [*self.history, *self.active_alerts()]
+
 
 def alerts_from_windows(
     windows: list[WindowAnalysis],

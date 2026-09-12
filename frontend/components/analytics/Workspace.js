@@ -37,7 +37,7 @@ export function Workspace({ result, videoUrl }) {
 
   const [playing, setPlaying] = useState(false);
   const [meshEnabled, setMeshEnabled] = useState(true);
-  const [meshMode, setMeshMode] = useState("contour");
+  const [meshMode, setMeshMode] = useState("full");
   const [ui, setUi] = useState({
     timeMs: 0,
     frame: result.frames[0] ?? null,
@@ -50,7 +50,7 @@ export function Workspace({ result, videoUrl }) {
   const rect = useDisplayRect(container, videoEl);
   const durationMs = result.video.durationMs;
   const activeAlerts = useMemo(() => alertsAt(alerts, ui.timeMs), [alerts, ui.timeMs]);
-  const notices = useAlertToasts(activeAlerts, ui.timeMs);
+  const notices = useAlertToasts(activeAlerts, ui.timeMs, !playing);
   const isLive = result.video.source === "live";
 
   const bindVideo = useCallback((node) => {
@@ -165,6 +165,8 @@ export function Workspace({ result, videoUrl }) {
               durationMs={durationMs}
               windows={result.windows}
               segments={result.segments}
+              alerts={alerts}
+              thresholds={result.config.thresholds}
               selection={null}
               onSeek={seek}
               onSelect={() => undefined}

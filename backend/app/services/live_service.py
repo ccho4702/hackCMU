@@ -195,6 +195,7 @@ class LiveSessionService:
                 window=session.windows[-1] if session.windows else None,
                 windows=recent,
                 alerts=session.tracker.active_alerts(),
+                alert_history=session.tracker.timeline_alerts(),
             )
 
     def stop(self, session_id: str) -> LiveSessionStopResult:

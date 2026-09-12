@@ -140,6 +140,7 @@ def test_live_session_mock_tick_and_stop(client: TestClient):
     tick = last.json()
     assert tick["timestampMs"] >= 0
     assert "alerts" in tick
+    assert "alertHistory" in tick
     assert "windows" in tick
 
     stopped = client.post(f"/api/v1/live/sessions/{session_id}/stop")

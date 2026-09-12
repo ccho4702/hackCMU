@@ -1,8 +1,9 @@
 "use client";
 
 import { Card, StatTile } from "@/components/ui/studio";
+import { MetricHint } from "@/components/ui/MetricHint";
 import { formatClock, formatDegrees, formatScore, unavailableReason } from "@/lib/analysis/format";
-import { METRIC_KEYS, METRIC_LABELS } from "@/lib/types/analysis";
+import { METRIC_KEYS, METRIC_LABELS, metricKeyFromAlert } from "@/lib/types/analysis";
 import { cn } from "@/lib/utils";
 
 const TONE_BAR = {
@@ -15,11 +16,14 @@ const TONE_TEXT = {
   warning: "text-amber-600",
 };
 
-function MetricRow({ label, value, unavailable, tone }) {
+function MetricRow({ label, metric, value, unavailable, tone }) {
   return (
     <div className="py-1.5">
-      <div className="flex items-baseline justify-between gap-4">
-        <span className="text-sm text-slate-600">{label}</span>
+      <div className="flex items-center justify-between gap-4">
+        <span className="inline-flex items-center gap-1 text-sm text-slate-600">
+          {label}
+          <MetricHint metric={metric} side="top" />
+        </span>
         {value == null ? (
           <span className="text-right text-xs text-slate-400">
             {unavailable ?? "Measurement unavailable"}
@@ -51,7 +55,9 @@ export function MomentInspector({
 }) {
   const faceDetected = frame?.quality.faceDetected ?? false;
   const gazeValid = frame?.quality.gazeValid ?? false;
-  const tones = Object.fromEntries(alerts.map((alert) => [alert.metric, alert.severity]));
+  const tones = Object.fromEntries(
+    alerts.map((alert) => [metricKeyFromAlert(alert.metric), alert.severity]),
+  );
 
   const blendshapes = frame?.blendshapes
     ? Object.entries(frame.blendshapes)
@@ -68,6 +74,7 @@ export function MomentInspector({
         {METRIC_KEYS.map((key) => (
           <MetricRow
             key={key}
+            metric={key}
             label={METRIC_LABELS[key]}
             value={window?.metrics[key]}
             unavailable={unavailableReason(key, faceDetected, gazeValid)}

@@ -1,6 +1,7 @@
 "use client";
 
 import { Card } from "@/components/ui/studio";
+import { MetricHint } from "@/components/ui/MetricHint";
 import { formatClock, formatPercent, formatScore } from "@/lib/analysis/format";
 import { METRIC_KEYS, METRIC_LABELS } from "@/lib/types/analysis";
 
@@ -24,7 +25,10 @@ export function SummaryPanel({ result }) {
             {METRIC_KEYS.map((key) => (
               <div key={key}>
                 <div className="flex justify-between text-sm">
-                  <span className="text-slate-600">{METRIC_LABELS[key]}</span>
+                  <span className="inline-flex items-center gap-1 text-slate-600">
+                    {METRIC_LABELS[key]}
+                    <MetricHint metric={key} side="top" />
+                  </span>
                   <span className="font-mono tabular-nums text-slate-900">
                     {formatScore(summary[key])}
                   </span>

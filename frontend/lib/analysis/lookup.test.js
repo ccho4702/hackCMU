@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { alertsAt, findNearestIndex, frameAt, windowAt } from "@/lib/analysis/lookup";
+import { metricKeyFromAlert, scoreTone } from "@/lib/types/analysis";
 
 function frame(ms, detected = true) {
   return {
@@ -77,5 +78,20 @@ describe("timestamp lookup", () => {
     expect(alertsAt(alerts, 1000)[0]?.id).toBe("alrt_1");
     expect(alertsAt(alerts, 2399)).toHaveLength(1);
     expect(alertsAt(alerts, 2400)).toHaveLength(0);
+  });
+});
+
+describe("metric helpers", () => {
+  it("maps snake_case alert metrics onto frontend keys", () => {
+    expect(metricKeyFromAlert("expression_activity")).toBe("expressionActivity");
+    expect(metricKeyFromAlert("gaze")).toBe("gaze");
+  });
+
+  it("classifies scores against warning and critical thresholds", () => {
+    const gaze = { warning: 64, critical: 42 };
+    expect(scoreTone(90, gaze)).toBe("ok");
+    expect(scoreTone(50, gaze)).toBe("warning");
+    expect(scoreTone(30, gaze)).toBe("critical");
+    expect(scoreTone(null, gaze)).toBe("ok");
   });
 });

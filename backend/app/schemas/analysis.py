@@ -64,7 +64,7 @@ class MetricThreshold(APIModel):
 
 
 class ThresholdConfig(APIModel):
-    gaze: MetricThreshold = Field(default_factory=lambda: MetricThreshold(warning=60, critical=40))
+    gaze: MetricThreshold = Field(default_factory=lambda: MetricThreshold(warning=64, critical=42))
     expression_activity: MetricThreshold = Field(
         default_factory=lambda: MetricThreshold(warning=55, critical=35)
     )
@@ -315,6 +315,7 @@ class LiveTick(APIModel):
     window: WindowAnalysis | None = None
     windows: list[WindowAnalysis] = Field(default_factory=list)
     alerts: list[DeliveryAlert] = Field(default_factory=list)
+    alert_history: list[DeliveryAlert] = Field(default_factory=list)
 
 
 class LiveSessionStopResult(APIModel):

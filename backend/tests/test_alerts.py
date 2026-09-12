@@ -90,3 +90,21 @@ def test_hysteresis_band_holds_warning():
     assert classify_score(66, warning=60, critical=40, hysteresis=5, current="warning") == "normal"
     assert classify_score(None, warning=60, critical=40, hysteresis=5, current="warning") == "normal"
     assert classify_score(50, warning=60, critical=40, hysteresis=5, current="normal") == "warning"
+
+
+def test_timeline_alerts_include_open_and_closed():
+    tracker = AlertTracker(enter_ms=200, exit_ms=200, hysteresis=5)
+    thresholds = ThresholdConfig()
+    scores_low = {"gaze": 20, "expression_activity": 80, "stability": 80, "expressiveness": 80}
+    scores_ok = {"gaze": 90, "expression_activity": 80, "stability": 80, "expressiveness": 80}
+    tracker.observe(1000, scores_low, thresholds)
+    tracker.observe(1400, scores_low, thresholds)
+    assert tracker.active_alerts()
+    open_only = tracker.timeline_alerts()
+    assert open_only and open_only[-1].end_ms is None
+    tracker.observe(1800, scores_ok, thresholds)
+    tracker.observe(2200, scores_ok, thresholds)
+    closed = tracker.timeline_alerts()
+    assert closed
+    assert all(item.end_ms is not None for item in closed)
+    assert tracker.active_alerts() == []

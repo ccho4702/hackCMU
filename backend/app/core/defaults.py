@@ -46,20 +46,21 @@ ALERT_MESSAGES: dict[str, dict[str, str]] = {
 }
 
 DEFAULT_THRESHOLDS: dict[str, dict[str, int]] = {
-    "gaze": {"warning": 60, "critical": 40},
+    "gaze": {"warning": 64, "critical": 42},
     "expressionActivity": {"warning": 55, "critical": 35},
     "stability": {"warning": 65, "critical": 45},
     "expressiveness": {"warning": 55, "critical": 35},
 }
 
 # Piecewise maps: (x, score). Transparent, monotonic in segments.
+# Modest camera-relative drift stays in the OK band; a clear look-away drops below warning.
 GAZE_DEVIATION_BREAKPOINTS: list[tuple[float, float]] = [
     (0.0, 100.0),
-    (0.12, 92.0),
-    (0.22, 74.0),
-    (0.35, 48.0),
-    (0.55, 22.0),
-    (0.85, 0.0),
+    (0.11, 91.0),
+    (0.20, 76.0),
+    (0.32, 50.0),
+    (0.52, 22.0),
+    (0.80, 0.0),
 ]
 
 # Blendshape L2 velocity per second.

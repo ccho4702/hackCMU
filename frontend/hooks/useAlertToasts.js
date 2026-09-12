@@ -2,13 +2,26 @@
 
 import { useEffect, useRef, useState } from "react";
 
-export function useAlertToasts(active, timeMs) {
+function toNotice(alert) {
+  return {
+    id: alert.id,
+    message: alert.message,
+    severity: alert.severity,
+  };
+}
+
+export function useAlertToasts(active, timeMs, persist = false) {
   const [notices, setNotices] = useState([]);
   const seen = useRef(new Set());
   const lastTime = useRef(timeMs);
   const timers = useRef([]);
 
   useEffect(() => {
+    if (persist) {
+      lastTime.current = timeMs;
+      for (const alert of active) seen.current.add(alert.id);
+      return;
+    }
     if (timeMs + 400 < lastTime.current) {
       seen.current.clear();
     }
@@ -16,11 +29,7 @@ export function useAlertToasts(active, timeMs) {
     for (const alert of active) {
       if (seen.current.has(alert.id)) continue;
       seen.current.add(alert.id);
-      const notice = {
-        id: alert.id,
-        message: alert.message,
-        severity: alert.severity,
-      };
+      const notice = toNotice(alert);
       setNotices((current) => [...current.slice(-2), notice]);
       const leave = window.setTimeout(() => {
         setNotices((current) =>
@@ -32,7 +41,7 @@ export function useAlertToasts(active, timeMs) {
       }, 3300);
       timers.current.push(leave, remove);
     }
-  }, [active, timeMs]);
+  }, [active, timeMs, persist]);
 
   useEffect(() => {
     const ids = timers.current;
@@ -41,5 +50,6 @@ export function useAlertToasts(active, timeMs) {
     };
   }, []);
 
+  if (persist) return active.map(toNotice);
   return notices;
 }

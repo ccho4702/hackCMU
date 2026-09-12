@@ -56,7 +56,7 @@ export function LiveWorkspace() {
   const [language, setLanguage] = useState("en");
   const [session, setSession] = useState(null);
   const [meshEnabled, setMeshEnabled] = useState(true);
-  const [meshMode, setMeshMode] = useState("contour");
+  const [meshMode, setMeshMode] = useState("full");
   const [horizon, setHorizon] = useState(30_000);
   const [starting, setStarting] = useState(false);
   const [stopping, setStopping] = useState(false);
@@ -67,6 +67,7 @@ export function LiveWorkspace() {
     window: null,
     windows: [],
     alerts: [],
+    alertHistory: [],
   });
 
   const rect = useDisplayRect(container, videoEl);
@@ -137,6 +138,7 @@ export function LiveWorkspace() {
               window: tick.window,
               windows: tick.windows,
               alerts: tick.alerts,
+              alertHistory: tick.alertHistory ?? [],
             });
           })
           .catch((err) => {
@@ -375,6 +377,7 @@ export function LiveWorkspace() {
               viewStartMs={viewStartMs}
               windows={ui.windows}
               segments={[]}
+              alerts={ui.alertHistory}
               selection={null}
               interactive={false}
               onSeek={() => undefined}

@@ -13,6 +13,11 @@ import { connectionsFor, connectionsForRegion } from "@/lib/mesh/connections";
 
 const REGIONS = ["contour", "mouthBrows", "eyes"];
 
+function regionKey(region) {
+  if (region === "mouth_brows") return "mouthBrows";
+  return region;
+}
+
 function severityLevel(severity) {
   return severity === "critical" ? 2 : 1;
 }
@@ -20,16 +25,17 @@ function severityLevel(severity) {
 function strokeFor(level) {
   if (level <= 0.04) return null;
   const t = Math.min(1, level / 2);
-  const alpha = 0.55 + 0.4 * t;
+  const alpha = 0.36 + 0.22 * t;
   if (level < 1.35) return `rgba(245, 158, 11, ${alpha})`;
   return `rgba(239, 68, 68, ${alpha})`;
 }
 
 function strokeWidth(region, level) {
   const t = Math.min(1, level / 2);
-  if (region === "eyes") return 2.8 + 1.6 * t;
-  if (region === "mouthBrows") return 2.6 + 1.4 * t;
-  return 2.8 + 1.5 * t;
+  if (region === "eyes") return 1.25 + 0.35 * t;
+  if (region === "brows") return 0.9 + 0.25 * t;
+  if (region === "mouth") return 1.1 + 0.3 * t;
+  return 1.15 + 0.3 * t;
 }
 
 export const MeshOverlay = forwardRef(function MeshOverlay({ rect, enabled, mode }, ref) {
@@ -54,7 +60,9 @@ export const MeshOverlay = forwardRef(function MeshOverlay({ rect, enabled, mode
   const targets = useCallback(() => {
     const next = { eyes: 0, contour: 0, mouthBrows: 0 };
     for (const alert of alertsRef.current) {
-      next[alert.region] = Math.max(next[alert.region], severityLevel(alert.severity));
+      const key = regionKey(alert.region);
+      if (!(key in next)) continue;
+      next[key] = Math.max(next[key], severityLevel(alert.severity));
     }
     return next;
   }, []);
@@ -122,23 +130,32 @@ export const MeshOverlay = forwardRef(function MeshOverlay({ rect, enabled, mode
         const color = strokeFor(level);
         if (!color) continue;
         ctx.strokeStyle = color;
-        ctx.lineWidth = strokeWidth(region, level);
         ctx.lineCap = "round";
         ctx.lineJoin = "round";
-        ctx.beginPath();
-        for (const [a, b] of connectionsForRegion(region)) {
-          const pa = frame.landmarks[a];
-          const pb = frame.landmarks[b];
-          if (!pa || !pb) continue;
-          const sa = landmarkToScreenPoint(pa, display);
-          const sb = landmarkToScreenPoint(pb, display);
-          ctx.moveTo(sa.x, sa.y);
-          ctx.lineTo(sb.x, sb.y);
+        const parts =
+          region === "mouthBrows"
+            ? [
+                ["brows", connectionsFor("brows")],
+                ["mouth", connectionsFor("mouth")],
+              ]
+            : [[region, connectionsForRegion(region)]];
+        for (const [part, edges] of parts) {
+          ctx.lineWidth = strokeWidth(part, level);
+          ctx.beginPath();
+          for (const [a, b] of edges ?? []) {
+            const pa = frame.landmarks[a];
+            const pb = frame.landmarks[b];
+            if (!pa || !pb) continue;
+            const sa = landmarkToScreenPoint(pa, display);
+            const sb = landmarkToScreenPoint(pb, display);
+            ctx.moveTo(sa.x, sa.y);
+            ctx.lineTo(sb.x, sb.y);
+          }
+          ctx.stroke();
         }
-        ctx.stroke();
         if (region === "eyes") {
           ctx.fillStyle = color;
-          const radius = 2.6 + 1.4 * Math.min(1, level / 2);
+          const radius = 1.7 + 0.5 * Math.min(1, level / 2);
           for (const index of [468, 473]) {
             const lm = frame.landmarks[index];
             if (!lm) continue;
