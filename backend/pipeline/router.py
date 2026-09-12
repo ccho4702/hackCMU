@@ -13,7 +13,7 @@ from backend.common.logging import save_json
 from backend import history
 
 router = APIRouter(tags=["Presentation pipeline"])
-OUTPUT_FILES = {"reference_alignment.json", "nonverbal_feedback.json", "script_feedback.json", "transcript.json", "improved_script.txt", "reference_speech.mp3"}
+OUTPUT_FILES = {"reference_alignment.json", "nonverbal_feedback.json", "vocal_feedback.json", "script_feedback.json", "transcript.json", "improved_script.txt", "reference_speech.mp3"}
 
 
 def get_run(run_id):
@@ -33,7 +33,7 @@ def public_manifest(manifest):
         if name in OUTPUT_FILES
     }, "original_video_url": f"/api/runs/{run_id}/original"}
     result["results"] = {}
-    for key in ("nonverbal_feedback", "script_feedback", "transcript"):
+    for key in ("nonverbal_feedback", "vocal_feedback", "script_feedback", "transcript"):
         name = manifest.get("outputs", {}).get(key)
         if name in OUTPUT_FILES and (directory / "outputs" / name).is_file():
             result["results"][key] = json.loads((directory / "outputs" / name).read_text())

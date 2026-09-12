@@ -79,7 +79,7 @@ class ServiceTests(unittest.TestCase):
         def fake_video(path, output, *args, **kwargs):
             output.mkdir(parents=True)
             (output/'presentation-analysis-meta.json').write_text('{"attempt_count":1}')
-            (output/'presentation-analysis.json').write_text('[]')
+            (output/'presentation-analysis.json').write_text(json.dumps({'nonverbal_feedback':[], 'vocal_feedback':[{'start_time':'00:01.000','end_time':'00:02.000','content':'Pause interrupts the phrase.'}]}))
             return 0
         def fake_tts(*args, **kwargs):
             (kwargs['output_dir']/'reference_speech.mp3').write_bytes(b'ID3test')
@@ -106,7 +106,9 @@ class ServiceTests(unittest.TestCase):
         self.assertEqual(speech.call_args.args[2], 'Hello everyone.')
         self.assertEqual(result['gemini_requests'], {'video':1,'script':1})
         self.assertTrue((run/'intermediates/original_script.txt').exists())
-        self.assertEqual(set(result['outputs']), {'nonverbal_feedback','script_feedback','improved_script','tts_audio','transcript'})
+        self.assertEqual(json.loads((run/'outputs/nonverbal_feedback.json').read_text()), [])
+        self.assertEqual(len(json.loads((run/'outputs/vocal_feedback.json').read_text())), 1)
+        self.assertEqual(set(result['outputs']), {'nonverbal_feedback','vocal_feedback','script_feedback','improved_script','tts_audio','transcript'})
 
     def test_pipeline_failure_retains_completed_outputs_and_stage(self):
         run=self.root/('b'*32)

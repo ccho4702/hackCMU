@@ -201,9 +201,22 @@ export default function Practice() {
         <div className="practice-grid">
           <section className="practice-script-card"><div className="card-heading"><div><span className="step-number">01</span><h2>Follow the script</h2></div><span className="count-pill">{mode === "trial" ? "YOUR TRIAL TIMING" : phase === "recording" ? "REFERENCE PACE GUIDE" : "REFERENCE TIMING"}</span></div>
             <div className={`word-cue ${phase === "recording" ? "guided" : ""}`} aria-live="off"><span>{phase === "countdown" ? "GET READY" : active >= 0 ? "NOW" : "UP NEXT"}</span><strong>{phase === "countdown" ? countdown : words.length ? cue : "Read naturally."}</strong><small>{phase === "recording" ? "Follow the reference timing. Your microphone is recording." : mode === "trial" ? "Aligned to your recorded voice" : "Play the reference to see each word light up"}</small>{cueWord && phase !== "countdown" && <div className="word-duration-panel"><div className="duration-title"><span>{mode === "trial" ? "Your word duration" : "Target word duration"}</span><strong>{wordDuration.toFixed(2)}<small> seconds</small></strong></div><div className="word-duration-track" role="progressbar" aria-label="Current word duration progress" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(wordProgress)}><i style={{width:`${wordProgress}%`}}/></div><div className="word-timestamps"><span>Start <b>{cueWord.t0.toFixed(2)}s</b></span><span>End <b>{cueWord.t1.toFixed(2)}s</b></span><span>{active >= 0 ? `${Math.max(0, cueWord.t1 - time).toFixed(2)}s remaining` : `Starts in ${Math.max(0, cueWord.t0 - time).toFixed(2)}s`}</span></div></div>}</div>
-            <div className="word-script" aria-label="Practice script">{words.length ? words.map((word,index) => <button key={`${index}-${word.text}`} ref={node => { wordElements.current[index] = node; }} disabled={busy} className={`spoken-word ${active === index ? "current-word" : word.t1 <= time ? "past-word" : ""}`} onClick={() => listenFrom(index)} aria-current={active === index ? "true" : undefined}>{word.text}</button>) : <p>{session.script}</p>}</div>
+            <div className="word-script" aria-label="Practice script">{words.length ? words.map((word,index) => {
+              const duration = Math.max(0, word.t1 - word.t0);
+              const timing = `${word.t0.toFixed(2)}–${word.t1.toFixed(2)}s`;
+              return <span key={`${index}-${word.text}`} className="timed-word"
+                ref={node => { wordElements.current[index] = node; }}
+                style={{ width: `${Math.max(64, duration * 320)}px` }}>
+                <button disabled={busy} className={`spoken-word ${active === index ? "current-word" : word.t1 <= time ? "past-word" : ""}`}
+                  onClick={() => listenFrom(index)} aria-current={active === index ? "true" : undefined}
+                  aria-describedby={`word-timing-${index}`} title={`${timing} · Duration ${duration.toFixed(2)}s`}>
+                  {word.text}
+                </button>
+                <small id={`word-timing-${index}`} className="word-timing-label">{timing}</small>
+              </span>;
+            }) : <p>{session.script}</p>}</div>
             {!session.words.length && <div className="alignment-action"><p>This earlier TTS recording needs word timing for the guided highlight.</p><button className="button secondary-button" onClick={getTiming} disabled={aligning || busy}>{aligning ? "Preparing word timing…" : "Prepare word highlights"}</button></div>}
-            <p className="practice-footnote">The recording guide follows the reference clock; it does not detect your words live. After scoring, replay your trial to follow your actual word timing.</p>
+            <p className="practice-footnote">Box width follows word duration; labels show start–end time. The recording guide follows the reference clock; it does not detect your words live. After scoring, replay your trial to follow your actual word timing.</p>
           </section>
           <section className="trial-recorder-card"><p className="eyebrow">02 / YOUR TURN</p><h2>One more try.</h2><p>Read the complete script in your natural voice. The reference stays silent while you record.</p><div className={`mic-orb ${phase === "recording" ? "pulsing" : ""}`} aria-hidden="true">{phase === "countdown" ? countdown : "♩"}</div><span className="trial-clock">{clockTime(seconds)} <small>/ {clockTime(session.max_trial_seconds)}</small></span>
             {phase === "recording" ? <button className="button stop-button" onClick={stop}><span className="stop-square"/>Stop & score</button> : <button className="button primary-button" onClick={start} disabled={busy || aligning}>{phase === "countdown" ? "Get ready…" : phase === "requesting" ? "Connecting microphone…" : phase === "uploading" ? "Saving your trial…" : phase === "scoring" ? "Scoring your trial…" : "Start voice trial"}</button>}
