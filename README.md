@@ -22,7 +22,7 @@ an audio reference that reads the improved script in the speaker's cloned voice.
 
 | Result | What you get | Powered by |
 | --- | --- | --- |
-| **Delivery coaching** | Timestamped feedback on gaze, gestures, speaking pace, pauses, articulation and vocal delivery | Gemini video understanding |
+| **Delivery coaching** | Separate timestamped sections for nonverbal expression and vocal delivery | Gemini video understanding |
 | **Script coaching** | Original transcript, concrete script issues, and a revised presentation script | ElevenLabs Scribe + Gemini |
 | **Hear the improvement** | The revised script spoken with a cloned reference voice | ElevenLabs IVC + TTS |
 

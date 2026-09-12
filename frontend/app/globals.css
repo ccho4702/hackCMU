@@ -333,6 +333,8 @@ body {
   gap: 24px;
   align-items: start;
 }
+.delivery-sections { display: grid; gap: 16px; min-width: 0; }
+.delivery-sections .feedback-list { max-height: 240px; }
 .original-card video {
   width: calc(100% - 40px);
   margin: 0 20px 20px;

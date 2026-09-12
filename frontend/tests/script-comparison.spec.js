@@ -7,7 +7,7 @@ async function showReview(page, pending=false) {
   await page.route(`**/api/runs/${runId}`,route=>route.fulfill({json:{
     run_id:runId,status:pending?"failed":"success",stage:pending?"script_analysis":"complete",outputs:pending?{}:{tts_audio:"/reference.wav"},
     original_video_url:"/test-video.mp4",
-    results:{transcript:{text:original},nonverbal_feedback:[],...(!pending?{script_feedback:{original_script:original,improved_script:improved,issues:[]}}:{})},
+    results:{transcript:{text:original},nonverbal_feedback:[],vocal_feedback:[],...(!pending?{script_feedback:{original_script:original,improved_script:improved,issues:[]}}:{})},
   }}));
   // A valid short WAV lets the native player load without a provider call.
   const wav=Buffer.alloc(44+16000*8*2);
@@ -88,4 +88,35 @@ test("reference player supports play, pause and keyboard seeking", async ({page}
   await slider.press("Home");
   await expect.poll(()=>audio.evaluate(element=>element.currentTime)).toBe(0);
   await expect(voice.getByRole("link",{name:"Download reference audio"})).toHaveAttribute("href","/reference.wav");
+});
+
+
+test("visual and vocal observations appear in separate sections", async ({page}) => {
+  await page.route(`**/api/runs/${runId}`, route=>route.fulfill({json:{
+    run_id:runId,status:"success",stage:"complete",outputs:{},original_video_url:"/test-video.mp4",
+    results:{nonverbal_feedback:[{start_time:"00:02.000",end_time:"00:03.000",content:"Look toward the camera."}],
+      vocal_feedback:[{start_time:"00:06.000",end_time:"00:08.000",content:"Pause between the two ideas."}]},
+  }}));
+  await page.goto(`/evaluation?run=${runId}`);
+  const visual=page.getByRole("region",{name:"Nonverbal delivery",exact:true});
+  const vocal=page.getByRole("region",{name:"Vocal delivery",exact:true});
+  await expect(visual).toContainText("Look toward the camera.");
+  await expect(visual).not.toContainText("Pause between");
+  await expect(vocal).toContainText("Pause between the two ideas.");
+  await expect(vocal).not.toContainText("Look toward");
+  await page.getByLabel("Original recording",{exact:true}).evaluate(video=>{
+    Object.defineProperty(video,"currentTime",{configurable:true,writable:true,value:0});
+    video.play=async()=>{};
+  });
+  await vocal.getByRole("button",{name:/00:06/}).click();
+  expect(await page.getByLabel("Original recording",{exact:true}).evaluate(video=>video.currentTime)).toBe(6);
+});
+
+test("legacy sessions distinguish unavailable vocal analysis from an empty result", async ({page}) => {
+  await page.route(`**/api/runs/${runId}`,route=>route.fulfill({json:{
+    run_id:runId,status:"success",stage:"complete",outputs:{},results:{nonverbal_feedback:[]},
+  }}));
+  await page.goto(`/evaluation?run=${runId}`);
+  await expect(page.getByRole("region",{name:"Vocal delivery",exact:true})).toContainText("not available for this saved session");
+  await expect(page.getByRole("region",{name:"Nonverbal delivery",exact:true})).toContainText("No clear issues");
 });

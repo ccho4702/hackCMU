@@ -6,7 +6,7 @@ from unittest.mock import Mock
 
 from requests.exceptions import Timeout
 
-from backend.gemini_video.service import run_analysis, validate_output
+from backend.gemini_video.service import run_analysis, validate_output, validate_delivery_output
 
 
 VALID = [{"start_time": "00:01.000", "end_time": "00:03.500", "content": "시선이 아래를 향합니다."}]
@@ -14,6 +14,12 @@ VALID = [{"start_time": "00:01.000", "end_time": "00:03.500", "content": "시선
 
 def response(text=None, status=200, finish="STOP", payload=None):
     if payload is None:
+        try:
+            parsed = json.loads(text or "[]")
+            if isinstance(parsed, list):
+                text = json.dumps({"nonverbal_feedback": parsed, "vocal_feedback": []})
+        except ValueError:
+            pass
         payload = {"candidates": [{"finishReason": finish, "content": {"parts": [{"text": text or "[]"}]}}],
                    "modelVersion": "gemini-3.8-flash", "usageMetadata": {"promptTokenCount": 100, "totalTokenCount": 110}}
     return Mock(status_code=status, ok=200 <= status < 300, text=json.dumps(payload), json=Mock(return_value=payload))
@@ -74,7 +80,7 @@ class RetryTests(unittest.TestCase):
         self.assertEqual(meta["usage_total"]["promptTokenCount"], 200)
         self.assertEqual([a["status"] for a in meta["attempts"]], ["validation_error", "success"])
         self.assertEqual(self.sleep.call_args.args, (2,))
-        self.assertEqual(json.loads((self.output / "presentation-analysis.json").read_text()), VALID)
+        self.assertEqual(json.loads((self.output / "presentation-analysis.json").read_text()), {"nonverbal_feedback": VALID, "vocal_feedback": []})
         self.assertEqual(sum(e["event"] == "attempt_finished" for e in logs), 2)
         self.assertTrue(Path(meta["attempts"][0]["response_file"]).exists())
 
@@ -102,14 +108,14 @@ class RetryTests(unittest.TestCase):
     def test_vocal_feedback_uses_the_same_timestamp_schema_and_one_request(self):
         vocal = [{"start_time": "00:05.000", "end_time": "00:08.000",
                   "content": "말 속도: 문장 끝을 급하게 이어 말합니다. 핵심어 뒤에 짧게 쉬어주세요."}]
-        status, session, meta, _ = self.run_case([response(json.dumps(vocal))])
+        status, session, meta, _ = self.run_case([response(json.dumps({"nonverbal_feedback": [], "vocal_feedback": vocal}))])
         self.assertEqual(status, 0)
         self.assertEqual(session.post.call_count, 1)
         self.assertEqual(meta["assessment_scope"], ["visual", "vocal"])
         body = session.post.call_args.kwargs["json"]
         self.assertEqual(body["contents"][0]["parts"][0]["inlineData"]["mimeType"], "video/mp4")
         self.assertEqual(set(vocal[0]), {"start_time", "end_time", "content"})
-        self.assertEqual(json.loads((self.output / "presentation-analysis.json").read_text()), vocal)
+        self.assertEqual(json.loads((self.output / "presentation-analysis.json").read_text())["vocal_feedback"], vocal)
 
     def test_permission_error_does_not_retry(self):
         status, session, meta, _ = self.run_case([response(status=403, payload={"error": {"message": "permission denied"}})])
@@ -132,3 +138,13 @@ class RetryTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+def test_split_feedback_requires_both_arrays_and_validates_each():
+    import pytest
+    valid = {"nonverbal_feedback": VALID, "vocal_feedback": [{"start_time":"00:00.000","end_time":"00:01.000","content":"Speech starts abruptly."}]}
+    assert validate_delivery_output(json.dumps(valid), 48) == valid
+    for invalid in [[], {"nonverbal_feedback": []}, {**valid,"extra":[]},
+                    {**valid,"vocal_feedback":{}},
+                    {**valid,"vocal_feedback":[{"start_time":"00:00.000","end_time":"00:49.000","content":"Too late"}]}]:
+        with pytest.raises(ValueError):validate_delivery_output(json.dumps(invalid), 48)

@@ -3,7 +3,8 @@
 Independent provider modules, composed by `pipeline/`:
 
 1. `gemini_video`: visual and vocal delivery observations with actionable corrections. Output is
-   an array of `{start_time, end_time, content}` with `MM:SS.sss` times. Includes schema,
+   an object with `nonverbal_feedback` and `vocal_feedback` arrays. Every item uses
+   `{start_time, end_time, content}` with `MM:SS.sss` times. Includes schema,
    local validation, bounded retries, raw responses, and cumulative usage logs.
 2. `elevenlabs_asr`: extracted recording audio -> verbatim text with Scribe v2.
    Stores the original transcript and word timestamps before revision.
@@ -21,7 +22,7 @@ Run from the repository root with `uvicorn backend.main:app --reload`.
 | Endpoint | Input | Output |
 | --- | --- | --- |
 | `POST /api/pipeline` | Multipart `file`, `user_id`, optional `noisy_environment` | 202 Accepted, run ID, status URL |
-| `POST /api/video/analyze` | Multipart video `file` | Visual/vocal feedback array; `X-Run-ID` header |
+| `POST /api/video/analyze` | Multipart video `file` | Separate visual/vocal feedback arrays; `X-Run-ID` header |
 | `POST /api/script/analyze-video` | Multipart video `file` | `original_script`, `issues`, `improved_script`; `X-Run-ID` |
 | `POST /api/script/analyze` | JSON `{ "script": "..." }` | Same script response shape |
 | `POST /api/asr/transcribe` | Multipart recording `file` | Original transcript and word timestamps |
@@ -54,6 +55,7 @@ artifacts/
       voice_sample.mp3
     outputs/
       nonverbal_feedback.json
+      vocal_feedback.json
       transcript.json
       script_feedback.json
       improved_script.txt
@@ -293,11 +295,30 @@ feedback, alongside visible delivery observations. The second Gemini request sti
 receives the ElevenLabs transcript for script revision only. Normal processing
 therefore remains **two Gemini generation calls**; bounded retries can add requests.
 
-For compatibility, the result remains the existing `nonverbal_feedback` output key
-and `nonverbal_feedback.json` filename, now containing both visual and vocal issues.
-Each entry still contains exactly `start_time`, `end_time`, and `content`; the same
-validation and retry logging apply. Provider metadata records
-`assessment_scope: ["visual", "vocal"]`. Old saved results are not regenerated.
-The frontend's Delivery notes display both kinds of feedback and seek the original
-recording at the returned timestamp. This is qualitative coaching, not calibrated
-WPM/dB/pitch measurement or the separate trial pronunciation score.
+The model returns an object with exactly two arrays:
+
+```json
+{
+  "nonverbal_feedback": [{"start_time":"00:01.000","end_time":"00:03.000","content":"Visual observation and correction"}],
+  "vocal_feedback": [{"start_time":"00:05.000","end_time":"00:07.000","content":"Audible observation and correction"}]
+}
+```
+
+Both arrays are required, including empty arrays when no issues are found. Each
+entry still contains exactly `start_time`, `end_time`, and `content`. Arrays are
+validated and sorted independently; identical intervals across the two modalities
+are allowed. An invalid/missing array causes the same bounded retry behavior as
+other validation failures. Mixed visual/vocal observations in a single item are
+explicitly excluded by the prompt. Provider metadata includes per-category counts.
+
+`POST /api/video/analyze` now returns this two-array object instead of a flat array.
+The pipeline stores separate `outputs/nonverbal_feedback.json` and
+`outputs/vocal_feedback.json` files and exposes both in the run's `results` and
+`outputs` objects. The frontend displays **Nonverbal delivery** and **Vocal delivery**
+as separate sections; either section's timestamp seeks the original recording.
+Old runs are not regenerated: an absent vocal result is shown as unavailable,
+whereas an empty array means the analysis completed with no flagged issues.
+
+This is qualitative coaching, not calibrated WPM/dB/pitch measurement or the
+separate trial pronunciation score. The normal pipeline still makes two Gemini
+calls: one joint visual/audio analysis returning two arrays, and one script revision.

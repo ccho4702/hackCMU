@@ -1,6 +1,5 @@
 import json
 import os
-import shutil
 
 from fastapi import APIRouter, HTTPException, Response, UploadFile, Form
 
@@ -8,13 +7,14 @@ from backend.common.language import Language
 from backend.common.config import google_project
 from backend.common.gemini import session as gemini_session
 from backend.common.media import prepare_video, save_upload
-from backend.gemini_video.schemas import VideoIssue
+from backend.gemini_video.schemas import DeliveryAnalysis
+from backend.common.logging import save_json
 from backend.gemini_video.service import run_analysis, video_duration
 
 router = APIRouter(prefix="/video", tags=["Gemini video analysis"])
 
 
-@router.post("/analyze", response_model=list[VideoIssue])
+@router.post("/analyze", response_model=DeliveryAnalysis)
 def analyze_video(file: UploadFile, response: Response, language: Language | None = Form(None)):
     run_id, source = save_upload(file, {".mov", ".mp4", ".webm", ".mkv"})
     run_dir = source.parent.parent
@@ -28,8 +28,9 @@ def analyze_video(file: UploadFile, response: Response, language: Language | Non
                                   max_attempts=int(os.getenv("VIDEO_MAX_ATTEMPTS", "3")), language=language)
         if status:
             raise HTTPException(502, {"message": "Video analysis failed; inspect the run logs", "run_id": run_id})
-        result = run_dir / "outputs/nonverbal_feedback.json"
-        shutil.copy2(run_dir / "logs/video/presentation-analysis.json", result)
-        return json.loads(result.read_text())
+        result = json.loads((run_dir / "logs/video/presentation-analysis.json").read_text())
+        for key in ("nonverbal_feedback", "vocal_feedback"):
+            save_json(run_dir / "outputs" / f"{key}.json", result[key])
+        return result
     except ValueError as exc:
         raise HTTPException(422, {"message": str(exc), "run_id": run_id}) from exc

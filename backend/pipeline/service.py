@@ -1,7 +1,6 @@
 """One recording -> visual/vocal delivery feedback, revised script, reference speech."""
 import json
 import os
-import shutil
 import time
 
 
@@ -46,8 +45,10 @@ def process_recording(source, user_id, noisy_environment=False, *, tts_client=No
         manifest["gemini_requests"]["video"] = video_meta["attempt_count"]
         if status:
             raise RuntimeError("Delivery analysis failed; see video attempt logs")
-        shutil.copy2(logs / "video/presentation-analysis.json", run_dir / "outputs/nonverbal_feedback.json")
-        manifest["outputs"]["nonverbal_feedback"] = "nonverbal_feedback.json"
+        delivery = json.loads((logs / "video/presentation-analysis.json").read_text())
+        for key in ("nonverbal_feedback", "vocal_feedback"):
+            save_json(run_dir / "outputs" / f"{key}.json", delivery[key])
+            manifest["outputs"][key] = f"{key}.json"
         manifest["stage"] = "transcription"
         checkpoint()
         manifest["asr_requests"] = 1

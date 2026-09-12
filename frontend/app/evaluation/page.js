@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import DeliveryFeedback from "@/components/DeliveryFeedback";
 import ReferenceVoice from "@/components/ReferenceVoice";
 import StudioHeader from "@/components/StudioHeader";
 import { apiGet } from "@/lib/coaching-api";
@@ -32,6 +33,7 @@ export default function Evaluation() {
   },[]);
   function seek(time) { if(player.current){player.current.currentTime=timestampSeconds(time);player.current.play().catch(()=>{});} }
   const feedback=job?.results?.nonverbal_feedback;
+  const vocalFeedback=job?.results?.vocal_feedback;
   const script=job?.results?.script_feedback;
   const transcript=job?.results?.transcript?.text || script?.original_script;
   const working=job && !["success","failed"].includes(job.status);
@@ -43,7 +45,13 @@ export default function Evaluation() {
       <div className="evaluation-intro"><div>{analysisId && <Link className="text-button" href={`/analysis/${analysisId}`}>← Back to facial metrics</Link>}<span className="blue-eyebrow">SESSION REVIEW</span><h2>Your next take starts here.</h2></div><Link href="/live" className="button secondary-button">New recording</Link></div>
       {working && <section className="panel progress-card" aria-live="polite"><div className="progress-heading"><span className="spinner"/><div><h2>{STAGES[stage]?.[1] || "Your recording is queued"}</h2><p>Completed results appear below as each stage finishes.</p></div></div><ol className="stage-list">{STAGES.map(([id,title],i)=><li key={id} className={i===stage?"active":i<stage?"done":""}><span>{i<stage?"✓":i+1}</span>{title}</li>)}</ol></section>}
       {job.status === "failed" && <div className="error-banner" role="alert"><div><strong>This session could not finish.</strong><p>{job.error_message || "Available results are preserved below."}</p></div><Link className="button secondary-button" href="/live">Try a new recording</Link></div>}
-      <div className="evaluation-grid"><section className="panel original-card"><div className="card-heading"><h2>Original recording</h2><span className="count-pill">CAMERA + AUDIO</span></div><video ref={player} controls playsInline preload="metadata" src={job.original_video_url} aria-label="Original recording"/></section><section className="panel feedback-card"><div className="card-heading"><h2>Delivery notes</h2>{feedback && <span className="count-pill">{feedback.length} moments</span>}</div><p className="card-description">Select a timestamp to review your delivery, including voice, pacing, gaze, and gestures.</p><div className="feedback-list">{feedback ? feedback.length ? feedback.map((item,i)=><article key={i} className="feedback-item"><button className="time-link" onClick={()=>seek(item.start_time)}>▷ {item.start_time.slice(0,5)} – {item.end_time.slice(0,5)}</button><p>{item.content}</p></article>) : <p className="empty-result">No clear delivery issues were flagged.</p> : <p className="muted">Your delivery feedback is being prepared.</p>}</div></section></div>
+      <div className="evaluation-grid">
+        <section className="panel original-card"><div className="card-heading"><h2>Original recording</h2><span className="count-pill">CAMERA + AUDIO</span></div><video ref={player} controls playsInline preload="metadata" src={job.original_video_url} aria-label="Original recording"/></section>
+        <div className="delivery-sections">
+          <DeliveryFeedback title="Nonverbal delivery" description="Gaze, gestures, posture, and body movement." items={feedback} pending={working} onSeek={seek} />
+          <DeliveryFeedback title="Vocal delivery" description="Intonation, loudness, pace, pauses, and articulation." items={vocalFeedback} pending={working} onSeek={seek} />
+        </div>
+      </div>
       <ReferenceVoice key={job.outputs?.tts_audio || "pending"} src={job.outputs?.tts_audio} failed={job.status === "failed"} />
       <section className="panel script-card">
         <div className="card-heading"><h2>Transcript</h2>{job.outputs?.improved_script && <a className="text-button" href={job.outputs.improved_script} download>Download revised script ↓</a>}</div>
