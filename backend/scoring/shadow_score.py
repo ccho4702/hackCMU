@@ -126,9 +126,9 @@ def warmup() -> None:
 
 @lru_cache(maxsize=1)
 def _allowed_chars() -> frozenset:
-    # "*" 는 star 토큰, "-" 는 CTC blank 라 타깃에 들어가면 forced_align 이 거부한다.
-    # 하이픈 단어("text-to-speech")는 붙여서("texttospeech") 정렬한다. 화면 표시는 원문 그대로.
-    return frozenset(torchaudio.pipelines.MMS_FA.get_dict().keys()) - {"*", "-"}
+    # '-' is the CTC blank (id 0), not a valid character in a target transcript.
+    return frozenset(ch for ch, index in torchaudio.pipelines.MMS_FA.get_dict().items()
+                     if index != 0 and ch != "*")
 
 
 def normalize_words(text: str) -> tuple[list[str], list[str]]:

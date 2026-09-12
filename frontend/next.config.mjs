@@ -1,8 +1,15 @@
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+
 const BACKEND_URL = process.env.BACKEND_URL ?? "http://localhost:8000";
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Proxy /api/* to FastAPI so the browser only ever talks to this origin (no CORS).
+  experimental: { proxyTimeout: 120_000, proxyClientMaxBodySize: "110mb" },
+  turbopack: {
+    root: __dirname,
+  },
   async rewrites() {
     return [
       {
@@ -10,10 +17,6 @@ const nextConfig = {
         destination: `${BACKEND_URL}/api/:path*`,
       },
     ];
-  },
-  experimental: {
-    // Default is 30s; voice cloning + TTS can take longer than that.
-    proxyTimeout: 120_000,
   },
 };
 

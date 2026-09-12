@@ -1,15 +1,23 @@
-fastapi[standard]
-python-dotenv
-elevenlabs
+fastapi[standard]==0.141.1
+python-dotenv==1.2.3
+elevenlabs==2.68.0
+google-genai==2.23.0
+google-auth==2.58.0
+requests==2.34.2
+imageio-ffmpeg==0.6.0
+httpx==0.28.1
 
-# --- scoring/shadow_score (쉐도잉 점수) ---
-# torch는 설치가 크다(2GB급). CPU 빌드면 충분: pip install torch torchaudio --index-url https://download.pytorch.org/whl/cpu
-torch>=2.3
-torchaudio>=2.3
-librosa>=0.10
-soundfile
-scipy
-numpy
+# gmin scoring integration: forced_align requires TorchAudio < 2.9
+torch==2.8.0
+torchaudio==2.8.0
+librosa==0.11.0
+soundfile==0.14.0
+scipy==1.18.1
+numpy==2.5.3
+num2words==0.5.14
 
-# --- Mongo ---
-pymongo[srv]
+# MediaPipe analysis from main
+mediapipe==0.10.35
+opencv-python-headless>=4.9.0
+pydantic-settings>=2.4.0
+pytest>=8.0.0
