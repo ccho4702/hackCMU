@@ -41,7 +41,7 @@ python -m scoring.selftest        # 환경 검증. macOS + ffmpeg 필요, API �
 | `rhythm_score` | 0~1. 전체 속도를 뺀 뒤 단어별 지속시간 비율이 GT와 얼마나 같은가 |
 | `intonation_score` | 0~1. 세미톤·중앙값 정규화한 F0 곡선의 DTW 거리 |
 | `stress_match` | 0~1. 단어별 prominence(에너지+F0 피크) 순위 상관 |
-| `word_diff[]` | 편차 큰 단어 상위 3개. `note`는 발음 불명확 / 급하게 지나감 / 늘어짐 / 강세 빠짐 / 강세 과함 |
+| `word_diff[]` | 편차 큰 단어 상위 3개. `note`는 Unclear pronunciation / Rushed / Drawn out / Missing stress / Overstressed |
 | `words[]` | 전 단어의 양쪽 `t0, t1, score, prominence`와 `pron`. 프론트가 파형 위에 그린다 |
 | `align_confidence` | 정렬 평균 신뢰도. `gt_source`가 `external`이면 ElevenLabs 타임스탬프를 쓴 것 |
 
@@ -75,10 +75,10 @@ macOS `say`의 같은 목소리로 만든 입력. GT가 본인 클론 보이스�
 |---|---|---|---|---|---|---|
 | 동일 파일 | 1.000 | 1.000 | 1.000 | 1.000 | 1.000 | - |
 | 느리게 | 0.900 | 1.104 | 0.838 | 0.968 | 0.957 | - |
-| 빠르게 | 0.891 | 0.893 | 0.782 | 0.960 | 0.963 | trained (강세 빠짐) |
-| removing→renewing | 0.730 | 0.998 | 0.924 | 0.965 | 0.974 | removing (발음 불명확) |
-| speaker's→seeker's | 0.858 | 0.993 | 0.942 | 0.984 | 0.965 | speaker's (발음 불명확) |
-| trained→drained | 0.854 | 0.993 | 0.852 | 0.974 | 0.975 | trained (발음 불명확) |
+| 빠르게 | 0.891 | 0.893 | 0.782 | 0.960 | 0.963 | trained (Missing stress) |
+| removing→renewing | 0.730 | 0.998 | 0.924 | 0.965 | 0.974 | removing (Unclear pronunciation) |
+| speaker's→seeker's | 0.858 | 0.993 | 0.942 | 0.984 | 0.965 | speaker's (Unclear pronunciation) |
+| trained→drained | 0.854 | 0.993 | 0.852 | 0.974 | 0.975 | trained (Unclear pronunciation) |
 
 바꿔 읽은 단어는 세 번 모두 `word_diff` 1위에 "발음 불명확"으로 올라오고, 속도만 바꾼 경우는 발음 오탐이 없다.
 음소 하나만 다른 경우(seeker's, drained)는 두 음절이 다른 경우(renewing)보다 점수 하락이 작다. 차이의 크기가 점수에 반영된다는 뜻이다.

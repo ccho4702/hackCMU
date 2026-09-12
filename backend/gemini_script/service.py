@@ -20,7 +20,7 @@ false starts in original_script; mark genuinely unintelligible sections as [inau
 instead of inventing words. For text input, original_script must equal the supplied text.
 Preserve the speaker's meaning, factual claims, names, and language. Do not invent facts,
 achievements, quotes, or credentials. Each issue's original must be an exact substring
-of original_script. Give problem and suggestion feedback in Korean. Write improved_script
+of original_script. Give problem and suggestion feedback in English. Write improved_script
 in the original draft's language. Do not evaluate gaze, body movement, audio pronunciation,
 or other properties that cannot be observed from text. Do not promise perfect delivery.
 For improved_script, spell numbers, times, and percentages as spoken words so the
@@ -35,7 +35,7 @@ def analyze_script(script: str = None, client=None, *, video_path=None, log_dir=
     prompt = SYSTEM_PROMPT + "\nSELECTED SCRIPT SCENARIO: " + script_style + "\n" + STYLE_INSTRUCTIONS[script_style]
     prompt += "\nApply the scenario to improved_script and contextual feedback only. Keep original_script verbatim and preserve all source facts and meaning.\n"
     if language:
-        prompt = prompt.replace("feedback in Korean", f"feedback in {NAMES[language]}")
+        prompt = prompt.replace("feedback in English", f"feedback in {NAMES[language]}")
         prompt = prompt.replace("in the original draft's language", f"in {NAMES[language]}")
         prompt = prompt.replace("names, and language.", "and names.")
         prompt += f"\nThe selected presentation language is {NAMES[language]}. Keep original_script verbatim.\n"

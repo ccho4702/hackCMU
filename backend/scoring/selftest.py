@@ -25,9 +25,9 @@ from pathlib import Path
 TEXT = "The challenge was removing a speaker's voice from a trained model without retraining it from scratch."
 VOICE = "Samantha"
 CASES = [  # (이름, 설명, 속도, (원래 단어, 바꿔 읽을 단어) 또는 None)
-    ("user_same", "동일 파일",           None, None),
-    ("user_slow", "느리게",              130,  None),
-    ("user_fast", "빠르게",              210,  None),
+    ("user_same", "identical file",      None, None),
+    ("user_slow", "slower",              130,  None),
+    ("user_fast", "faster",              210,  None),
     ("user_sub1", "removing→renewing",   170,  ("removing", "renewing")),
     ("user_sub2", "speaker's→seeker's",  170,  ("speaker's", "seeker's")),
     ("user_sub3", "trained→drained",     170,  ("trained", "drained")),
@@ -44,12 +44,12 @@ def synth(out: Path, text: str, rate: int) -> None:
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--dir", help="오디오 저장 경로 (기본: 임시 폴더)")
+    ap.add_argument("--dir", help="directory for generated audio (default: temp dir)")
     a = ap.parse_args()
 
     for tool in ("say", "ffmpeg"):
         if not shutil.which(tool):
-            sys.exit(f"'{tool}' 이 없습니다. 이 셀프테스트는 macOS + ffmpeg 전제입니다.")
+            sys.exit(f"'{tool}' not found. This selftest needs macOS `say` and ffmpeg.")
 
     d = Path(a.dir) if a.dir else Path(tempfile.mkdtemp(prefix="shadow_selftest_"))
     d.mkdir(parents=True, exist_ok=True)
@@ -65,7 +65,7 @@ def main():
     from .shadow_score import score_shadowing  # 오디오 생성 뒤에 import (모델 로드 지연)
 
     fmt = lambda v: f"{v:.3f}" if isinstance(v, (int, float)) else "  -  "
-    print(f"\n{'case':10s} {'설명':20s} {'status':6s} {'pron':>6s} {'rate':>6s} {'rhythm':>7s} "
+    print(f"\n{'case':10s} {'case desc':20s} {'status':6s} {'pron':>6s} {'rate':>6s} {'rhythm':>7s} "
           f"{'inton':>6s} {'stress':>7s}  {'sec':>4s}  top word_diff")
     R = {}
     for name, desc, _, _ in CASES:
@@ -80,25 +80,25 @@ def main():
 
     def top_is(name, target):
         wd = R[name]["word_diff"]
-        return bool(wd) and wd[0]["text"].rstrip(".,") == target and wd[0]["note"] == "발음 불명확"
+        return bool(wd) and wd[0]["text"].rstrip(".,") == target and wd[0]["note"] == "Unclear pronunciation"
 
     def no_pron_flag(name):
-        return all(w["note"] != "발음 불명확" for w in R[name]["word_diff"])
+        return all(w["note"] != "Unclear pronunciation" for w in R[name]["word_diff"])
 
     metrics = ("pronunciation_score", "rate_ratio", "rhythm_score", "intonation_score", "stress_match")
     base_pron = min(R["user_slow"]["pronunciation_score"], R["user_fast"]["pronunciation_score"])
     checks = [
-        ("동일 파일: 다섯 지표 1.0", all(abs(R["user_same"][k] - 1.0) < 1e-3 for k in metrics)),
-        ("느림: rate_ratio > 1", R["user_slow"]["rate_ratio"] > 1.0),
-        ("빠름: rate_ratio < 1", R["user_fast"]["rate_ratio"] < 1.0),
-        ("느림/빠름: 발음 오탐 없음", no_pron_flag("user_slow") and no_pron_flag("user_fast")),
-        ("느림/빠름: pronunciation_score > 0.80", base_pron > 0.80),
-        ("sub1: removing 이 발음 불명확 1위", top_is("user_sub1", "removing")),
-        ("sub2: speaker's 가 발음 불명확 1위", top_is("user_sub2", "speaker's")),
-        ("sub3: trained 가 발음 불명확 1위", top_is("user_sub3", "trained")),
-        ("sub1~3: pronunciation_score < 느림/빠름",
+        ("identical file: all five measures 1.0", all(abs(R["user_same"][k] - 1.0) < 1e-3 for k in metrics)),
+        ("slower: rate_ratio > 1", R["user_slow"]["rate_ratio"] > 1.0),
+        ("faster: rate_ratio < 1", R["user_fast"]["rate_ratio"] < 1.0),
+        ("slower/faster: no pronunciation false positives", no_pron_flag("user_slow") and no_pron_flag("user_fast")),
+        ("slower/faster: pronunciation_score > 0.80", base_pron > 0.80),
+        ("sub1: removing is top unclear word", top_is("user_sub1", "removing")),
+        ("sub2: speaker's is top unclear word", top_is("user_sub2", "speaker's")),
+        ("sub3: trained is top unclear word", top_is("user_sub3", "trained")),
+        ("sub1~3: pronunciation_score < slower/faster",
          all(R[n]["pronunciation_score"] < base_pron for n in ("user_sub1", "user_sub2", "user_sub3"))),
-        ("전부 status ok", all(r["status"] == "ok" for r in R.values())),
+        ("all status ok", all(r["status"] == "ok" for r in R.values())),
     ]
     print()
     ok = True
@@ -107,7 +107,7 @@ def main():
         ok &= passed
 
     for case, target in (("user_sub1", "removing"), ("user_slow", None)):
-        print(f"\n--- {case} 단어별 pron ---")
+        print(f"\n--- {case} per-word pron ---")
         for w in R[case]["words"]:
             p = w["pron"]
             if p:

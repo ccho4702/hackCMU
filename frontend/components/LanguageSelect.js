@@ -10,8 +10,8 @@ export function LanguageSelect({ value, onChange, scriptStyle="presentation", on
       <div className="session-settings-fields">
         <label>
           <span>Presentation language</span>
-          <select value={value} disabled={disabled} onChange={event=>{onChange(event.target.value);}}>
-            <option value="en">English</option><option value="ko">한국어</option>
+          <select value={value} disabled={disabled} onChange={event=>onChange(event.target.value)}>
+            <option value="en">English</option><option value="ko">Korean</option>
           </select>
           <small>The language you’ll speak.</small>
         </label>
