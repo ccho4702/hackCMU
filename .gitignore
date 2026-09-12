@@ -27,3 +27,6 @@ deploy/certs/
 
 # Public project demo; local recordings remain ignored.
 !/assets/demo.mp4
+
+# Published demo packaged with the standalone frontend.
+!/frontend/public/demo/optune-demo.mp4

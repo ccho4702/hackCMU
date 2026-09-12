@@ -40,3 +40,33 @@
 .spotify-design .practice-reference .practice-reference-meta { color:#b8c9e5; font-size:12px; }
 .spotify-design .practice-reference audio { flex-shrink:0; }
 @media(max-width:640px) { .spotify-design .practice-reference-guidance { font-size:13px; } }
+
+/* A clearly labeled, on-demand product walkthrough on Overview. */
+.overview-demo {
+  display:grid;
+  grid-template-columns:minmax(220px,.8fr) minmax(0,1.35fr);
+  align-items:center;
+  gap:32px;
+  margin-top:30px;
+  padding:24px;
+  border:1px solid #e1e7f0;
+  border-radius:8px;
+  background:#fff;
+}
+.overview-demo-copy { min-width:0; }
+.overview-demo-label { display:flex; align-items:center; gap:8px; color:#326fdd; font-size:10px; font-weight:750; letter-spacing:1.1px; }
+.overview-demo h2 { margin:12px 0 10px; font-size:23px; font-weight:750; letter-spacing:-.5px; line-height:1.25; color:#253750; }
+.overview-demo-copy p { max-width:280px; color:#6b778a; font-size:13px; line-height:1.6; }
+.overview-demo-duration { display:block; margin-top:16px; color:#8994a4; font-size:11px; font-variant-numeric:tabular-nums; }
+.overview-demo-player { position:relative; min-width:0; }
+.overview-demo video { display:block; width:100%; aspect-ratio:1274/720; border-radius:6px; background:#eef2f8; object-fit:contain; }
+.overview-demo-watermark { position:absolute; top:10px; right:10px; z-index:1; padding:5px 8px; border-radius:4px; color:#fff; background:rgba(26,43,70,.85); font-size:9px; font-weight:700; letter-spacing:.7px; pointer-events:none; }
+.overview-demo-error { margin-top:10px; color:#7f4050; font-size:12px; line-height:1.6; }
+.overview-demo-error a { color:#326fdd; text-decoration:underline; }
+@media(max-width:1000px) { .overview-demo { gap:22px; } .overview-demo h2 { font-size:21px; } }
+@media(max-width:640px) {
+  .overview-demo { grid-template-columns:minmax(0,1fr); padding:18px; gap:18px; margin-top:24px; }
+  .overview-demo h2 { font-size:21px; }
+  .overview-demo-copy p { max-width:none; }
+  .overview-demo-duration { margin-top:9px; }
+}

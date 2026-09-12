@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { ArrowUpRight, Mic2, Video, Upload, Play, AudioLines } from "lucide-react";
 import { PageShell } from "@/components/ui/studio";
 import { UploadPanel } from "@/components/upload/UploadPanel";
+import OverviewDemo from "@/components/OverviewDemo";
 
 export default function HomePage(){
   const router=useRouter();
@@ -25,6 +26,7 @@ export default function HomePage(){
         <Link href="/practice" className="studio-album"><div className="album-art album-practice"><Mic2 size={40}/><span>03 / REHEARSE</span><i><ArrowUpRight size={21}/></i></div><h3>Make the words your own</h3><p>Listen, follow along, and try again.</p></Link>
       </div>
     </section>
+    <OverviewDemo />
     <section className="studio-list"><div className="studio-section-heading"><h2>Built around your voice</h2><span>YOUR REHEARSAL TOOLKIT</span></div>{[["01","See your delivery","Eye contact, gestures & posture","/evaluation"],["02","Shape your message","Choose a language & script style","/live"],["03","Find your rhythm","Reference audio & word-by-word practice","/practice"]].map(([n,title,detail,href])=><Link href={href} key={n}><span>{n}</span><strong>{title}</strong><p>{detail}</p><ArrowUpRight size={17}/></Link>)}</section>
 
   </div></PageShell>;

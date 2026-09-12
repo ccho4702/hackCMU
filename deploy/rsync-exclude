@@ -11,6 +11,8 @@ frontend/coverage
 **/.mypy_cache
 .DS_Store
 *.mov
++ /assets/demo.mp4
++ /frontend/public/demo/optune-demo.mp4
 *.mp4
 *.wav
 *.mp3
