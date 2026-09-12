@@ -2,7 +2,7 @@
 
 # 🏆 HackCMU 2026 Winner
 
-### Rehearse — Your next presentation starts with a better rehearsal.
+### Mellonaires — Presentation analysis and practice.
 
 **HackCMU 2026 우승 프로젝트 레포지토리**
 
@@ -81,8 +81,10 @@ npm run dev
 
 Frontend: **http://localhost:3000** · API docs: **http://localhost:8000/docs**
 
-Open **Go to Streaming**, then click **Start recording** to capture camera and microphone
-together. **Stop & analyze** uploads the recording and opens its Evaluation page.
+Choose **Start Live Analysis** to capture camera and microphone with live MediaPipe
+metrics. **Stop session** opens the original analysis workspace and starts the script/voice
+pipeline. Use **Open evaluation** for the revised script, TTS, and voice practice.
+**Analyze Recorded Video** follows the same two-part flow with an uploaded file.
 The browser uploads the recording and follows progress until the original video, delivery
 notes, original/revised script tabs, and generated audio are ready. Existing recordings
 can also be uploaded. Camera capture requires localhost or HTTPS. Recordings stop
@@ -124,7 +126,7 @@ Recordings, credentials, generated audio, and local voice caches stay out of Git
 ## Verify
 
 ```bash
-backend/.venv/bin/python -m unittest discover -s backend/tests -t .
+backend/.venv/bin/pytest -c backend/pytest.ini backend/tests
 ```
 
 Browser checks: `cd frontend && npm run test:e2e` (run `npx playwright install chromium --only-shell` once).
@@ -153,9 +155,18 @@ model download. See the [backend guide](backend/README.md#voice-practice-and-wor
 
 ## Frontend flow
 
-The UI follows the blue Live Session design from `main` (`40c5e1d`).
-`/streaming` records camera + microphone and retains the overlay controls; `/evaluation`
-shows progress, original video, feedback, scripts, and TTS; `/practice` provides timed
-voice trials. The backend reports optional landmark support through `/api/capabilities`,
-so unavailable live overlays do not block recording or the post-session analysis.
-The current word cue shows start/end timestamps, target duration, and a duration bar.
+The frontend follows the latest `main` Mellonaires workspace (`8b5abfd`), preserving
+recorded/live MediaPipe analysis, face mesh, timelines, segment inspection, and exports.
+The additional Evaluation and Voice Practice panels share its neutral design tokens.
+
+- `/`: main's recorded/live mode selection.
+- `/live`: camera + microphone, real MediaPipe analysis, then recorded review.
+- `/analysis/<analysisId>`: main's analysis workspace with a Script & Voice bridge.
+- `/evaluation?run=<run_id>`: Gemini feedback, original/revised script, and TTS.
+- `/practice?run=<run_id>`: repeated voice trials and word-level timing.
+- `/streaming`: retained legacy Live Session UI.
+
+The active word shows its start/end timestamps, target duration, remaining time, and
+progress bar. Reference playback and recorded-trial playback use their respective times.
+See [the imported MediaPipe guide](docs/mediapipe-main.md) for the original instrumentation
+architecture, and [the unified backend guide](backend/README.md) for the combined API.

@@ -16,3 +16,12 @@ voice_cache.json
 *.mp4
 *.wav
 *.mp3
+
+*.pyc
+.mypy_cache/
+backend/models/*.task
+/tmp/
+frontend/.next/
+frontend/node_modules/
+frontend/coverage/
+*.tsbuildinfo

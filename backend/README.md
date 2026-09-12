@@ -161,3 +161,16 @@ landmark backend is available. Camera + microphone recording still uses the comp
 analysis pipeline. Successful uploads navigate to `/evaluation?run=<run_id>`.
 Voice Practice displays the active word’s start, end, target duration, and remaining
 time with a progress bar; trial playback labels its own measured duration separately.
+
+
+## Unified main-branch API
+
+`backend.main:app` now composes the imported MediaPipe `/api/v1` routes and the existing
+coaching `/api` routes in one server. The imported code lives under `backend/app` and
+uses the `backend.app` package consistently. Recorded and live MediaPipe analyses keep
+their original result schemas; Gemini/ElevenLabs outputs remain separate run artifacts.
+Main frontend uploads and live-session stops start the coaching job once, then link
+from the original analysis workspace into Evaluation.
+
+Validation: `backend/.venv/bin/pytest -c backend/pytest.ini backend/tests`.
+Frontend unit tests: `cd frontend && npm test`; browser tests: `npm run test:e2e`.

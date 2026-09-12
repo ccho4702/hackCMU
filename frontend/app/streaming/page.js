@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { apiGet, startPipeline } from "@/lib/api";
+import { apiGet, startPipeline } from "@/lib/coaching-api";
 import { recordingOptions, recordingFilename, clockTime, MAX_RECORDING_SECONDS, MAX_UPLOAD_BYTES } from "@/lib/recording";
 import { useEffect, useRef, useState } from "react";
 import { LAYERS, countLandmarks, drawLandmarks } from "./drawLandmarks";

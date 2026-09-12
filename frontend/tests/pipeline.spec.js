@@ -15,9 +15,11 @@ const manifest = {
 async function fakeCamera(page, denied = false) {
   await page.addInitScript(({ denied }) => {
     window.__stoppedTracks = 0;
-    const tracks = ["video", "audio"].map(kind => ({ kind, stop: () => window.__stoppedTracks++ }));
+    window.__captureCalls = 0;
     Object.defineProperty(navigator, "mediaDevices", { configurable: true, value: { getUserMedia: async () => {
       if (denied) throw new DOMException("Denied", "NotAllowedError");
+      window.__captureCalls++;
+      const tracks = ["video", "audio"].map(kind => ({ kind, stop: () => window.__stoppedTracks++ }));
       return { getTracks: () => tracks, getAudioTracks: () => [tracks[1]], getVideoTracks: () => [tracks[0]] };
     } } });
     Object.defineProperty(HTMLMediaElement.prototype, "srcObject", { configurable: true, get() { return this.__stream; }, set(value) { this.__stream = value; } });
@@ -117,10 +119,52 @@ test("real saved run loads its transcript, revision, and playable audio", async 
 test("main frontend navigation and streaming layout remain available", async ({ page }) => {
   await page.route("**/api/capabilities", route => route.fulfill({ json: { landmarks: false } }));
   await page.goto("/");
-  await page.getByRole("link", { name: "Go to Streaming" }).click();
+  await expect(page.getByRole("link", { name: /Start Live Analysis/ })).toBeVisible();
+  await page.goto("/streaming");
   await expect(page).toHaveURL(/\/streaming$/);
   await expect(page.getByRole("heading", { name: "Live Session", exact: true })).toBeVisible();
   await expect(page.getByRole("switch", { name: "Show mask" })).toBeDisabled();
   await expect(page.getByRole("button", { name: "Start recording", exact: true })).toBeEnabled();
   await page.screenshot({ path: "test-results/main-streaming-desktop.png", fullPage: true });
+});
+
+async function stubMainAnalysis(page) {
+  const analysisId = "anl_browser_test";
+  await page.route("**/api/v1/analyses", route => route.fulfill({status:202,json:{analysisId,status:"queued"}}));
+  await page.route(`**/api/v1/analyses/${analysisId}/status`, route => route.fulfill({json:{analysisId,status:"processing",progress:.3,phase:"Analyzing frames",mock:false}}));
+  await page.route(`**/api/v1/analyses/${analysisId}/events`, route => route.fulfill({status:200,contentType:"text/event-stream",body:'event: status\ndata: '+JSON.stringify({analysisId,status:"processing",progress:.3,phase:"Analyzing frames"})+'\n\n'}));
+  await page.route("**/api/v1/live/sessions", route => route.fulfill({status:201,json:{sessionId:analysisId,analysisId,mock:false}}));
+  await page.route(`**/api/v1/live/sessions/${analysisId}/stop`, route => route.fulfill({json:{analysisId,status:"completed"}}));
+  return analysisId;
+}
+
+test("main recorded-video flow keeps facial analysis and connects script evaluation", async ({page}) => {
+  const analysisId=await stubMainAnalysis(page);
+  const uploads=await stubPipeline(page);
+  await page.goto("/");
+  await page.getByRole("button",{name:/Analyze Recorded Video/}).click();
+  await page.locator('input[type="file"]').setInputFiles({name:"take.mp4",mimeType:"video/mp4",buffer:Buffer.from("test video")});
+  await page.getByRole("button",{name:"Analyze",exact:true}).click();
+  await expect(page).toHaveURL(new RegExp(`/analysis/${analysisId}$`));
+  expect(uploads()).toBe(1);
+  await page.getByRole("link",{name:"Evaluation",exact:true}).click();
+  await expect(page.getByRole("tabpanel")).toContainText("I have an idea to share.");
+});
+
+test("main live recording submits voice pipeline once and keeps the main review route", async ({page}) => {
+  await fakeCamera(page);
+  const analysisId=await stubMainAnalysis(page);
+  const uploads=await stubPipeline(page);
+  await page.goto("/live");
+  await page.getByRole("button",{name:"Stop session",exact:true}).click();
+  await expect(page).toHaveURL(new RegExp(`/analysis/${analysisId}$`));
+  expect(uploads()).toBe(1);
+  expect(await page.evaluate(()=>window.__stoppedTracks)).toBe(await page.evaluate(()=>window.__captureCalls * 2));
+});
+
+test("legacy saved-run links redirect to the new evaluation page", async ({page}) => {
+  await stubPipeline(page);
+  await page.goto(`/?run=${runId}`);
+  await expect(page).toHaveURL(new RegExp(`/evaluation\\?run=${runId}$`));
+  await expect(page.getByRole("tabpanel")).toContainText("I have an idea to share.");
 });

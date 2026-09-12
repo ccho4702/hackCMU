@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import StudioHeader from "@/components/StudioHeader";
-import { apiGet, apiPost, apiUpload } from "@/lib/api";
+import { apiGet, apiPost, apiUpload } from "@/lib/coaching-api";
 import { clockTime, recordingError } from "@/lib/recording";
 import { activeWordAt, audioRecordingOptions, scoreLabel, SCORE_AXES } from "@/lib/practice";
 
@@ -209,6 +209,6 @@ export default function Practice() {
         </section>}
         <section className="trial-history"><div className="section-heading"><div><p className="eyebrow">KEEP SHOWING UP</p><h2>Your practice history</h2></div><span className="count-pill">{session.trial_count} trials</span></div>{session.trials.length ? <div className="history-list">{session.trials.map(item => <button key={item.trial_id} className={trial?.trial_id === item.trial_id ? "selected-trial" : ""} disabled={busy} onClick={() => chooseTrial(item)}><strong>Trial {item.trial_number}</strong><span>{item.status === "complete" ? item.score?.status === "ok" ? `Pronunciation ${scoreLabel("pronunciation_score",item.score.pronunciation_score)} · Rhythm ${scoreLabel("rhythm_score",item.score.rhythm_score)}` : "Try again · unreliable alignment" : item.status}</span><small>{new Date(item.created_at).toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"})}</small></button>)}</div> : <p className="muted">Your first trial is a starting point. Every new recording gets its own result.</p>}</section>
       </>}
-    </main><footer><span className="footer-brand">rehearse.</span><span>Practice makes progress.</span></footer>
+    </main><footer><span className="footer-brand">Mellonaires</span><span>Practice makes progress.</span></footer>
   </div>;
 }

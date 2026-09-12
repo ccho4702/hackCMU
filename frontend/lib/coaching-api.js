@@ -12,7 +12,7 @@ async function request(path, options = {}) {
 
   if (!res.ok) {
     // FastAPI puts error messages in `detail`
-    const detail = isJson ? body.detail : res.statusText;
+    const detail = isJson ? body.detail || body.error : res.statusText;
     const message = typeof detail === "string" ? detail : detail?.message || (Array.isArray(detail) ? detail.map((entry) => entry.msg).join("; ") : res.statusText);
     throw new Error(message || "The request failed. Please try again.");
   }
