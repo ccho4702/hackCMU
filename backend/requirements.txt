@@ -10,3 +10,6 @@ librosa>=0.10
 soundfile
 scipy
 numpy
+
+# --- Mongo ---
+pymongo[srv]

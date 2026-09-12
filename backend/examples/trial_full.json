@@ -1,0 +1,1173 @@
+{
+  "id": "6aa51272447266899a923458",
+  "user_id": "6aa5122a3be1ec765046b2c2",
+  "question": "Tell me about a project you're proud of.",
+  "kind": "shadow",
+  "reference_id": "6aa5125c447266899a923456",
+  "created_at": "2026-09-12T08:50:58.185000",
+  "status": "ready",
+  "error": null,
+  "media": {
+    "raw": "6aa5122a3be1ec765046b2c2/trials/6aa51272447266899a923458/raw.wav",
+    "wav": "6aa5122a3be1ec765046b2c2/trials/6aa51272447266899a923458/audio.wav",
+    "duration_sec": 15.874,
+    "raw_url": "/api/media/6aa5122a3be1ec765046b2c2/trials/6aa51272447266899a923458/raw.wav",
+    "wav_url": "/api/media/6aa5122a3be1ec765046b2c2/trials/6aa51272447266899a923458/audio.wav"
+  },
+  "metrics": {
+    "language": null,
+    "nonverbal": null
+  },
+  "shadowing": [
+    {
+      "sentence_id": "s0",
+      "text": "The project I'm most proud of is a speaker unlearning system for text-to-speech models.",
+      "segment": {
+        "t0": 0.0,
+        "t1": 4.414
+      },
+      "wav": null,
+      "status": "ok",
+      "reason": null,
+      "pronunciation_score": 0.807,
+      "rate_ratio": 0.933,
+      "rhythm_score": 0.722,
+      "intonation_score": 0.954,
+      "stress_match": 0.976,
+      "word_diff": [
+        {
+          "text": "The",
+          "gt_dur": 0.06,
+          "user_dur": 0.08,
+          "ratio": 1.333,
+          "dev": 0.303,
+          "stress_gap": 0.721,
+          "pron": 0.804,
+          "note": "늘어짐"
+        }
+      ],
+      "words": [
+        {
+          "text": "The",
+          "gt": {
+            "t0": 0.02,
+            "t1": 0.08,
+            "score": 0.994,
+            "prominence": 1.192
+          },
+          "user": {
+            "t0": 0.0,
+            "t1": 0.08,
+            "score": 0.931,
+            "prominence": 0.471
+          },
+          "pron": {
+            "sim": 0.947,
+            "conf_gap": 0.063,
+            "z": -0.19,
+            "score": 0.804
+          }
+        },
+        {
+          "text": "project",
+          "gt": {
+            "t0": 0.121,
+            "t1": 0.603,
+            "score": 0.975,
+            "prominence": 0.248
+          },
+          "user": {
+            "t0": 0.1,
+            "t1": 0.562,
+            "score": 0.998,
+            "prominence": 0.927
+          },
+          "pron": {
+            "sim": 0.95,
+            "conf_gap": -0.023,
+            "z": -0.03,
+            "score": 0.876
+          }
+        },
+        {
+          "text": "I'm",
+          "gt": {
+            "t0": 0.724,
+            "t1": 0.804,
+            "score": 0.662,
+            "prominence": 1.235
+          },
+          "user": {
+            "t0": 0.662,
+            "t1": 0.762,
+            "score": 0.664,
+            "prominence": 1.301
+          },
+          "pron": {
+            "sim": 0.922,
+            "conf_gap": -0.002,
+            "z": -1.45,
+            "score": 0.805
+          }
+        },
+        {
+          "text": "most",
+          "gt": {
+            "t0": 0.844,
+            "t1": 1.086,
+            "score": 0.96,
+            "prominence": -0.798
+          },
+          "user": {
+            "t0": 0.782,
+            "t1": 1.003,
+            "score": 0.975,
+            "prominence": -0.426
+          },
+          "pron": {
+            "sim": 0.947,
+            "conf_gap": -0.015,
+            "z": -0.21,
+            "score": 0.866
+          }
+        },
+        {
+          "text": "proud",
+          "gt": {
+            "t0": 1.126,
+            "t1": 1.387,
+            "score": 0.892,
+            "prominence": 0.714
+          },
+          "user": {
+            "t0": 1.043,
+            "t1": 1.284,
+            "score": 0.821,
+            "prominence": 0.277
+          },
+          "pron": {
+            "sim": 0.957,
+            "conf_gap": 0.071,
+            "z": 0.31,
+            "score": 0.821
+          }
+        },
+        {
+          "text": "of",
+          "gt": {
+            "t0": 1.427,
+            "t1": 1.488,
+            "score": 0.996,
+            "prominence": -1.053
+          },
+          "user": {
+            "t0": 1.324,
+            "t1": 1.384,
+            "score": 0.995,
+            "prominence": -0.736
+          },
+          "pron": {
+            "sim": 0.961,
+            "conf_gap": 0.001,
+            "z": 0.52,
+            "score": 0.902
+          }
+        },
+        {
+          "text": "is",
+          "gt": {
+            "t0": 1.548,
+            "t1": 1.628,
+            "score": 0.993,
+            "prominence": -1.403
+          },
+          "user": {
+            "t0": 1.425,
+            "t1": 1.505,
+            "score": 0.996,
+            "prominence": -0.864
+          },
+          "pron": {
+            "sim": 0.924,
+            "conf_gap": -0.003,
+            "z": -1.32,
+            "score": 0.811
+          }
+        },
+        {
+          "text": "a",
+          "gt": {
+            "t0": 1.689,
+            "t1": 1.709,
+            "score": 0.981,
+            "prominence": 0.025
+          },
+          "user": {
+            "t0": 1.565,
+            "t1": 1.585,
+            "score": 0.992,
+            "prominence": 0.189
+          },
+          "pron": {
+            "sim": 0.97,
+            "conf_gap": -0.011,
+            "z": 0.97,
+            "score": 0.926
+          }
+        },
+        {
+          "text": "speaker",
+          "gt": {
+            "t0": 1.789,
+            "t1": 2.171,
+            "score": 0.997,
+            "prominence": 0.238
+          },
+          "user": {
+            "t0": 1.645,
+            "t1": 2.006,
+            "score": 0.942,
+            "prominence": 0.054
+          },
+          "pron": {
+            "sim": 0.963,
+            "conf_gap": 0.055,
+            "z": 0.59,
+            "score": 0.852
+          }
+        },
+        {
+          "text": "unlearning",
+          "gt": {
+            "t0": 2.231,
+            "t1": 2.674,
+            "score": 0.905,
+            "prominence": 1.528
+          },
+          "user": {
+            "t0": 2.067,
+            "t1": 2.488,
+            "score": 0.879,
+            "prominence": 1.422
+          },
+          "pron": {
+            "sim": 0.957,
+            "conf_gap": 0.026,
+            "z": 0.29,
+            "score": 0.866
+          }
+        },
+        {
+          "text": "system",
+          "gt": {
+            "t0": 2.754,
+            "t1": 3.096,
+            "score": 0.999,
+            "prominence": 1.164
+          },
+          "user": {
+            "t0": 2.548,
+            "t1": 2.849,
+            "score": 1.0,
+            "prominence": 0.556
+          },
+          "pron": {
+            "sim": 0.963,
+            "conf_gap": -0.001,
+            "z": 0.6,
+            "score": 0.907
+          }
+        },
+        {
+          "text": "for",
+          "gt": {
+            "t0": 3.136,
+            "t1": 3.277,
+            "score": 0.997,
+            "prominence": -0.673
+          },
+          "user": {
+            "t0": 2.909,
+            "t1": 3.03,
+            "score": 0.999,
+            "prominence": -0.703
+          },
+          "pron": {
+            "sim": 0.956,
+            "conf_gap": -0.002,
+            "z": 0.26,
+            "score": 0.89
+          }
+        },
+        {
+          "text": "text-to-speech",
+          "gt": {
+            "t0": 3.337,
+            "t1": 4.121,
+            "score": 0.855,
+            "prominence": -0.531
+          },
+          "user": {
+            "t0": 3.09,
+            "t1": 3.832,
+            "score": 0.88,
+            "prominence": -0.584
+          },
+          "pron": {
+            "sim": 0.94,
+            "conf_gap": -0.025,
+            "z": -0.55,
+            "score": 0.849
+          }
+        },
+        {
+          "text": "models.",
+          "gt": {
+            "t0": 4.181,
+            "t1": 4.624,
+            "score": 0.94,
+            "prominence": -1.887
+          },
+          "user": {
+            "t0": 3.872,
+            "t1": 4.294,
+            "score": 0.955,
+            "prominence": -1.881
+          },
+          "pron": {
+            "sim": 0.955,
+            "conf_gap": -0.015,
+            "z": 0.23,
+            "score": 0.888
+          }
+        }
+      ],
+      "align_confidence": {
+        "gt": 0.939,
+        "user": 0.931,
+        "gt_source": "aligned"
+      },
+      "durations": {
+        "gt": 4.604,
+        "user": 4.294
+      },
+      "wav_url": null
+    },
+    {
+      "sentence_id": "s1",
+      "text": "The challenge was removing a speaker's voice from a trained model without retraining it from scratch.",
+      "segment": {
+        "t0": 4.414,
+        "t1": 9.278
+      },
+      "wav": null,
+      "status": "ok",
+      "reason": null,
+      "pronunciation_score": 0.872,
+      "rate_ratio": 0.936,
+      "rhythm_score": 0.878,
+      "intonation_score": 0.961,
+      "stress_match": 0.929,
+      "word_diff": [],
+      "words": [
+        {
+          "text": "The",
+          "gt": {
+            "t0": 0.02,
+            "t1": 0.08,
+            "score": 0.992,
+            "prominence": 1.073
+          },
+          "user": {
+            "t0": 0.141,
+            "t1": 0.201,
+            "score": 0.998,
+            "prominence": 0.06
+          },
+          "pron": {
+            "sim": 0.948,
+            "conf_gap": -0.006,
+            "z": -1.05,
+            "score": 0.871
+          }
+        },
+        {
+          "text": "challenge",
+          "gt": {
+            "t0": 0.14,
+            "t1": 0.581,
+            "score": 0.996,
+            "prominence": 1.527
+          },
+          "user": {
+            "t0": 0.281,
+            "t1": 0.683,
+            "score": 0.987,
+            "prominence": 1.983
+          },
+          "pron": {
+            "sim": 0.965,
+            "conf_gap": 0.009,
+            "z": -0.23,
+            "score": 0.903
+          }
+        },
+        {
+          "text": "was",
+          "gt": {
+            "t0": 0.602,
+            "t1": 0.722,
+            "score": 0.917,
+            "prominence": 0.046
+          },
+          "user": {
+            "t0": 0.703,
+            "t1": 0.824,
+            "score": 0.897,
+            "prominence": 0.136
+          },
+          "pron": {
+            "sim": 0.968,
+            "conf_gap": 0.02,
+            "z": -0.05,
+            "score": 0.901
+          }
+        },
+        {
+          "text": "removing",
+          "gt": {
+            "t0": 0.782,
+            "t1": 1.203,
+            "score": 0.999,
+            "prominence": 1.33
+          },
+          "user": {
+            "t0": 0.864,
+            "t1": 1.266,
+            "score": 0.957,
+            "prominence": 1.628
+          },
+          "pron": {
+            "sim": 0.978,
+            "conf_gap": 0.042,
+            "z": 0.45,
+            "score": 0.904
+          }
+        },
+        {
+          "text": "a",
+          "gt": {
+            "t0": 1.243,
+            "t1": 1.263,
+            "score": 0.995,
+            "prominence": -0.471
+          },
+          "user": {
+            "t0": 1.306,
+            "t1": 1.327,
+            "score": 0.996,
+            "prominence": -1.049
+          },
+          "pron": {
+            "sim": 0.97,
+            "conf_gap": -0.001,
+            "z": 0.05,
+            "score": 0.926
+          }
+        },
+        {
+          "text": "speaker's",
+          "gt": {
+            "t0": 1.343,
+            "t1": 1.785,
+            "score": 0.915,
+            "prominence": -0.501
+          },
+          "user": {
+            "t0": 1.387,
+            "t1": 1.809,
+            "score": 0.941,
+            "prominence": -0.231
+          },
+          "pron": {
+            "sim": 0.972,
+            "conf_gap": -0.026,
+            "z": 0.16,
+            "score": 0.931
+          }
+        },
+        {
+          "text": "voice",
+          "gt": {
+            "t0": 1.845,
+            "t1": 2.105,
+            "score": 0.999,
+            "prominence": -0.372
+          },
+          "user": {
+            "t0": 1.849,
+            "t1": 2.11,
+            "score": 1.0,
+            "prominence": -0.464
+          },
+          "pron": {
+            "sim": 0.976,
+            "conf_gap": -0.001,
+            "z": 0.32,
+            "score": 0.94
+          }
+        },
+        {
+          "text": "from",
+          "gt": {
+            "t0": 2.145,
+            "t1": 2.286,
+            "score": 0.973,
+            "prominence": -0.534
+          },
+          "user": {
+            "t0": 2.131,
+            "t1": 2.271,
+            "score": 0.989,
+            "prominence": 0.338
+          },
+          "pron": {
+            "sim": 0.978,
+            "conf_gap": -0.016,
+            "z": 0.44,
+            "score": 0.945
+          }
+        },
+        {
+          "text": "a",
+          "gt": {
+            "t0": 2.326,
+            "t1": 2.346,
+            "score": 0.996,
+            "prominence": -1.696
+          },
+          "user": {
+            "t0": 2.311,
+            "t1": 2.332,
+            "score": 0.997,
+            "prominence": -1.713
+          },
+          "pron": {
+            "sim": 0.973,
+            "conf_gap": -0.001,
+            "z": 0.16,
+            "score": 0.932
+          }
+        },
+        {
+          "text": "trained",
+          "gt": {
+            "t0": 2.426,
+            "t1": 2.747,
+            "score": 0.998,
+            "prominence": 1.983
+          },
+          "user": {
+            "t0": 2.392,
+            "t1": 2.693,
+            "score": 0.958,
+            "prominence": 1.264
+          },
+          "pron": {
+            "sim": 0.97,
+            "conf_gap": 0.04,
+            "z": 0.04,
+            "score": 0.886
+          }
+        },
+        {
+          "text": "model",
+          "gt": {
+            "t0": 2.787,
+            "t1": 3.068,
+            "score": 0.997,
+            "prominence": 0.839
+          },
+          "user": {
+            "t0": 2.733,
+            "t1": 2.995,
+            "score": 0.995,
+            "prominence": 1.115
+          },
+          "pron": {
+            "sim": 0.972,
+            "conf_gap": 0.002,
+            "z": 0.14,
+            "score": 0.928
+          }
+        },
+        {
+          "text": "without",
+          "gt": {
+            "t0": 3.108,
+            "t1": 3.449,
+            "score": 0.971,
+            "prominence": 0.207
+          },
+          "user": {
+            "t0": 3.035,
+            "t1": 3.357,
+            "score": 0.901,
+            "prominence": 0.161
+          },
+          "pron": {
+            "sim": 0.972,
+            "conf_gap": 0.07,
+            "z": 0.14,
+            "score": 0.86
+          }
+        },
+        {
+          "text": "retraining",
+          "gt": {
+            "t0": 3.509,
+            "t1": 4.05,
+            "score": 0.984,
+            "prominence": 1.373
+          },
+          "user": {
+            "t0": 3.397,
+            "t1": 3.919,
+            "score": 0.999,
+            "prominence": 1.804
+          },
+          "pron": {
+            "sim": 0.973,
+            "conf_gap": -0.015,
+            "z": 0.17,
+            "score": 0.932
+          }
+        },
+        {
+          "text": "it",
+          "gt": {
+            "t0": 4.09,
+            "t1": 4.171,
+            "score": 0.999,
+            "prominence": -2.845
+          },
+          "user": {
+            "t0": 3.939,
+            "t1": 4.02,
+            "score": 0.999,
+            "prominence": -3.075
+          },
+          "pron": {
+            "sim": 0.976,
+            "conf_gap": 0.0,
+            "z": 0.32,
+            "score": 0.939
+          }
+        },
+        {
+          "text": "from",
+          "gt": {
+            "t0": 4.211,
+            "t1": 4.351,
+            "score": 0.999,
+            "prominence": 0.415
+          },
+          "user": {
+            "t0": 4.04,
+            "t1": 4.181,
+            "score": 0.999,
+            "prominence": 0.185
+          },
+          "pron": {
+            "sim": 0.953,
+            "conf_gap": 0.0,
+            "z": -0.8,
+            "score": 0.884
+          }
+        },
+        {
+          "text": "scratch.",
+          "gt": {
+            "t0": 4.431,
+            "t1": 4.913,
+            "score": 0.836,
+            "prominence": -2.374
+          },
+          "user": {
+            "t0": 4.261,
+            "t1": 4.723,
+            "score": 0.894,
+            "prominence": -2.145
+          },
+          "pron": {
+            "sim": 0.964,
+            "conf_gap": -0.058,
+            "z": -0.26,
+            "score": 0.91
+          }
+        }
+      ],
+      "align_confidence": {
+        "gt": 0.973,
+        "user": 0.969,
+        "gt_source": "aligned"
+      },
+      "durations": {
+        "gt": 4.893,
+        "user": 4.582
+      },
+      "wav_url": null
+    },
+    {
+      "sentence_id": "s2",
+      "text": "I designed a training-free method, and it cut the speaker similarity by sixty percent while keeping audio quality intact.",
+      "segment": {
+        "t0": 9.318,
+        "t1": 15.874
+      },
+      "wav": null,
+      "status": "ok",
+      "reason": null,
+      "pronunciation_score": 0.853,
+      "rate_ratio": 0.923,
+      "rhythm_score": 0.787,
+      "intonation_score": 0.967,
+      "stress_match": 0.963,
+      "word_diff": [
+        {
+          "text": "quality",
+          "gt_dur": 0.42,
+          "user_dur": 0.38,
+          "ratio": 0.905,
+          "dev": -0.044,
+          "stress_gap": -1.301,
+          "pron": 0.901,
+          "note": "강세 과함"
+        }
+      ],
+      "words": [
+        {
+          "text": "I",
+          "gt": {
+            "t0": 0.08,
+            "t1": 0.1,
+            "score": 0.997,
+            "prominence": 0.64
+          },
+          "user": {
+            "t0": 0.14,
+            "t1": 0.16,
+            "score": 0.994,
+            "prominence": 0.459
+          },
+          "pron": {
+            "sim": 0.931,
+            "conf_gap": 0.003,
+            "z": -2.32,
+            "score": 0.826
+          }
+        },
+        {
+          "text": "designed",
+          "gt": {
+            "t0": 0.16,
+            "t1": 0.561,
+            "score": 0.948,
+            "prominence": 0.522
+          },
+          "user": {
+            "t0": 0.2,
+            "t1": 0.581,
+            "score": 0.946,
+            "prominence": 0.673
+          },
+          "pron": {
+            "sim": 0.986,
+            "conf_gap": 0.002,
+            "z": 0.41,
+            "score": 0.963
+          }
+        },
+        {
+          "text": "a",
+          "gt": {
+            "t0": 0.581,
+            "t1": 0.601,
+            "score": 0.986,
+            "prominence": 0.121
+          },
+          "user": {
+            "t0": 0.601,
+            "t1": 0.622,
+            "score": 0.984,
+            "prominence": -0.059
+          },
+          "pron": {
+            "sim": 0.981,
+            "conf_gap": 0.002,
+            "z": 0.17,
+            "score": 0.951
+          }
+        },
+        {
+          "text": "training-free",
+          "gt": {
+            "t0": 0.661,
+            "t1": 1.302,
+            "score": 0.966,
+            "prominence": 1.05
+          },
+          "user": {
+            "t0": 0.662,
+            "t1": 1.263,
+            "score": 0.97,
+            "prominence": 1.064
+          },
+          "pron": {
+            "sim": 0.985,
+            "conf_gap": -0.004,
+            "z": 0.37,
+            "score": 0.963
+          }
+        },
+        {
+          "text": "method,",
+          "gt": {
+            "t0": 1.382,
+            "t1": 1.742,
+            "score": 0.98,
+            "prominence": -2.123
+          },
+          "user": {
+            "t0": 1.323,
+            "t1": 1.684,
+            "score": 0.995,
+            "prominence": -1.958
+          },
+          "pron": {
+            "sim": 0.983,
+            "conf_gap": -0.015,
+            "z": 0.23,
+            "score": 0.956
+          }
+        },
+        {
+          "text": "and",
+          "gt": {
+            "t0": 2.002,
+            "t1": 2.102,
+            "score": 0.995,
+            "prominence": -0.203
+          },
+          "user": {
+            "t0": 1.905,
+            "t1": 2.025,
+            "score": 0.996,
+            "prominence": -0.383
+          },
+          "pron": {
+            "sim": 0.977,
+            "conf_gap": -0.001,
+            "z": -0.05,
+            "score": 0.942
+          }
+        },
+        {
+          "text": "it",
+          "gt": {
+            "t0": 2.163,
+            "t1": 2.243,
+            "score": 0.986,
+            "prominence": 0.461
+          },
+          "user": {
+            "t0": 2.065,
+            "t1": 2.145,
+            "score": 0.983,
+            "prominence": 0.196
+          },
+          "pron": {
+            "sim": 0.989,
+            "conf_gap": 0.003,
+            "z": 0.57,
+            "score": 0.97
+          }
+        },
+        {
+          "text": "cut",
+          "gt": {
+            "t0": 2.283,
+            "t1": 2.463,
+            "score": 0.879,
+            "prominence": -0.655
+          },
+          "user": {
+            "t0": 2.185,
+            "t1": 2.346,
+            "score": 0.998,
+            "prominence": -0.246
+          },
+          "pron": {
+            "sim": 0.985,
+            "conf_gap": -0.119,
+            "z": 0.33,
+            "score": 0.961
+          }
+        },
+        {
+          "text": "the",
+          "gt": {
+            "t0": 2.503,
+            "t1": 2.583,
+            "score": 0.802,
+            "prominence": 0.347
+          },
+          "user": {
+            "t0": 2.386,
+            "t1": 2.446,
+            "score": 0.948,
+            "prominence": 0.416
+          },
+          "pron": {
+            "sim": 0.933,
+            "conf_gap": -0.146,
+            "z": -2.25,
+            "score": 0.832
+          }
+        },
+        {
+          "text": "speaker",
+          "gt": {
+            "t0": 2.643,
+            "t1": 3.004,
+            "score": 0.98,
+            "prominence": -0.093
+          },
+          "user": {
+            "t0": 2.506,
+            "t1": 2.847,
+            "score": 0.988,
+            "prominence": -0.366
+          },
+          "pron": {
+            "sim": 0.986,
+            "conf_gap": -0.008,
+            "z": 0.39,
+            "score": 0.964
+          }
+        },
+        {
+          "text": "similarity",
+          "gt": {
+            "t0": 3.084,
+            "t1": 3.624,
+            "score": 0.992,
+            "prominence": 2.676
+          },
+          "user": {
+            "t0": 2.907,
+            "t1": 3.428,
+            "score": 0.988,
+            "prominence": 2.372
+          },
+          "pron": {
+            "sim": 0.987,
+            "conf_gap": 0.004,
+            "z": 0.43,
+            "score": 0.962
+          }
+        },
+        {
+          "text": "by",
+          "gt": {
+            "t0": 3.704,
+            "t1": 3.845,
+            "score": 0.998,
+            "prominence": -0.533
+          },
+          "user": {
+            "t0": 3.489,
+            "t1": 3.629,
+            "score": 0.999,
+            "prominence": -0.627
+          },
+          "pron": {
+            "sim": 0.988,
+            "conf_gap": -0.001,
+            "z": 0.5,
+            "score": 0.97
+          }
+        },
+        {
+          "text": "sixty",
+          "gt": {
+            "t0": 3.925,
+            "t1": 4.265,
+            "score": 0.597,
+            "prominence": -1.254
+          },
+          "user": {
+            "t0": 3.709,
+            "t1": 4.03,
+            "score": 0.827,
+            "prominence": -1.214
+          },
+          "pron": {
+            "sim": 0.97,
+            "conf_gap": -0.23,
+            "z": -0.41,
+            "score": 0.924
+          }
+        },
+        {
+          "text": "percent",
+          "gt": {
+            "t0": 4.365,
+            "t1": 4.766,
+            "score": 0.844,
+            "prominence": -0.717
+          },
+          "user": {
+            "t0": 4.11,
+            "t1": 4.491,
+            "score": 0.952,
+            "prominence": -0.406
+          },
+          "pron": {
+            "sim": 0.985,
+            "conf_gap": -0.108,
+            "z": 0.34,
+            "score": 0.962
+          }
+        },
+        {
+          "text": "while",
+          "gt": {
+            "t0": 4.806,
+            "t1": 5.046,
+            "score": 0.953,
+            "prominence": -1.089
+          },
+          "user": {
+            "t0": 4.531,
+            "t1": 4.752,
+            "score": 0.99,
+            "prominence": -1.519
+          },
+          "pron": {
+            "sim": 0.983,
+            "conf_gap": -0.037,
+            "z": 0.23,
+            "score": 0.956
+          }
+        },
+        {
+          "text": "keeping",
+          "gt": {
+            "t0": 5.066,
+            "t1": 5.446,
+            "score": 0.943,
+            "prominence": 1.202
+          },
+          "user": {
+            "t0": 4.772,
+            "t1": 5.112,
+            "score": 0.995,
+            "prominence": 0.762
+          },
+          "pron": {
+            "sim": 0.984,
+            "conf_gap": -0.052,
+            "z": 0.3,
+            "score": 0.96
+          }
+        },
+        {
+          "text": "audio",
+          "gt": {
+            "t0": 5.507,
+            "t1": 5.767,
+            "score": 0.657,
+            "prominence": 0.951
+          },
+          "user": {
+            "t0": 5.173,
+            "t1": 5.413,
+            "score": 0.677,
+            "prominence": 1.011
+          },
+          "pron": {
+            "sim": 0.99,
+            "conf_gap": -0.02,
+            "z": 0.62,
+            "score": 0.976
+          }
+        },
+        {
+          "text": "quality",
+          "gt": {
+            "t0": 5.887,
+            "t1": 6.307,
+            "score": 0.996,
+            "prominence": 0.177
+          },
+          "user": {
+            "t0": 5.534,
+            "t1": 5.914,
+            "score": 0.938,
+            "prominence": 1.478
+          },
+          "pron": {
+            "sim": 0.984,
+            "conf_gap": 0.058,
+            "z": 0.3,
+            "score": 0.901
+          }
+        },
+        {
+          "text": "intact.",
+          "gt": {
+            "t0": 6.408,
+            "t1": 6.968,
+            "score": 0.959,
+            "prominence": -1.478
+          },
+          "user": {
+            "t0": 6.015,
+            "t1": 6.496,
+            "score": 0.943,
+            "prominence": -1.654
+          },
+          "pron": {
+            "sim": 0.974,
+            "conf_gap": 0.016,
+            "z": -0.17,
+            "score": 0.92
+          }
+        }
+      ],
+      "align_confidence": {
+        "gt": 0.919,
+        "user": 0.953,
+        "gt_source": "aligned"
+      },
+      "durations": {
+        "gt": 6.888,
+        "user": 6.356
+      },
+      "wav_url": null
+    }
+  ],
+  "summary": {
+    "axes": {
+      "pronunciation": 0.844,
+      "rate": 0.931,
+      "rhythm": 0.796,
+      "intonation": 0.961,
+      "stress": 0.956
+    },
+    "overall": 0.898,
+    "n_scored": 3,
+    "n_sentences": 3
+  }
+}

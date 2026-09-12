@@ -1,0 +1,450 @@
+{
+  "sentence": {
+    "sentence_id": "s2",
+    "text": "I designed a training-free method, and it cut the speaker similarity by sixty percent while keeping audio quality intact.",
+    "segment": null,
+    "wav": "6aa5122a3be1ec765046b2c2/trials/6aa5125d447266899a923457/sentences/s2.16k.wav",
+    "status": "ok",
+    "reason": null,
+    "pronunciation_score": 0.691,
+    "rate_ratio": 1.084,
+    "rhythm_score": 0.789,
+    "intonation_score": 0.96,
+    "stress_match": 0.954,
+    "word_diff": [
+      {
+        "text": "sixty",
+        "gt_dur": 0.34,
+        "user_dur": 0.32,
+        "ratio": 0.941,
+        "dev": -0.127,
+        "stress_gap": -0.017,
+        "pron": 0.434,
+        "note": "발음 불명확"
+      }
+    ],
+    "words": [
+      {
+        "text": "I",
+        "gt": {
+          "t0": 0.08,
+          "t1": 0.1,
+          "score": 0.997,
+          "prominence": 0.64
+        },
+        "user": {
+          "t0": 0.1,
+          "t1": 0.12,
+          "score": 0.996,
+          "prominence": 0.471
+        },
+        "pron": {
+          "sim": 0.933,
+          "conf_gap": 0.001,
+          "z": -1.3,
+          "score": 0.832
+        }
+      },
+      {
+        "text": "designed",
+        "gt": {
+          "t0": 0.16,
+          "t1": 0.561,
+          "score": 0.948,
+          "prominence": 0.522
+        },
+        "user": {
+          "t0": 0.18,
+          "t1": 0.621,
+          "score": 0.902,
+          "prominence": 0.652
+        },
+        "pron": {
+          "sim": 0.99,
+          "conf_gap": 0.046,
+          "z": 0.44,
+          "score": 0.929
+        }
+      },
+      {
+        "text": "a",
+        "gt": {
+          "t0": 0.581,
+          "t1": 0.601,
+          "score": 0.986,
+          "prominence": 0.121
+        },
+        "user": {
+          "t0": 0.641,
+          "t1": 0.661,
+          "score": 0.991,
+          "prominence": 0.257
+        },
+        "pron": {
+          "sim": 0.989,
+          "conf_gap": -0.005,
+          "z": 0.4,
+          "score": 0.971
+        }
+      },
+      {
+        "text": "training-free",
+        "gt": {
+          "t0": 0.661,
+          "t1": 1.302,
+          "score": 0.966,
+          "prominence": 1.05
+        },
+        "user": {
+          "t0": 0.721,
+          "t1": 1.442,
+          "score": 0.998,
+          "prominence": 0.997
+        },
+        "pron": {
+          "sim": 0.993,
+          "conf_gap": -0.032,
+          "z": 0.53,
+          "score": 0.982
+        }
+      },
+      {
+        "text": "method,",
+        "gt": {
+          "t0": 1.382,
+          "t1": 1.742,
+          "score": 0.98,
+          "prominence": -2.123
+        },
+        "user": {
+          "t0": 1.502,
+          "t1": 1.923,
+          "score": 0.963,
+          "prominence": -2.089
+        },
+        "pron": {
+          "sim": 0.992,
+          "conf_gap": 0.017,
+          "z": 0.52,
+          "score": 0.964
+        }
+      },
+      {
+        "text": "and",
+        "gt": {
+          "t0": 2.002,
+          "t1": 2.102,
+          "score": 0.995,
+          "prominence": -0.203
+        },
+        "user": {
+          "t0": 2.203,
+          "t1": 2.323,
+          "score": 0.961,
+          "prominence": -0.027
+        },
+        "pron": {
+          "sim": 0.986,
+          "conf_gap": 0.034,
+          "z": 0.32,
+          "score": 0.931
+        }
+      },
+      {
+        "text": "it",
+        "gt": {
+          "t0": 2.163,
+          "t1": 2.243,
+          "score": 0.986,
+          "prominence": 0.461
+        },
+        "user": {
+          "t0": 2.383,
+          "t1": 2.463,
+          "score": 0.969,
+          "prominence": 0.373
+        },
+        "pron": {
+          "sim": 0.977,
+          "conf_gap": 0.017,
+          "z": 0.05,
+          "score": 0.926
+        }
+      },
+      {
+        "text": "cut",
+        "gt": {
+          "t0": 2.283,
+          "t1": 2.463,
+          "score": 0.879,
+          "prominence": -0.655
+        },
+        "user": {
+          "t0": 2.523,
+          "t1": 2.704,
+          "score": 0.998,
+          "prominence": -0.422
+        },
+        "pron": {
+          "sim": 0.991,
+          "conf_gap": -0.119,
+          "z": 0.46,
+          "score": 0.977
+        }
+      },
+      {
+        "text": "the",
+        "gt": {
+          "t0": 2.503,
+          "t1": 2.583,
+          "score": 0.802,
+          "prominence": 0.347
+        },
+        "user": {
+          "t0": 2.744,
+          "t1": 2.824,
+          "score": 0.957,
+          "prominence": -0.447
+        },
+        "pron": {
+          "sim": 0.941,
+          "conf_gap": -0.155,
+          "z": -1.07,
+          "score": 0.852
+        }
+      },
+      {
+        "text": "speaker",
+        "gt": {
+          "t0": 2.643,
+          "t1": 3.004,
+          "score": 0.98,
+          "prominence": -0.093
+        },
+        "user": {
+          "t0": 2.904,
+          "t1": 3.304,
+          "score": 0.981,
+          "prominence": -0.06
+        },
+        "pron": {
+          "sim": 0.992,
+          "conf_gap": -0.001,
+          "z": 0.49,
+          "score": 0.979
+        }
+      },
+      {
+        "text": "similarity",
+        "gt": {
+          "t0": 3.084,
+          "t1": 3.624,
+          "score": 0.992,
+          "prominence": 2.676
+        },
+        "user": {
+          "t0": 3.384,
+          "t1": 3.985,
+          "score": 0.982,
+          "prominence": 2.776
+        },
+        "pron": {
+          "sim": 0.991,
+          "conf_gap": 0.01,
+          "z": 0.47,
+          "score": 0.968
+        }
+      },
+      {
+        "text": "by",
+        "gt": {
+          "t0": 3.704,
+          "t1": 3.845,
+          "score": 0.998,
+          "prominence": -0.533
+        },
+        "user": {
+          "t0": 4.065,
+          "t1": 4.206,
+          "score": 0.86,
+          "prominence": -0.738
+        },
+        "pron": {
+          "sim": 0.978,
+          "conf_gap": 0.138,
+          "z": 0.09,
+          "score": 0.808
+        }
+      },
+      {
+        "text": "sixty",
+        "gt": {
+          "t0": 3.925,
+          "t1": 4.265,
+          "score": 0.597,
+          "prominence": -1.254
+        },
+        "user": {
+          "t0": 4.306,
+          "t1": 4.626,
+          "score": 0.391,
+          "prominence": -1.237
+        },
+        "pron": {
+          "sim": 0.856,
+          "conf_gap": 0.206,
+          "z": -3.66,
+          "score": 0.434
+        }
+      },
+      {
+        "text": "percent",
+        "gt": {
+          "t0": 4.365,
+          "t1": 4.766,
+          "score": 0.844,
+          "prominence": -0.717
+        },
+        "user": {
+          "t0": 4.706,
+          "t1": 5.147,
+          "score": 0.864,
+          "prominence": -0.294
+        },
+        "pron": {
+          "sim": 0.975,
+          "conf_gap": -0.02,
+          "z": -0.01,
+          "score": 0.938
+        }
+      },
+      {
+        "text": "while",
+        "gt": {
+          "t0": 4.806,
+          "t1": 5.046,
+          "score": 0.953,
+          "prominence": -1.089
+        },
+        "user": {
+          "t0": 5.207,
+          "t1": 5.447,
+          "score": 0.908,
+          "prominence": -1.024
+        },
+        "pron": {
+          "sim": 0.99,
+          "conf_gap": 0.045,
+          "z": 0.44,
+          "score": 0.93
+        }
+      },
+      {
+        "text": "keeping",
+        "gt": {
+          "t0": 5.066,
+          "t1": 5.446,
+          "score": 0.943,
+          "prominence": 1.202
+        },
+        "user": {
+          "t0": 5.487,
+          "t1": 5.888,
+          "score": 0.996,
+          "prominence": 0.482
+        },
+        "pron": {
+          "sim": 0.993,
+          "conf_gap": -0.053,
+          "z": 0.52,
+          "score": 0.981
+        }
+      },
+      {
+        "text": "audio",
+        "gt": {
+          "t0": 5.507,
+          "t1": 5.767,
+          "score": 0.657,
+          "prominence": 0.951
+        },
+        "user": {
+          "t0": 5.948,
+          "t1": 6.248,
+          "score": 0.647,
+          "prominence": 1.077
+        },
+        "pron": {
+          "sim": 0.985,
+          "conf_gap": 0.01,
+          "z": 0.29,
+          "score": 0.953
+        }
+      },
+      {
+        "text": "quality",
+        "gt": {
+          "t0": 5.887,
+          "t1": 6.307,
+          "score": 0.996,
+          "prominence": 0.177
+        },
+        "user": {
+          "t0": 6.388,
+          "t1": 6.849,
+          "score": 0.997,
+          "prominence": 0.75
+        },
+        "pron": {
+          "sim": 0.992,
+          "conf_gap": -0.001,
+          "z": 0.5,
+          "score": 0.98
+        }
+      },
+      {
+        "text": "intact.",
+        "gt": {
+          "t0": 6.408,
+          "t1": 6.968,
+          "score": 0.959,
+          "prominence": -1.478
+        },
+        "user": {
+          "t0": 6.949,
+          "t1": 7.57,
+          "score": 0.885,
+          "prominence": -1.498
+        },
+        "pron": {
+          "sim": 0.993,
+          "conf_gap": 0.074,
+          "z": 0.53,
+          "score": 0.909
+        }
+      }
+    ],
+    "align_confidence": {
+      "gt": 0.919,
+      "user": 0.908,
+      "gt_source": "aligned"
+    },
+    "durations": {
+      "gt": 6.888,
+      "user": 7.47
+    },
+    "wav_url": "/api/media/6aa5122a3be1ec765046b2c2/trials/6aa5125d447266899a923457/sentences/s2.16k.wav"
+  },
+  "summary": {
+    "axes": {
+      "pronunciation": 0.838,
+      "rate": 0.906,
+      "rhythm": 0.805,
+      "intonation": 0.96,
+      "stress": 0.963
+    },
+    "overall": 0.894,
+    "n_scored": 3,
+    "n_sentences": 3
+  }
+}

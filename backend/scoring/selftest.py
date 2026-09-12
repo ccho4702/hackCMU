@@ -62,7 +62,11 @@ def main():
         else:
             synth(d / f"{name}.wav", TEXT.replace(*sub) if sub else TEXT, rate)
 
-    from scoring.shadow_score import score_shadowing  # 오디오 생성 뒤에 import (모델 로드 지연)
+    from scoring.shadow_score import normalize_words, score_shadowing  # 오디오 생성 뒤에 import (모델 로드 지연)
+
+    # 정규화: 하이픈(blank 토큰)·숫자·기호가 정렬 타깃에 들어가면 안 된다
+    _, norm = normalize_words("text-to-speech it’s 60% *star*")
+    assert norm == ["texttospeech", "it's", "", "star"], norm
 
     fmt = lambda v: f"{v:.3f}" if isinstance(v, (int, float)) else "  -  "
     print(f"\n{'case':10s} {'설명':20s} {'status':6s} {'pron':>6s} {'rate':>6s} {'rhythm':>7s} "
