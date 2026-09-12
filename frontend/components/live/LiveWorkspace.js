@@ -23,6 +23,7 @@ import {
 import { useAlertToasts } from "@/hooks/useAlertToasts";
 import { useDisplayRect } from "@/hooks/useDisplayRect";
 import { ApiError, createLiveSession, sendLiveFrame, stopLiveSession } from "@/lib/api/client";
+import { LanguageSelect } from "@/components/LanguageSelect";
 import { beginCoaching } from "@/lib/api/coaching";
 import { stashVideoFile } from "@/lib/media/videoStore";
 
@@ -52,6 +53,7 @@ export function LiveWorkspace() {
   const running = useRef(false);
   const unmounted = useRef(false);
 
+  const [language, setLanguage] = useState("en");
   const [session, setSession] = useState(null);
   const [meshEnabled, setMeshEnabled] = useState(true);
   const [meshMode, setMeshMode] = useState("contour");
@@ -255,7 +257,7 @@ export function LiveWorkspace() {
           },
         );
         stashVideoFile(stopped.analysisId, file);
-        await beginCoaching(file, stopped.analysisId);
+        await beginCoaching(file, stopped.analysisId, language);
       }
       router.push(`/analysis/${stopped.analysisId}`);
     } catch (err) {
@@ -263,7 +265,7 @@ export function LiveWorkspace() {
       else setError(err instanceof Error ? err.message : "Could not stop the session.");
       setStopping(false);
     }
-  }, [router, stopping, collectRecording]);
+  }, [router, stopping, collectRecording, language]);
 
   const failed = !session && !starting && error;
   const cameraStatus = session
@@ -295,6 +297,7 @@ export function LiveWorkspace() {
     >
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
         <div className="flex min-w-0 flex-col gap-6">
+          <LanguageSelect value={language} onChange={setLanguage} disabled={starting || Boolean(session) || stopping} />
           <Stage ref={setContainer}>
             {/* Mirrored like a selfie view; video and mesh flip together so they stay aligned */}
             <div className="absolute inset-0 origin-center -scale-x-100">

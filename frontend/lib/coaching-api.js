@@ -39,9 +39,10 @@ export function apiUpload(path, file, field = "file") {
   return request(path, { method: "POST", body: form });
 }
 
-export function startPipeline(file, userId) {
+export function startPipeline(file, userId, language) {
   const form = new FormData();
   form.append("file", file);
   form.append("user_id", userId);
+  if (language) form.append("language", language);
   return request("/pipeline", { method: "POST", body: form });
 }

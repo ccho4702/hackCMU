@@ -272,8 +272,8 @@ TTS calls, supply a script already written in the selected language.
 
 When no language is selected, existing behavior is retained: Korean feedback,
 original-language improved script, and automatic ASR/TTS language inference. Selected
-language is saved in run manifests and provider metadata. The frontend source is
-unchanged; a language selector can call these APIs when integrated by its owner.
+language is saved in run manifests and provider metadata. The frontend upload and live-analysis screens let the user select English or Korean
+before starting. The selection is retained for retries of the same analysis.
 
 **Practice pronunciation scoring remains English-only.** Korean analysis, script
 revision, TTS and generated word timing are supported; the existing MMS pronunciation

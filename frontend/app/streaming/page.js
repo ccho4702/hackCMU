@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { LanguageSelect } from "@/components/LanguageSelect";
 import { apiGet, startPipeline } from "@/lib/coaching-api";
 import { recordingOptions, recordingFilename, clockTime, MAX_RECORDING_SECONDS, MAX_UPLOAD_BYTES } from "@/lib/recording";
 import { useEffect, useRef, useState } from "react";
@@ -33,6 +34,7 @@ const TONE_DOT = {
 export default function StreamingPage() {
   const router = useRouter();
   const { videoRef, status: cameraStatus, error: cameraError, start: startCamera, stop: stopCamera } = useWebcam();
+  const [language, setLanguage] = useState("en");
   const [recordError, setRecordError] = useState("");
   const [uploading, setUploading] = useState(false);
   const [seconds, setSeconds] = useState(0);
@@ -66,7 +68,7 @@ export default function StreamingPage() {
       if(file.size>MAX_UPLOAD_BYTES) throw new Error("Please upload a recording smaller than 100 MB.");
       let userId=localStorage.getItem("rehearse.userId");
       if(!userId){userId=crypto.randomUUID();localStorage.setItem("rehearse.userId",userId);}
-      const job=await startPipeline(file,userId);
+      const job=await startPipeline(file,userId,language);
       localStorage.setItem("rehearse.lastRun",job.run_id);
       if(alive.current) router.push(`/evaluation?run=${job.run_id}`);
     } catch(e) {
@@ -257,7 +259,7 @@ export default function StreamingPage() {
               </code>
             </div>
           </Card>
-          <Card title="Have a recording?"><p className="mb-3 text-xs leading-5 text-slate-500">Upload a video with microphone audio to run the same analysis.</p><button className="button secondary-button w-full" disabled={live || uploading || cameraStatus === "starting"} onClick={()=>inputRef.current?.click()}>Upload a recording</button><input ref={inputRef} type="file" className="visually-hidden" accept="video/mp4,video/webm,video/quicktime,.mov,.mkv" onChange={uploadRecording} aria-label="Upload a recording"/></Card>
+          <Card title="Have a recording?"><LanguageSelect value={language} onChange={setLanguage} disabled={live || uploading || cameraStatus === "starting"} /><p className="mb-3 text-xs leading-5 text-slate-500">Upload a video with microphone audio to run the same analysis.</p><button className="button secondary-button w-full" disabled={live || uploading || cameraStatus === "starting"} onClick={()=>inputRef.current?.click()}>Upload a recording</button><input ref={inputRef} type="file" className="visually-hidden" accept="video/mp4,video/webm,video/quicktime,.mov,.mkv" onChange={uploadRecording} aria-label="Upload a recording"/></Card>
         </aside>
       </main>
     </div>
