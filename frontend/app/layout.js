@@ -15,9 +15,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata = {
-  title: "Mellonaires — Presentation Analysis",
+  title: "Optune — Optimize your voice. Hear your best.",
   description:
-    "Instrumentation for quantitative analysis of observable facial delivery in presentation video.",
+    "Record a rehearsal, get timestamped delivery coaching and a revised script, then practice it in your own voice.",
 };
 
 export default function RootLayout({ children }) {

@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { AudioLines } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { UserMenu } from "@/components/layout/UserMenu";
@@ -23,13 +23,8 @@ export function AppHeader({ title, subtitle, right, mock, runId }) {
   return (
     <header className="sticky top-0 z-30 px-3 pt-3 sm:px-6">
       <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-x-4 gap-y-2 rounded-2xl bg-white/75 px-3 py-2 shadow-[0_10px_40px_-18px_rgba(15,23,42,0.35)] ring-1 ring-white/80 backdrop-blur-xl sm:px-4">
-        <Link href="/" aria-label="Home" className="flex shrink-0 items-center gap-2.5">
-          <span className="grid size-9 place-items-center rounded-xl bg-gradient-to-br from-[#172554] to-primary text-white">
-            <AudioLines className="size-[18px]" />
-          </span>
-          <span className="hidden text-[15px] font-bold tracking-tight text-slate-900 sm:block">
-            Mellonaires
-          </span>
+        <Link href="/" aria-label="Optune home" className="flex shrink-0 items-center py-1">
+          <Image src="/optune-logo.png" alt="Optune" width={1326} height={680} priority className="h-7 w-auto sm:h-8" />
         </Link>
 
         {!isHome && title ? (

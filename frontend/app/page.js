@@ -1,5 +1,7 @@
 "use client";
 
+import Image from "next/image";
+
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -30,11 +32,11 @@ export default function HomePage() {
           <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-950/20 to-transparent"/>
           <div className="absolute inset-0 flex flex-col justify-end p-5 text-white sm:p-10 lg:p-14">
             <span className="h-1 w-10 rounded-full bg-white sm:w-14" />
-            <h1 className="mt-3 text-3xl font-bold tracking-tight text-shadow-lg sm:mt-5 sm:text-6xl lg:text-7xl">
-              Presently
+            <h1 className="mt-3 sm:mt-5">
+              <Image src="/optune-logo-white.png" alt="Optune" width={1326} height={680} priority className="h-10 w-auto drop-shadow-lg sm:h-16 lg:h-20" />
             </h1>
-            <p className="mt-1 max-w-md text-sm font-medium text-shadow-md sm:mt-3 sm:text-lg lg:text-xl">
-              Optimize to Your Best Version of Speech
+            <p className="mt-2 max-w-md text-sm font-semibold text-shadow-md sm:mt-4 sm:text-xl lg:text-2xl">
+              Optimize your voice. Hear your best.
             </p>
           </div>
         </div>

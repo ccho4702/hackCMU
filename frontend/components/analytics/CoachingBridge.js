@@ -1,7 +1,8 @@
 "use client";
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { ArrowRight, AudioLines } from "lucide-react";
+import Image from "next/image";
+import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { beginCoaching } from "@/lib/api/coaching";
 import { getVideoFile, stashVideoFile } from "@/lib/media/videoStore";
@@ -38,7 +39,7 @@ export function CoachingBridge({ analysisId }) {
     <section className="flex flex-wrap items-center justify-between gap-4 overflow-hidden rounded-2xl bg-slate-950 bg-[url(/banner_dark.png)] bg-cover bg-center p-5 text-white shadow-xl shadow-primary/10 sm:p-6">
       <div className="flex min-w-0 flex-1 items-start gap-4">
         <div className="grid size-11 shrink-0 place-items-center rounded-xl bg-white/10 text-white ring-1 ring-white/20 backdrop-blur-md">
-          <AudioLines className="size-5" />
+          <Image src="/optune-mark-white.png" alt="" width={64} height={64} className="size-6" />
         </div>
         <div className="min-w-0">
           <p className="text-sm font-semibold text-shadow-md">Script &amp; voice practice</p>
