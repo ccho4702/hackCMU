@@ -322,3 +322,12 @@ whereas an empty array means the analysis completed with no flagged issues.
 This is qualitative coaching, not calibrated WPM/dB/pitch measurement or the
 separate trial pronunciation score. The normal pipeline still makes two Gemini
 calls: one joint visual/audio analysis returning two arrays, and one script revision.
+
+## Practice word duration display
+
+Each timed word has a translucent clickable box and a small start–end label in
+seconds (for example, `0.20–0.40s`). Box width uses 320 pixels per second of spoken
+duration, with a 64-pixel readability minimum and the available container width as
+a maximum. Widths and labels follow reference timing during guided practice and
+the selected trial's alignment during trial playback. Existing active-word tracking
+and click-to-seek behavior are retained.

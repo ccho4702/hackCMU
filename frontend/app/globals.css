@@ -740,41 +740,57 @@ body {
   color: #334155;
 }
 .word-script {
-  max-height: 300px;
+  display: flex;
+  flex-wrap: wrap;
+  align-content: flex-start;
+  align-items: flex-start;
+  gap: 14px 8px;
+  max-height: 360px;
   overflow: auto;
-  padding: 4px 20px 20px;
-  line-height: 2.25;
+  padding: 8px 20px 24px;
 }
-.word-script p {
-  font-size: 17px;
-  line-height: 1.9;
-  color: #334155;
+.word-script p { font-size: 17px; line-height: 1.9; color: #334155; }
+.timed-word {
+  display: inline-flex;
+  flex: 0 0 auto;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 6px;
+  max-width: 100%;
 }
 .spoken-word {
-  margin: 2px 1px;
-  padding: 1px 5px;
-  border-radius: 8px;
-  background: transparent;
-  font-size: 18px;
-  line-height: 1.65;
+  display: block;
+  width: 100%;
+  min-height: 42px;
+  margin: 0;
+  padding: 9px 8px;
+  border: 1px solid rgba(81, 96, 112, 0.14);
+  border-radius: 6px;
+  background: rgba(81, 96, 112, 0.075);
+  font-size: 16px;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
   color: #334155;
-  transition: color 0.1s, background 0.1s, transform 0.1s;
+  transition: color 0.1s, background 0.1s, border-color 0.1s;
 }
-.spoken-word:hover:not(:disabled) {
-  background: var(--accent-soft);
-}
-.spoken-word:disabled {
-  opacity: 1;
-  cursor: default;
-}
+.spoken-word:hover:not(:disabled):not(.current-word) { background: rgba(81, 96, 112, 0.13); }
+.spoken-word:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.spoken-word:disabled { opacity: 1; cursor: default; }
 .spoken-word.current-word {
-  background: var(--accent);
-  color: #fff;
-  transform: scale(1.08);
-  box-shadow: 0 4px 12px rgba(47, 107, 255, 0.35);
+  background: rgba(47, 107, 255, 0.16);
+  border-color: rgba(47, 107, 255, 0.48);
+  color: #174b9a;
 }
-.spoken-word.past-word {
-  color: #94a3b8;
+.spoken-word.past-word { color: #82909e; background: rgba(81, 96, 112, 0.035); }
+.word-timing-label {
+  display: block;
+  text-align: center;
+  font-size: 10px;
+  font-weight: 400;
+  line-height: 1.3;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  color: #83909c;
 }
 .practice-footnote {
   padding: 16px 20px;
