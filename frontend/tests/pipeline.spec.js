@@ -1,5 +1,11 @@
 import { test, expect } from "@playwright/test";
 
+test.beforeEach(async ({page}) => {
+  await page.addInitScript(() => localStorage.setItem("rehearse.user", JSON.stringify({
+    user_id:"aaaaaaaaaaaaaaaaaaaaaaaa",name:"Test User",email:"tester@example.test",
+  })));
+});
+
 const runId = "a".repeat(32);
 const manifest = {
   run_id: runId, status: "success", stage: "complete",
@@ -118,7 +124,7 @@ test("real saved run loads its transcript, revision, and playable audio", async 
 test("main frontend navigation and streaming layout remain available", async ({ page }) => {
   await page.route("**/api/capabilities", route => route.fulfill({ json: { landmarks: false } }));
   await page.goto("/");
-  await expect(page.getByRole("link", { name: /Start Live Analysis/ })).toBeVisible();
+  await expect(page.getByRole("link", { name: /Start recording/i })).toBeVisible();
   await page.goto("/streaming");
   await expect(page).toHaveURL(/\/streaming$/);
   await expect(page.getByRole("heading", { name: "Live Session", exact: true })).toBeVisible();
@@ -141,7 +147,7 @@ test("main recorded-video flow keeps facial analysis and connects script evaluat
   const analysisId=await stubMainAnalysis(page);
   const uploads=await stubPipeline(page);
   await page.goto("/");
-  await page.getByRole("button",{name:/Analyze Recorded Video/}).click();
+  await page.getByRole("button",{name:/Upload a video/i}).click();
   await page.locator('input[type="file"]').setInputFiles({name:"take.mp4",mimeType:"video/mp4",buffer:Buffer.from("test video")});
   await page.getByRole("button",{name:"Analyze",exact:true}).click();
   await expect(page).toHaveURL(new RegExp(`/analysis/${analysisId}$`));
@@ -155,6 +161,7 @@ test("main live recording submits voice pipeline once and keeps the main review 
   const analysisId=await stubMainAnalysis(page);
   const uploads=await stubPipeline(page);
   await page.goto("/live");
+  await page.getByRole("button",{name:"Start live analysis",exact:true}).click();
   await page.getByRole("button",{name:"Stop session",exact:true}).click();
   await expect(page).toHaveURL(new RegExp(`/analysis/${analysisId}$`));
   expect(uploads()).toBe(1);
