@@ -2,7 +2,7 @@
 trial = 녹화 한 번. 문서 하나.
 
     POST   /api/trials                            multipart. question, kind(original|shadow), reference_id, file(선택)
-    GET    /api/trials?question=&kind=&limit=     내 trial 목록 + best 표시
+    GET    /api/trials?question=&kind=&reference_id=&limit=   내 trial 목록 + best 표시
     GET    /api/trials/{id}                       전체
     DELETE /api/trials/{id}
     POST   /api/trials/{id}/sentences/{sid}       문장 하나 쉐도잉 녹음 업로드 → 즉시 채점 → shadowing[] 갱신
@@ -14,6 +14,7 @@ trial = 녹화 한 번. 문서 하나.
         문장마다 /sentences/{sid} 에 올린다. 요청 안에서 채점하고(3~4초) 결과를 바로 돌려준다.
 
 "가장 높은 trial" 은 summary.overall 기준이다 (summary.py). 오디오 점수만 본다.
+리더보드는 reference_id 로 묶는다. GT 가 다르면 점수 기준이 달라서 한 보드에 섞으면 안 된다.
 metrics.language / metrics.nonverbal 은 팀원 모듈(STT, MediaPipe)이 채우는 자리다. 여기서는 비워둔다.
 """
 from __future__ import annotations
@@ -182,14 +183,18 @@ async def create_trial(
 def list_trials(
     question: Optional[str] = None,
     kind: Optional[str] = None,
+    reference_id: Optional[str] = None,
     limit: int = 50,
     user_id: str = Depends(current_user_id),
 ):
+    """리더보드는 ?reference_id=&kind=shadow 로 조회한다. 같은 GT 기준 도전 기록만 모인다."""
     q = {"user_id": user_id}
     if question:
         q["question"] = question
     if kind:
         q["kind"] = kind
+    if reference_id:
+        q["reference_id"] = reference_id
     docs = list(db.trials().find(q, {"shadowing": 0, "metrics": 0}).sort("created_at", -1).limit(limit))
 
     scored = [d for d in docs if (d.get("summary") or {}).get("overall") is not None]

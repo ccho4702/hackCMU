@@ -1,25 +1,6 @@
 {
   "trials": [
     {
-      "id": "6aa5184428cabf158706787c",
-      "user_id": "6aa5181a3be1ec765046b666",
-      "question": "Tell me about a project you're proud of.",
-      "kind": "original",
-      "reference_id": null,
-      "created_at": "2026-09-12T09:15:48.779000",
-      "status": "ready",
-      "error": null,
-      "media": {
-        "raw": "6aa5181a3be1ec765046b666/trials/6aa5184428cabf158706787c/raw.wav",
-        "wav": "6aa5181a3be1ec765046b666/trials/6aa5184428cabf158706787c/audio.wav",
-        "duration_sec": 3.804,
-        "raw_url": "/api/media/6aa5181a3be1ec765046b666/trials/6aa5184428cabf158706787c/raw.wav",
-        "wav_url": "/api/media/6aa5181a3be1ec765046b666/trials/6aa5184428cabf158706787c/audio.wav"
-      },
-      "summary": null,
-      "best": false
-    },
-    {
       "id": "6aa5183528cabf158706787b",
       "user_id": "6aa5181a3be1ec765046b666",
       "question": "Tell me about a project you're proud of.",

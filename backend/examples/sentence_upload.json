@@ -3,7 +3,7 @@
     "sentence_id": "s2",
     "text": "I designed a training-free method, and it cut the speaker similarity by sixty percent while keeping audio quality intact.",
     "segment": null,
-    "wav": "6aa5122a3be1ec765046b2c2/trials/6aa5125d447266899a923457/sentences/s2.16k.wav",
+    "wav": "6aa5181a3be1ec765046b666/trials/6aa5182028cabf158706787a/sentences/s2.16k.wav",
     "status": "ok",
     "reason": null,
     "pronunciation_score": 0.691,
@@ -433,7 +433,7 @@
       "gt": 6.888,
       "user": 7.47
     },
-    "wav_url": "/api/media/6aa5122a3be1ec765046b2c2/trials/6aa5125d447266899a923457/sentences/s2.16k.wav"
+    "wav_url": "/api/media/6aa5181a3be1ec765046b666/trials/6aa5182028cabf158706787a/sentences/s2.16k.wav"
   },
   "summary": {
     "axes": {

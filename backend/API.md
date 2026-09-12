@@ -45,7 +45,7 @@ POST   /api/trials                            multipart
     kind          "original" | "shadow"   (기본 original)
     reference_id  str  (shadow 면 필수)
     file          녹화 파일 (선택. webm/wav/mp3 아무거나, ffmpeg 가 변환)
-GET    /api/trials?question=&kind=&limit=     →  {"trials": [...], "best_trial_id"}
+GET    /api/trials?question=&kind=&reference_id=&limit=   →  {"trials": [...], "best_trial_id"}
 GET    /api/trials/{id}
 DELETE /api/trials/{id}
 POST   /api/trials/{id}/sentences/{sid}       multipart  file  →  {"sentence": {...}, "summary": {...}}
@@ -80,7 +80,9 @@ summary       null | {axes: {pronunciation, rate, rhythm, intonation, stress}, o
 ### best trial
 
 `summary.overall` 이 가장 높은 trial. 목록 응답의 `best_trial_id` 와 각 항목의 `best: true` 로 온다.
-`?question=` 을 주면 그 질문 안에서, 안 주면 내 전체 trial 중에서 고른다.
+필터를 준 범위 안에서 고른다. **리더보드는 `?reference_id=<id>&kind=shadow` 로 조회한다.** 쉐도잉 한 번이 한 줄이고,
+같은 개선본(GT)을 기준으로 채점된 도전만 모인다. 첫 영상을 다시 찍어 reference 가 새로 생기면 보드도 새로 시작된다.
+GT 가 다르면 점수 기준이 달라서 한 보드에 섞으면 공정한 비교가 아니다. 예시: `examples/leaderboard.json`
 
 `overall` 은 다섯 축의 **가중치 없는 평균**이다. 정렬과 배지에만 쓰고 화면에는 다섯 축을 따로 보여주는 게 원칙이다.
 `rate` 축은 `1 - |1 - rate_ratio|` 로 뒤집어서 1.0 이 "GT 와 같은 속도" 가 되게 했다. 오디오 점수만 본다.

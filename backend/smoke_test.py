@@ -129,6 +129,14 @@ def main():
         assert L["best_trial_id"] in (t1["id"], t2["id"])
         assert sum(x["best"] for x in L["trials"]) == 1
 
+        # 6b. 리더보드: reference 단위로 묶기. original 과 다른 reference 는 빠져야 한다
+        B = c.get("/api/trials", headers=H, params={"reference_id": ref["id"], "kind": "shadow"}).json()
+        dump("leaderboard", B)
+        ids = {x["id"] for x in B["trials"]}
+        assert ids == {t1["id"], t2["id"]}, ids
+        assert all(x["kind"] == "shadow" and x["reference_id"] == ref["id"] for x in B["trials"])
+        print("leaderboard ", [(x["id"][-4:], (x["summary"] or {}).get("overall"), "BEST" if x["best"] else "") for x in B["trials"]])
+
         # 7. 미디어 서빙
         r = c.get(t3["media"]["wav_url"])
         assert r.status_code == 200 and len(r.content) > 1000
