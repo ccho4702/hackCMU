@@ -4,6 +4,7 @@ import { coachingStorage } from "@/lib/session";
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import ProviderProgress from "@/components/ProviderProgress";
+import ProcessingCursor from "@/components/ProcessingCursor";
 import { PROCESSING_STAGES, processingStage } from "@/lib/processing-stages";
 import DeliveryFeedback from "@/components/DeliveryFeedback";
 import ReferenceVoice from "@/components/ReferenceVoice";
@@ -45,7 +46,7 @@ export default function Evaluation() {
   const working=job && !["success","failed"].includes(job.status);
   const stage=PROCESSING_STAGES.findIndex(item=>item.id===job?.stage);
   const currentStage=processingStage(job?.stage);
-  return <div className="studio-app"><StudioHeader title="Evaluation" subtitle="Your recording, feedback, and next take" active="evaluation" runId={job?.run_id}/><main className="studio-container evaluation-layout">
+  return <div className="studio-app">{working && <ProcessingCursor {...currentStage} />}<StudioHeader title="Evaluation" subtitle="Your recording, feedback, and next take" active="evaluation" runId={job?.run_id}/><main className="studio-container evaluation-layout">
     {error && <div className="error-banner" role="alert"><p>{error}</p><Link className="button secondary-button" href="/live">Start live analysis</Link></div>}
     {!job && !error && <div className="panel loading-panel"><span className="spinner"/>Loading your evaluation…</div>}
     {job && <>
