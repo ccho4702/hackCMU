@@ -2,11 +2,10 @@ import json
 import os
 import shutil
 
-import google.auth
-from google.auth.transport.requests import AuthorizedSession
 from fastapi import APIRouter, HTTPException, Response, UploadFile
 
 from backend.common.config import google_project
+from backend.common.gemini import session as gemini_session
 from backend.common.media import prepare_video, save_upload
 from backend.gemini_video.schemas import VideoIssue
 from backend.gemini_video.service import run_analysis, video_duration
@@ -21,8 +20,7 @@ def analyze_video(file: UploadFile, response: Response):
     response.headers["X-Run-ID"] = run_id
     try:
         video = prepare_video(source, run_dir / "intermediates/analysis-input.mp4")
-        credentials, _ = google.auth.default(scopes=["https://www.googleapis.com/auth/cloud-platform"])
-        with AuthorizedSession(credentials) as session:
+        with gemini_session() as session:
             status = run_analysis(video, run_dir / "logs/video", google_project(),
                                   os.getenv("GEMINI_VIDEO_MODEL", "gemini-3.8-flash"),
                                   video_duration(video), session,

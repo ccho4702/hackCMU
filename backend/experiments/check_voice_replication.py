@@ -11,8 +11,7 @@ import sys
 import time
 import wave
 
-import google.auth
-from google.auth.transport.requests import AuthorizedSession
+from backend.common.gemini import session as gemini_session, generate_endpoint
 
 
 def main():
@@ -40,11 +39,10 @@ def main():
             }}},
         },
     }
-    credentials, _ = google.auth.default(scopes=["https://www.googleapis.com/auth/cloud-platform"])
-    endpoint = f"https://aiplatform.googleapis.com/v1/projects/{project}/locations/global/publishers/google/models/{model}:generateContent"
+    endpoint = generate_endpoint(project, model)
     print(f"Model: {model}\nReference duration: {duration:.2f}s\nScript: {script}", flush=True)
     started = time.monotonic()
-    with AuthorizedSession(credentials) as session:
+    with gemini_session() as session:
         response = session.post(endpoint, json=request, headers={"x-goog-user-project": project}, timeout=120)
     payload = response.json()
     report = {

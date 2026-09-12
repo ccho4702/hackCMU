@@ -56,30 +56,83 @@ Video validation retries, when needed, add Gemini requests and are logged separa
 
 ## Run locally
 
-From the repository root:
+Run the backend and frontend in **two separate terminals** and keep both open.
+The commands below assume dependencies and `backend/.env` are already set up.
+
+**Terminal 1 — backend** (from the repository root):
+
+```bash
+backend/.venv/bin/uvicorn backend.main:app --host 127.0.0.1 --port 8000
+```
+
+**Terminal 2 — frontend** (from the repository root):
+
+```bash
+# Uses the bundled Node installation when available; otherwise uses Node on PATH.
+export PATH="$PWD/.tools/node/bin:$PATH"
+cd frontend
+npm run dev -- --hostname 127.0.0.1 --port 3000
+```
+
+Open **http://localhost:3000**. API docs: **http://localhost:8000/docs**.
+If you see `Address already in use`, a process is already listening on that port.
+Check `curl http://localhost:8000/api/health` and open the frontend before starting
+another copy. Stop a server with Ctrl+C in its terminal. Restart the backend after
+changing its `.env`; the commands above do not enable automatic reload.
+
+### First-time setup
+
+Use Python 3.12 and Node.js 22 or newer. From the repository root:
 
 ```bash
 python3.12 -m venv backend/.venv
-source backend/.venv/bin/activate
-pip install -r backend/requirements.txt
-cp backend/.env.example backend/.env
-gcloud auth application-default login
-uvicorn backend.main:app --reload
+backend/.venv/bin/python -m pip install -r backend/requirements.txt
+backend/.venv/bin/python backend/scripts/download_model.py
+cp -n backend/.env.example backend/.env
+export PATH="$PWD/.tools/node/bin:$PATH"
+(cd frontend && npm ci)
 ```
 
-Set `GOOGLE_CLOUD_PROJECT` and `ELEVENLABS_API_KEY` in `backend/.env`.
-Use an ElevenLabs plan/account with Instant Voice Cloning enabled. FFmpeg is resolved
-from your PATH or the bundled `imageio-ffmpeg` dependency.
+`cp -n` preserves an existing `.env`. Configure the values below before starting
+the backend. Install the Face Landmarker asset for MediaPipe as described in the
+backend configuration; FFmpeg is resolved from PATH or `imageio-ffmpeg`.
 
-In another terminal:
+### Google Cloud JSON authentication
+
+Put the complete service-account JSON on **one line**, enclosed in single quotes,
+in `backend/.env` alongside the ElevenLabs key:
+
+```dotenv
+GOOGLE_CLOUD_PROJECT=your-existing-cloud-project-id
+GOOGLE_CLOUD_LOCATION=global
+GEMINI_AUTH_MODE=adc
+GOOGLE_SERVICE_ACCOUNT_JSON='{"type":"service_account","project_id":"your-existing-cloud-project-id","private_key":"-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n","client_email":"backend@your-existing-cloud-project-id.iam.gserviceaccount.com","token_uri":"https://oauth2.googleapis.com/token"}'
+ELEVENLABS_API_KEY=your-elevenlabs-key
+```
+
+Replace the abbreviated JSON with the complete credentials; keep the literal `\n`
+escapes inside `private_key`. With this variable set, the backend authenticates as
+the service account without `gcloud auth application-default login` or a separate
+JSON file. The account needs `aiplatform.endpoints.predict` and
+`serviceusage.services.use` on the project, with the Vertex AI API enabled.
+The project's ID must match the JSON's `project_id`.
+
+Gemini still calls **Google Cloud Vertex AI**, using the project's linked billing
+account and eligible remaining trial credits. This configuration does not upgrade
+the billing account. AI Studio Gemini Developer API usage is excluded from the
+$300 Welcome credit program. See [Google's Free Trial coverage](https://docs.cloud.google.com/free/docs/free-cloud-features).
+ElevenLabs has separate billing and needs Instant Voice Cloning access.
+
+Share `.env` privately with authorized teammates; **never commit it or put these
+credentials in frontend code or `NEXT_PUBLIC_*` variables**. Real secrets are not
+included in this repository. A small authentication check is available:
 
 ```bash
-cd frontend
-npm install
-npm run dev
+backend/.venv/bin/python -m backend.experiments.check_gemini
 ```
 
-Frontend: **http://localhost:3000** · API docs: **http://localhost:8000/docs**
+This sends one Gemini generation request. See the [backend guide](backend/README.md)
+for file-based credentials and optional MongoDB configuration.
 
 Choose **Start Live Analysis** to capture camera and microphone with live MediaPipe
 metrics. **Stop session** opens the original analysis workspace and starts the script/voice

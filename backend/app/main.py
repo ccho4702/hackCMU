@@ -31,7 +31,18 @@ logging.basicConfig(
 async def lifespan(_app: FastAPI):
     settings = get_settings()
     settings.temp_storage_path.mkdir(parents=True, exist_ok=True)
-    yield
+    from backend import db
+    if db.configured():
+        try:
+            db.ensure_indexes()
+        except Exception:
+            logging.getLogger(__name__).warning("MongoDB unavailable; local coaching remains enabled")
+    try:
+        yield
+    finally:
+        if db.client.cache_info().currsize:
+            db.client().close()
+            db.client.cache_clear()
 
 
 def create_app() -> FastAPI:
@@ -62,6 +73,16 @@ def create_app() -> FastAPI:
     application.include_router(live.router, prefix="/api/v1", tags=["live"])
     from backend.api import api as coaching_api
     application.include_router(coaching_api)
+    from backend.routers import auth, references, trials, storage
+    from pymongo.errors import PyMongoError
+    from fastapi.responses import JSONResponse
+
+    async def mongo_error_handler(request, exc):
+        return JSONResponse(status_code=503, content={"detail": "MongoDB is unavailable. Check server database configuration."})
+
+    application.add_exception_handler(PyMongoError, mongo_error_handler)
+    for router in (auth.router, references.router, trials.router, storage.router):
+        application.include_router(router)
     return application
 
 

@@ -3,7 +3,7 @@ import os
 from backend.common.config import google_project
 import sys
 
-from google import genai
+from backend.common.gemini import client as gemini_client, credentials
 from google.genai import types
 from google.auth.exceptions import DefaultCredentialsError
 
@@ -13,12 +13,11 @@ def main():
     model = os.environ.get("GEMINI_TEST_MODEL", "gemini-2.5-flash")
     print(f"Project: {project}\nModel: {model}", flush=True)
     try:
-        with genai.Client(
-            vertexai=True,
-            project=project,
-            location="global",
-            http_options=types.HttpOptions(api_version="v1", timeout=30000),
-        ) as client:
+        identity = credentials() if os.getenv("GEMINI_AUTH_MODE", "adc") == "adc" else None
+        print(f"Identity type: {type(identity).__name__}")
+        if identity and getattr(identity, "service_account_email", None):
+            print(f"Service account: {identity.service_account_email}")
+        with gemini_client(timeout_ms=30000) as client:
             response = client.models.generate_content(
                 model=model,
                 contents="Reply with only OK.",

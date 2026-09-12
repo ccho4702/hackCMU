@@ -3,10 +3,9 @@ from pathlib import Path
 import time
 import json
 
-from google import genai
 from google.genai import types
 
-from backend.common.config import google_project
+from backend.common.gemini import client as gemini_client
 from backend.gemini_script.schemas import ScriptAnalysis
 from backend.common.logging import log_event, save_json
 
@@ -43,10 +42,7 @@ def analyze_script(script: str = None, client=None, *, video_path=None, log_dir=
     started = time.monotonic()
     owned = client is None
     if owned:
-        client = genai.Client(vertexai=True, project=google_project(),
-                              location=os.getenv("GOOGLE_CLOUD_LOCATION", "global"),
-                              http_options=types.HttpOptions(api_version="v1", timeout=90000,
-                                  retry_options=types.HttpRetryOptions(attempts=1)))
+        client = gemini_client()
     try:
         response = client.models.generate_content(
             model=os.getenv("GEMINI_SCRIPT_MODEL", "gemini-3.8-flash"),

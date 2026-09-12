@@ -11,11 +11,10 @@ import sys
 import time
 import uuid
 
-import google.auth
-from google.auth.transport.requests import AuthorizedSession
 from google.auth.exceptions import GoogleAuthError
 from requests.exceptions import RequestException
 from backend.common.config import google_project
+from backend.common.gemini import session as gemini_session, generate_endpoint
 from backend.common.media import ffmpeg_path
 from backend.common.logging import log_event, save_json
 
@@ -138,7 +137,7 @@ def run_analysis(path, output, project, model, duration, session, max_attempts=3
             "maxOutputTokens": 8192,
         },
     }
-    endpoint = f"https://aiplatform.googleapis.com/v1/projects/{project}/locations/global/publishers/google/models/{model}:generateContent"
+    endpoint = generate_endpoint(project, model)
     meta = {"run_id": run_id, "project": project, "requested_model": model,
             "submitted_video": str(path), "duration_seconds": duration,
             "sampling_fps": 4, "audio_included": True, "max_attempts": max_attempts,
@@ -248,8 +247,7 @@ def main():
     args = parser.parse_args()
     path = args.input.resolve()
     duration = video_duration(path)
-    credentials, _ = google.auth.default(scopes=["https://www.googleapis.com/auth/cloud-platform"])
-    with AuthorizedSession(credentials) as session:
+    with gemini_session() as session:
         return run_analysis(path, args.output_dir.resolve(),
                             google_project(), os.getenv("GEMINI_VIDEO_MODEL", "gemini-3.8-flash"),
                             duration, session, max_attempts=args.max_attempts)
