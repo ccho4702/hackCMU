@@ -2,7 +2,7 @@
 // 이후 모든 /api 요청은 lib/coaching-api.js 가 X-User-Id 헤더로 붙인다.
 
 const USER_KEY = "rehearse.user";
-// 파이프라인의 user_id (ElevenLabs 보이스 캐시 키). 로그인하면 로그인 id 로 통일한다.
+// 파이프라인의 user_id. 로그인하면 로그인 id 로 통일한다. 음성 클론은 녹음마다 새로 생성한다.
 const LEGACY_ID_KEY = "rehearse.userId";
 export const USER_EVENT = "rehearse:user";
 

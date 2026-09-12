@@ -43,8 +43,8 @@ and practice it with word-level guidance and speech scoring.
 | Practice scoring | MMS_FA · librosa pYIN |
 | Media & history | FFmpeg · MongoDB |
 
-One recording normally uses **2 Gemini calls + 1 ASR call + 1 TTS call**.
-Voice cloning is added on a cache miss; retries add requests. Repeated trial scoring
+One recording normally uses **2 Gemini calls + 1 ASR call + 1 IVC call + 1 TTS call**.
+Each new recording creates its own voice clone from that recording’s audio. Retries add requests. Repeated trial scoring
 runs locally against the same reference. Results, recordings, and logs are organized per run.
 
 ## Try it locally

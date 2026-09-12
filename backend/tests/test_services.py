@@ -1,4 +1,6 @@
 import json
+import base64
+import hashlib
 import os
 from pathlib import Path
 import tempfile
@@ -10,7 +12,7 @@ from fastapi.testclient import TestClient
 from backend.main import app
 from backend.gemini_script.service import analyze_script
 from backend.gemini_script.schemas import ScriptAnalysis
-from backend.elevenlabs_tts.service import get_or_create_voice, generate_gt_speech
+from backend.elevenlabs_tts.service import create_voice, generate_gt_speech, run_pipeline as speech_pipeline
 from backend.pipeline.service import process_recording
 
 
@@ -22,20 +24,67 @@ class ServiceTests(unittest.TestCase):
     def tearDown(self):
         self.temp.cleanup()
 
-    def test_voice_cache_avoids_second_clone_and_preserves_labels(self):
-        sample = self.root / 'sample.mp3'
-        sample.write_bytes(b'sample')
+    def test_every_recording_creates_a_fresh_voice_for_the_same_user(self):
+        first = self.root / 'first.mp3'; first.write_bytes(b'first voice sample')
+        second = self.root / 'second.mp3'; second.write_bytes(b'second voice sample')
+        legacy = self.root / 'elevenlabs/voice_cache.json'
+        legacy.parent.mkdir(); legacy.write_text('invalid legacy cache must not be read')
         provider = Mock()
-        provider.voices.ivc.create.return_value = SimpleNamespace(voice_id='voice-1', requires_verification=False)
-        cache = self.root / 'cache.json'
-        with patch.dict(os.environ, {'ELEVENLABS_API_KEY': 'test-only'}):
-            for _ in range(2):
-                self.assertEqual(get_or_create_voice('../user', str(sample), client=provider, cache_path=cache), 'voice-1')
-        self.assertEqual(provider.voices.ivc.create.call_count, 1)
+        submitted = []
+        names = []
+        def clone(**kwargs):
+            submitted.append(kwargs['files'][0].read())
+            names.append(kwargs['name'])
+            return SimpleNamespace(voice_id=f'voice-{len(submitted)}', requires_verification=False)
+        provider.voices.ivc.create.side_effect = clone
+        with patch.dict(os.environ, {'ARTIFACTS_DIR': str(self.root)}):
+            for i, sample in enumerate([first, second, second], 1):
+                self.assertEqual(create_voice('../user', str(sample), client=provider), f'voice-{i}')
+        self.assertEqual(submitted, [b'first voice sample', b'second voice sample', b'second voice sample'])
+        self.assertEqual(len(set(names)), 3)
+        self.assertTrue(all('../user' not in name for name in names))
+        self.assertEqual(legacy.read_text(), 'invalid legacy cache must not be read')
         self.assertEqual(provider.voices.ivc.create.call_args.kwargs['labels'], {})
         self.assertEqual(provider.voices.ivc.create.call_args.kwargs['request_options']['max_retries'], 0)
-        self.assertNotIn('test-only', cache.read_text())
-        self.assertNotIn('../user', cache.read_text())
+
+    def test_tts_uses_the_voice_created_from_each_current_recording(self):
+        provider = Mock(); samples = []; voices = []
+        def clone(**kwargs):
+            samples.append(kwargs['files'][0].read())
+            return SimpleNamespace(voice_id=f'current-voice-{len(samples)}', requires_verification=False)
+        def tts(**kwargs):
+            voices.append(kwargs['voice_id'])
+            return SimpleNamespace(model_dump=lambda **_: {
+                'audio_base64': base64.b64encode(b'generated audio').decode(),
+                'normalized_alignment': {'characters': ['H','i'], 'character_start_times_seconds': [0,.1], 'character_end_times_seconds': [.1,.2]},
+            })
+        provider.voices.ivc.create.side_effect = clone
+        provider.text_to_speech.convert_with_timestamps.side_effect = tts
+        for i, data in enumerate([b'person A', b'person B'], 1):
+            sample = self.root / f'{i}.mp3'; sample.write_bytes(data)
+            run = self.root / f'run-{i}'
+            speech_pipeline('same-login', str(sample), 'Hi', client=provider,
+                            prepared_audio_path=sample, output_dir=run/'outputs', log_dir=run/'logs')
+            stats = json.loads((run/'logs/meta.json').read_text())
+            provenance = json.loads((run/'logs/voice.json').read_text())
+            self.assertEqual((stats['clone_requests'], stats['tts_requests']), (1,1))
+            self.assertEqual(stats['voice_source'], 'current_recording')
+            self.assertEqual(provenance['voice_id'], f'current-voice-{i}')
+            self.assertEqual(provenance['sample_sha256'], hashlib.sha256(data).hexdigest())
+            self.assertTrue((run/'outputs/reference_alignment.json').exists())
+        self.assertEqual(samples, [b'person A', b'person B'])
+        self.assertEqual(voices, ['current-voice-1', 'current-voice-2'])
+
+    def test_clone_failure_never_falls_back_to_an_old_or_default_voice(self):
+        sample = self.root/'sample.mp3'; sample.write_bytes(b'current sample')
+        provider = Mock(); provider.voices.ivc.create.side_effect = RuntimeError('voice slots exhausted')
+        with self.assertRaises(RuntimeError):
+            speech_pipeline('same-login', str(sample), 'Hi', client=provider,
+                            prepared_audio_path=sample, output_dir=self.root/'outputs', log_dir=self.root/'logs')
+        provider.text_to_speech.convert_with_timestamps.assert_not_called()
+        stats = json.loads((self.root/'logs/meta.json').read_text())
+        self.assertEqual((stats['clone_requests'], stats['tts_requests']), (1,0))
+        self.assertEqual(stats['status'], 'failed')
 
     def test_tts_failure_preserves_previous_audio_and_removes_partial(self):
         provider = Mock()
@@ -61,15 +110,18 @@ class ServiceTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             analyze_script(video_path=video, client=provider)
 
-    def test_verification_required_does_not_create_duplicate_paid_voice(self):
+    def test_verification_required_stops_before_tts_and_records_provenance(self):
         sample=self.root/'sample.mp3';sample.write_bytes(b'sample')
         provider=Mock()
         provider.voices.ivc.create.return_value=SimpleNamespace(voice_id='pending-voice',requires_verification=True)
-        cache=self.root/'cache.json'
         with self.assertRaises(RuntimeError):
-            get_or_create_voice('demo',str(sample),client=provider,cache_path=cache)
-        self.assertEqual(get_or_create_voice('demo',str(sample),client=provider,cache_path=cache),'pending-voice')
+            speech_pipeline('demo',str(sample),'Hi',client=provider,prepared_audio_path=sample,
+                            output_dir=self.root/'outputs',log_dir=self.root/'logs')
         self.assertEqual(provider.voices.ivc.create.call_count,1)
+        provider.text_to_speech.convert_with_timestamps.assert_not_called()
+        provenance=json.loads((self.root/'logs/voice.json').read_text())
+        self.assertEqual(provenance['voice_id'],'pending-voice')
+        self.assertTrue(provenance['requires_verification'])
 
     def test_pipeline_connects_two_gemini_stages_and_passes_revised_script_to_tts(self):
         run = self.root / ('a'*32)
@@ -84,7 +136,7 @@ class ServiceTests(unittest.TestCase):
         def fake_tts(*args, **kwargs):
             (kwargs['output_dir']/'reference_speech.mp3').write_bytes(b'ID3test')
             kwargs['log_dir'].mkdir(parents=True)
-            (kwargs['log_dir']/'meta.json').write_text('{"tts_requests":1,"clone_requests":0}')
+            (kwargs['log_dir']/'meta.json').write_text('{"tts_requests":1,"clone_requests":1}')
         with patch('backend.pipeline.service.prepare_video', return_value=run/'intermediates/analysis-input.mp4'), \
              patch('backend.pipeline.service.extract_audio', return_value=str(run/'intermediates/voice_sample.mp3')), \
              patch('backend.pipeline.service.transcribe_audio', return_value={'text':'hello','language_code':'eng','words':[]}) as asr, \

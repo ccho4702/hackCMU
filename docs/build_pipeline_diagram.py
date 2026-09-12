@@ -31,7 +31,7 @@ N = {
     "audio":   ("R", 440,  "local",  "Extract audio",        "ffmpeg · 16 kHz mono"),
     "coach":   ("L", 550,  "out",    "Timestamped coaching", "nonverbal · vocal · click to seek"),
     "asr":     ("C", 550,  "eleven", "ElevenLabs Scribe",    "transcript"),
-    "ivc":     ("R", 550,  "eleven", "Voice clone",          "your voice · cached per user"),
+    "ivc":     ("R", 550,  "eleven", "Voice clone",          "your voice · current recording"),
     "gscript": ("C", 660,  "gemini", "Gemini script",        "issues + improved script"),
     "tts":     ("R", 660,  "eleven", "ElevenLabs TTS",       "with word timestamps"),
     "script":  ("C", 770,  "out",    "Improved script",      "original vs revised"),

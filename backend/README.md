@@ -11,7 +11,7 @@ Independent provider modules, composed by `pipeline/`:
 3. `gemini_script`: ASR text -> script issues + revised script in one Gemini call.
    Visual delivery is excluded. The rewritten script retains the original language.
    The legacy direct-video endpoint remains available independently.
-4. `elevenlabs_tts`: reference recording -> cached IVC voice -> revised-script MP3.
+4. `elevenlabs_tts`: current recording -> fresh IVC voice -> revised-script MP3.
    Based on the supplied hackathon pipeline; `labels={}` is preserved. API keys are
    read lazily so Gemini-only routes work without ElevenLabs credentials.
 
@@ -67,7 +67,6 @@ artifacts/
       script/          Prompt, response, attempt log, usage metadata
       elevenlabs/      Cache hit, clone/TTS request counts, status and timing
     manifest.json
-  elevenlabs/voice_cache.json
   experiments/
     inputs/            Original local test recordings
     intermediates/     Converted media used in earlier tests
@@ -81,9 +80,13 @@ output filenames are served by the API.
 
 ## Request counts and retry behavior
 
-- Normal run: Gemini video 1 + ElevenLabs ASR 1 + Gemini script 1 + ElevenLabs TTS 1.
-- First use of a voice: 1 additional ElevenLabs IVC request. Later requests for the
-  same user/account reuse the voice ID, even if the recording changes.
+- Normal run: Gemini video 1 + ElevenLabs ASR 1 + Gemini script 1 + ElevenLabs IVC 1 + ElevenLabs TTS 1.
+- Every recording creates a fresh IVC from that recording’s extracted audio, including
+  repeated uploads by the same user. Legacy voice-cache files are not read or written.
+- The returned voice ID and sample hash are recorded in the run’s private
+  `logs/elevenlabs/voice.json`; this is provenance, not a reusable voice cache.
+- A cloning error or verification requirement stops TTS. No old or default voice is substituted.
+- Each recording consumes a new voice slot; existing provider voices are not automatically deleted.
 - `VIDEO_MAX_ATTEMPTS=3` allows 1 initial request plus 2 retries. Set it to `1` when
   you need exactly two Gemini generation attempts per successful video pipeline.
 - Gemini script and ElevenLabs SDK automatic retries are disabled. Failed stages and
@@ -93,8 +96,7 @@ output filenames are served by the API.
 - Logged counts exclude authentication/token refresh. A timeout may consume provider
   usage without returning token metadata.
 
-The local voice cache uses atomic replacement and a thread lock. Run one API worker
-for this prototype; multiple workers require a shared database/lock. `/api/pipeline`
+`/api/pipeline`
 uses FastAPI background tasks and returns immediately after upload. The frontend polls
 every 2.5 seconds, displays completed stages even if a later stage fails, and restores
 the last run on reload. Tasks run in the server process: keep it running until completion.
@@ -362,6 +364,6 @@ boxes remain available, but no longer reset the progress bar at each word bounda
 
 Accent selection has been removed. New Gemini vocal analyses assess clarity, pace,
 pauses, articulation and intonation without a regional-accent target. TTS reads the
-improved script with the cached voice and configured model (default
+improved script with a fresh clone of the current recording and the configured model (default
 `eleven_multilingual_v2`), without injected accent tags or automatic model switching.
 Existing saved audio and PoC artifacts are unchanged.

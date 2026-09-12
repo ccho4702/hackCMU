@@ -57,7 +57,7 @@
 <rect x="810" y="550" width="300" height="74" rx="12" fill="#161B22" stroke="#30363D" stroke-width="1.5"/>
 <rect x="810" y="550" width="7" height="74" rx="3.5" fill="#E07A50"/>
 <text x="834" y="581" font-size="20" font-weight="700" fill="#F0F3F6">Voice clone</text>
-<text x="834" y="604" font-size="13.5" fill="#9AA4AF">your voice · cached per user</text>
+<text x="834" y="604" font-size="13.5" fill="#9AA4AF">your voice · current recording</text>
 <rect x="450" y="660" width="300" height="74" rx="12" fill="#161B22" stroke="#30363D" stroke-width="1.5"/>
 <rect x="450" y="660" width="7" height="74" rx="3.5" fill="#5FA86A"/>
 <text x="474" y="691" font-size="20" font-weight="700" fill="#F0F3F6">Gemini script</text>
