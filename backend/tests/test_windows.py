@@ -78,6 +78,25 @@ def test_valid_scores_are_bounded():
                 assert 0 <= value <= 100
 
 
+def test_valid_windows_include_au_intensity():
+    frames = [synthetic_frame(i * 80, 4000, gap_start=10_000, gap_end=10_000) for i in range(20)]
+    windows = build_windows(
+        frames,
+        prepare_frames(frames),
+        window_size_ms=1000,
+        stride_ms=500,
+        minimum_valid_coverage=0.7,
+        strategy=HeuristicV1Strategy(),
+        config=AnalysisConfig(),
+    )
+    scored = [w for w in windows if w.metrics.expression_activity is not None]
+    assert scored
+    assert scored[0].features.au_intensity_mean is not None
+    assert scored[0].features.au_intensity_mean > 0.0
+    occupancy = scored[0].features.gaze_camera_occupancy
+    assert occupancy is None or 0.0 <= occupancy <= 1.0
+
+
 def test_quality_flags_do_not_invent_zeros():
     quality = FrameQuality(
         face_detected=False,

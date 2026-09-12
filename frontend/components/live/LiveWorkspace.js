@@ -24,6 +24,7 @@ import { useDisplayRect } from "@/hooks/useDisplayRect";
 import { ApiError, createLiveSession, sendLiveFrame, stopLiveSession } from "@/lib/api/client";
 import { LanguageSelect } from "@/components/LanguageSelect";
 import { beginCoaching } from "@/lib/api/coaching";
+import { requestUserMedia } from "@/lib/media/userMedia";
 import { stashVideoFile } from "@/lib/media/videoStore";
 
 import { formatClock } from "@/lib/analysis/format";
@@ -161,7 +162,7 @@ export function LiveWorkspace() {
     setStarting(true);
     setError(null);
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({
+      const stream = await requestUserMedia({
         video: { width: { ideal: 1280 }, height: { ideal: 720 }, facingMode: "user" },
         audio: true,
       });

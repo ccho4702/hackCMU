@@ -65,4 +65,5 @@ npm --prefix frontend run dev -- --hostname 127.0.0.1 --port 3000
 Open **http://127.0.0.1:3000** → record or upload → review → practice.
 
 [Backend guide](backend/README.md) · [Frontend guide](frontend/README.md) ·
-[Scoring details](backend/scoring/README.md) · [MediaPipe details](docs/mediapipe-main.md)
+[Speech scoring](backend/scoring/README.md) · [Facial scoring](docs/facial-delivery-scores.md) ·
+[MediaPipe details](docs/mediapipe-main.md)

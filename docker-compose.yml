@@ -1,20 +1,48 @@
 services:
   backend:
     build: ./backend
-    ports:
-      - "8000:8000"
+    command:
+      - uvicorn
+      - backend.main:app
+      - --host
+      - 0.0.0.0
+      - --port
+      - "8000"
+      - --reload
+      - --reload-dir
+      - /workspace/backend
     environment:
-      FRONTEND_ORIGIN: http://localhost:3000
+      FRONTEND_ORIGIN: ${PUBLIC_ORIGIN:-http://localhost:3000,http://127.0.0.1:3000,http://localhost}
       ANALYZER: mediapipe
       TEMP_STORAGE_PATH: /tmp/mellonaires
+      MEDIAPIPE_DISABLE_GPU: "1"
     volumes:
-      - ./backend/models:/workspace/backend/models
+      - ./backend:/workspace/backend
+      - backend-artifacts:/workspace/backend/artifacts
+      - torch-cache:/root/.cache
+    ports:
+      - "8000:8000"
+    restart: unless-stopped
   frontend:
-    build: ./frontend
+    image: node:22-alpine
+    working_dir: /app
+    command: sh -c "npm install && npm run dev -- --hostname 0.0.0.0 --port 3000"
+    environment:
+      BACKEND_URL: http://backend:8000
+      PUBLIC_ORIGIN: ${PUBLIC_ORIGIN:-http://localhost:3000}
+      ALLOWED_DEV_ORIGINS: ${PUBLIC_ORIGIN:-http://localhost:3000,http://127.0.0.1:3000}
+      WATCHPACK_POLLING: "true"
+      CHOKIDAR_USEPOLLING: "true"
+    volumes:
+      - ./frontend:/app
+      - frontend-node-modules:/app/node_modules
     ports:
       - "3000:3000"
-    environment:
-      NEXT_PUBLIC_API_BASE_URL: http://localhost:8000
-      BACKEND_URL: http://backend:8000
     depends_on:
       - backend
+    restart: unless-stopped
+
+volumes:
+  backend-artifacts:
+  torch-cache:
+  frontend-node-modules:

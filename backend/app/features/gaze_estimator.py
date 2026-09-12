@@ -118,3 +118,23 @@ def _clamp(x: float, lo: float, hi: float) -> float:
 
 def gaze_deviation(horizontal: float, vertical: float) -> float:
     return math.hypot(horizontal, vertical)
+
+
+# Within the previous OK gaze band. A frame inside this radius counts as
+# camera-oriented occupancy (Kimani et al., ICMI 2020; Ochoa & Zhao, 2024).
+GAZE_ON_CAMERA_RADIUS = 0.22
+
+
+def camera_occupancy(
+    pairs: list[tuple[float, float]],
+    *,
+    radius: float = GAZE_ON_CAMERA_RADIUS,
+) -> float | None:
+    """Fraction of (horizontal, vertical) samples on camera. None if empty."""
+    if not pairs:
+        return None
+    on_camera = 0
+    for horizontal, vertical in pairs:
+        if gaze_deviation(horizontal, vertical) <= radius:
+            on_camera += 1
+    return on_camera / len(pairs)

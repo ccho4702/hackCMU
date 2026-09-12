@@ -2,20 +2,24 @@ export const API_BASE = resolveApiBase();
 
 function resolveApiBase() {
   // Use Next rewrites by default so all requests share the active backend and origin.
-  const configured = process.env.NEXT_PUBLIC_API_BASE_URL ?? "";
+  const configured = (process.env.NEXT_PUBLIC_API_BASE_URL ?? "").trim();
   if (!configured) return "";
-  if (typeof window === "undefined") return configured;
+  if (typeof window === "undefined") return configured.replace(/\/$/, "");
   try {
     const url = new URL(configured);
+    const pageHost = window.location.hostname;
+    const loopback = url.hostname === "localhost" || url.hostname === "127.0.0.1";
+    const pageIsLoopback = pageHost === "localhost" || pageHost === "127.0.0.1";
+    if (loopback && !pageIsLoopback) return "";
     if (
-      (url.hostname === "localhost" && window.location.hostname === "127.0.0.1") ||
-      (url.hostname === "127.0.0.1" && window.location.hostname === "localhost")
+      (url.hostname === "localhost" && pageHost === "127.0.0.1") ||
+      (url.hostname === "127.0.0.1" && pageHost === "localhost")
     ) {
-      url.hostname = window.location.hostname;
+      url.hostname = pageHost;
     }
     return url.origin;
   } catch {
-    return configured;
+    return configured.replace(/\/$/, "");
   }
 }
 

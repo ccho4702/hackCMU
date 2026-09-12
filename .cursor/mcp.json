@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "vultr": {
+      "type": "stdio",
+      "command": "${workspaceFolder}/.cursor/vultr-mcp.sh",
+      "args": []
+    }
+  }
+}

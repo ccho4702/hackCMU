@@ -7,6 +7,7 @@ import Link from "next/link";
 import { apiGet, apiPost, apiUpload } from "@/lib/coaching-api";
 import { useRequireUser } from "@/lib/useUser";
 import { clockTime, recordingError } from "@/lib/recording";
+import { requestUserMedia } from "@/lib/media/userMedia";
 import { activeWordAt, audioProgress, audioRecordingOptions, scoreLabel, SCORE_AXES } from "@/lib/practice";
 
 export default function Practice() {
@@ -144,8 +145,8 @@ export default function Practice() {
     operating.current = true; setPhase("requesting"); setError("");
     refAudio.current?.pause(); trialAudio.current?.pause(); setMode("reference"); setTime(0); setSeconds(0);
     try {
-      if (!navigator.mediaDevices?.getUserMedia || !window.MediaRecorder) throw new Error("Use a browser on localhost or HTTPS, or upload an audio recording.");
-      const media = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true }, video: false });
+      const media = await requestUserMedia({ audio: { echoCancellation: true, noiseSuppression: true }, video: false });
+      if (!window.MediaRecorder) throw new Error("This browser cannot record audio. Try Chrome or Safari, or upload a recording.");
       if (!mounted.current) { media.getTracks().forEach(t => t.stop()); return; }
       stream.current = media;
       const rec = new MediaRecorder(media, audioRecordingOptions(MediaRecorder));

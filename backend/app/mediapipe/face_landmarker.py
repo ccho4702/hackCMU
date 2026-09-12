@@ -37,9 +37,21 @@ class FaceLandmarkerSession:
             ) from exc
 
         self._mp = mp
+        model_file = Path(model_path).resolve()
+        if not model_file.is_file() or model_file.stat().st_size < 1000:
+            raise AppError(
+                ErrorCode.MODEL_INITIALIZATION_FAILED,
+                "MediaPipe Face Landmarker model file is missing.",
+                status_code=500,
+                details={"path": str(model_file)},
+            )
         try:
+            base_kwargs = {"model_asset_path": str(model_file)}
+            delegate = getattr(mp_python.BaseOptions, "Delegate", None)
+            if delegate is not None:
+                base_kwargs["delegate"] = delegate.CPU
             options = vision.FaceLandmarkerOptions(
-                base_options=mp_python.BaseOptions(model_asset_path=str(model_path)),
+                base_options=mp_python.BaseOptions(**base_kwargs),
                 running_mode=vision.RunningMode.VIDEO,
                 num_faces=1,
                 min_face_detection_confidence=0.5,
@@ -50,11 +62,12 @@ class FaceLandmarkerSession:
             )
             self._landmarker = vision.FaceLandmarker.create_from_options(options)
         except Exception as exc:
+            logger.exception("Face Landmarker initialization failed")
             raise AppError(
                 ErrorCode.MODEL_INITIALIZATION_FAILED,
                 "MediaPipe Face Landmarker failed to initialize.",
                 status_code=500,
-                details={"reason": str(exc)},
+                details={"reason": str(exc), "path": str(model_file)},
             ) from exc
 
     def detect(self, rgb: np.ndarray, timestamp_ms: int) -> LandmarkerObservation:

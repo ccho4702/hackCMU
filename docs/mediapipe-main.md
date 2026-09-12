@@ -81,7 +81,14 @@ npm run generate:api
 
 ## Scoring
 
-`heuristic_v1` maps window features through documented piecewise-linear curves. Valid scores are `0–100`. Missing face/gaze/pose never becomes `0`; it is `null` and shown as unavailable in the UI.
+`heuristic_v2` turns observable face geometry into four windowed scores (`0–100`).
+
+- Blendshapes are FACS Action Unit intensities (0–1 ≈ intensity / 5), not emotion labels ([Sanchez-Lozano et al., IEEE TAFFC 2021](https://doi.org/10.1109/TAFFC.2021.3061605)).
+- Each 1 s window is its own quality state. Gaze is `0.70 × on-camera occupancy + 0.30 × drift`, targeting ~80% occupancy ([Kimani et al., ICMI 2020](https://doi.org/10.1145/3382507.3418888)).
+- The four axes (expression activity, facial pose/stability, expressiveness, gaze) follow measurable lecture-style biometrics ([Dimitriadou & Lanitis, 2024](https://doi.org/10.1007/s11042-024-20297-6)).
+- Timestamped alerts exist because automated presentation feedback improves the next human-rated talk ([Ochoa & Domínguez, BJET 2020](https://doi.org/10.1111/bjet.12987)).
+
+Missing face/gaze/pose never becomes `0`; it is `null` and shown as unavailable in the UI.
 
 Head-pose sign convention (stable in exports):
 

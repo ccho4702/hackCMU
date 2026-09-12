@@ -11,7 +11,7 @@ from backend.app.schemas.analysis import HeadPose
 The 4x4 matrix maps the canonical face into camera space. Translation sits
 in the last column; rotation occupies the upper-left 3x3.
 
-Sign convention (stable across exports and scoringVersion heuristic_v1):
+Sign convention (stable across exports and scoringVersion heuristic_v2):
 
 Coordinate frame: camera looks toward -Z, X right, Y up, matching MediaPipe's
 metric face space.

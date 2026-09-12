@@ -51,7 +51,8 @@ def create_app() -> FastAPI:
         title="Mellonaires Presentation Analysis",
         description=(
             "Instrumentation API for quantitative analysis of observable facial "
-            "delivery in presentation video. Not a psychological or emotion classifier."
+            "delivery in presentation video. Blendshapes are scored as Action Unit "
+            "intensities over 1-second windows, not as emotion labels."
         ),
         version=settings.backend_version,
         lifespan=lifespan,
