@@ -87,6 +87,7 @@ Use Python 3.12 and Node.js 22 or newer. From the repository root:
 ```bash
 python3.12 -m venv backend/.venv
 backend/.venv/bin/python -m pip install -r backend/requirements.txt
+backend/.venv/bin/python backend/scripts/download_model.py
 cp -n backend/.env.example backend/.env
 export PATH="$PWD/.tools/node/bin:$PATH"
 (cd frontend && npm ci)
