@@ -52,7 +52,7 @@ def test_tts_does_not_send_unsupported_language_parameter(tmp_path, monkeypatch,
 def test_video_prompt_language_and_log(tmp_path):
     video = tmp_path/'video.mp4';video.write_bytes(b'test video')
     reply = Mock(status_code=200,ok=True)
-    reply.json.return_value = {'candidates':[{'finishReason':'STOP','content':{'parts':[{'text':'[]'}]}}]}
+    reply.json.return_value = {'candidates':[{'finishReason':'STOP','content':{'parts':[{'text':json.dumps({'nonverbal_feedback':[], 'vocal_feedback':[]})}]}}]}
     reply.text = json.dumps(reply.json.return_value)
     session = Mock();session.post.return_value = reply
     assert run_analysis(video,tmp_path/'logs','project','model',4,session,max_attempts=1,language='en') == 0

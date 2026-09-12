@@ -2,8 +2,9 @@
 
 Independent provider modules, composed by `pipeline/`:
 
-1. `gemini_video`: nonverbal observations and actionable corrections only. Output is
-   an array of `{start_time, end_time, content}` with `MM:SS.sss` times. Includes schema,
+1. `gemini_video`: visual and vocal delivery observations with actionable corrections. Output is
+   an object with `nonverbal_feedback` and `vocal_feedback` arrays. Every item uses
+   `{start_time, end_time, content}` with `MM:SS.sss` times. Includes schema,
    local validation, bounded retries, raw responses, and cumulative usage logs.
 2. `elevenlabs_asr`: extracted recording audio -> verbatim text with Scribe v2.
    Stores the original transcript and word timestamps before revision.
@@ -21,7 +22,7 @@ Run from the repository root with `uvicorn backend.main:app --reload`.
 | Endpoint | Input | Output |
 | --- | --- | --- |
 | `POST /api/pipeline` | Multipart `file`, `user_id`, optional `noisy_environment` | 202 Accepted, run ID, status URL |
-| `POST /api/video/analyze` | Multipart video `file` | Nonverbal feedback array; `X-Run-ID` header |
+| `POST /api/video/analyze` | Multipart video `file` | Separate visual/vocal feedback arrays; `X-Run-ID` header |
 | `POST /api/script/analyze-video` | Multipart video `file` | `original_script`, `issues`, `improved_script`; `X-Run-ID` |
 | `POST /api/script/analyze` | JSON `{ "script": "..." }` | Same script response shape |
 | `POST /api/asr/transcribe` | Multipart recording `file` | Original transcript and word timestamps |
@@ -34,7 +35,9 @@ Run from the repository root with `uvicorn backend.main:app --reload`.
 Existing `/api/echo` and `/api/upload` starter routes are retained for compatibility.
 `/api/upload` only describes an upload; use `/api/pipeline` for processing.
 
-The pipeline sends video to Gemini once for nonverbal analysis. Separately, audio
+The pipeline sends the video with its audio track to Gemini once for visual and vocal
+delivery analysis (gaze, gestures, pace, hesitation, articulation, intonation and relative
+loudness). Separately, audio
 is sent to ElevenLabs ASR, and its text is sent to Gemini for script revision.
 The generated `improved_script` is passed directly to ElevenLabs TTS. The extracted
 audio sample is reused for voice cloning. ASR names and technical terms may be
@@ -52,6 +55,7 @@ artifacts/
       voice_sample.mp3
     outputs/
       nonverbal_feedback.json
+      vocal_feedback.json
       transcript.json
       script_feedback.json
       improved_script.txt
@@ -282,3 +286,48 @@ scripts rather than producing misleading scores.
 
 Provider references: [ASR language hint](https://elevenlabs.io/docs/api-reference/speech-to-text/convert),
 [TTS language parameter limitations](https://elevenlabs.io/docs/api-reference/text-to-speech/convert-with-timestamps).
+
+## Vocal delivery analysis
+
+The first Gemini request receives an MP4 with both video and AAC audio; FFmpeg
+preserves the input audio track. The delivery prompt explicitly requests audible
+feedback, alongside visible delivery observations. The second Gemini request still
+receives the ElevenLabs transcript for script revision only. Normal processing
+therefore remains **two Gemini generation calls**; bounded retries can add requests.
+
+The model returns an object with exactly two arrays:
+
+```json
+{
+  "nonverbal_feedback": [{"start_time":"00:01.000","end_time":"00:03.000","content":"Visual observation and correction"}],
+  "vocal_feedback": [{"start_time":"00:05.000","end_time":"00:07.000","content":"Audible observation and correction"}]
+}
+```
+
+Both arrays are required, including empty arrays when no issues are found. Each
+entry still contains exactly `start_time`, `end_time`, and `content`. Arrays are
+validated and sorted independently; identical intervals across the two modalities
+are allowed. An invalid/missing array causes the same bounded retry behavior as
+other validation failures. Mixed visual/vocal observations in a single item are
+explicitly excluded by the prompt. Provider metadata includes per-category counts.
+
+`POST /api/video/analyze` now returns this two-array object instead of a flat array.
+The pipeline stores separate `outputs/nonverbal_feedback.json` and
+`outputs/vocal_feedback.json` files and exposes both in the run's `results` and
+`outputs` objects. The frontend displays **Nonverbal delivery** and **Vocal delivery**
+as separate sections; either section's timestamp seeks the original recording.
+Old runs are not regenerated: an absent vocal result is shown as unavailable,
+whereas an empty array means the analysis completed with no flagged issues.
+
+This is qualitative coaching, not calibrated WPM/dB/pitch measurement or the
+separate trial pronunciation score. The normal pipeline still makes two Gemini
+calls: one joint visual/audio analysis returning two arrays, and one script revision.
+
+## Practice word duration display
+
+Each timed word has a translucent clickable box and a small start–end label in
+seconds (for example, `0.20–0.40s`). Box width uses 320 pixels per second of spoken
+duration, with a 64-pixel readability minimum and the available container width as
+a maximum. Widths and labels follow reference timing during guided practice and
+the selected trial's alignment during trial playback. Existing active-word tracking
+and click-to-seek behavior are retained.

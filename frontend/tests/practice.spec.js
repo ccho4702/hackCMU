@@ -21,13 +21,13 @@ async function mockMic(page) {
   });
 }
 
-async function stub(page, unreliable=false) {
+async function stub(page, unreliable=false, timing=words, scoring=goodScore) {
   let count=0;const trials=[];
-  const session=()=>({run_id:runId,script:'Hello world.',scoring_text:'Hello world.',reference_audio_url:`/api/runs/${runId}/outputs/reference_speech.mp3`,duration_seconds:1.2,max_trial_seconds:30,words,model:{status:'ready'},trials:[...trials].reverse(),trial_count:count});
+  const session=()=>({run_id:runId,script:'Hello world.',scoring_text:'Hello world.',reference_audio_url:`/api/runs/${runId}/outputs/reference_speech.mp3`,duration_seconds:1.2,max_trial_seconds:30,words:timing,model:{status:'ready'},trials:[...trials].reverse(),trial_count:count});
   await page.route(`**/api/runs/${runId}/practice`,route=>route.fulfill({json:session()}));
   await page.route(`**/api/runs/${runId}/trials`,route=>{
     count++;const id=String(count).padStart(32,'a');
-    trials.push({trial_id:id,trial_number:count,created_at:new Date().toISOString(),status:'complete',stage:'complete',audio_url:`/api/runs/${runId}/trials/${id}/audio`,score:unreliable?{...goodScore,status:'unreliable',reason:'Please read the complete script.'}:goodScore});
+    trials.push({trial_id:id,trial_number:count,created_at:new Date().toISOString(),status:'complete',stage:'complete',audio_url:`/api/runs/${runId}/trials/${id}/audio`,score:unreliable?{...scoring,status:'unreliable',reason:'Please read the complete script.'}:scoring});
     return route.fulfill({status:202,json:{trial_id:id,trial_number:count,status:'queued',stage:'queued'}});
   });
   await page.route(new RegExp(`/api/runs/${runId}/trials/[a-f0-9]{32}$`),route=>route.fulfill({json:trials.at(-1)}));
@@ -84,4 +84,58 @@ test('real reference timing and saved scoring results render',async({page})=>{
   if(await reliable.count()) {await reliable.click();await expect(page.locator('.score-axis')).toHaveCount(5);}
   await page.evaluate(()=>window.scrollTo(0,0));
   await page.screenshot({path:'test-results/practice-real.png',fullPage:true});
+});
+
+
+test('word boxes scale with spoken duration and show timing underneath',async({page})=>{
+  const timing=[{text:'One',t0:0,t1:.2},{text:'two',t0:.2,t1:.6},{text:'three',t0:.6,t1:1.4}];
+  await mockMic(page);await stub(page,false,timing);
+  await page.setViewportSize({width:1440,height:1000});
+  await page.goto(`/practice?run=${runId}`);
+  const boxes=page.locator('.timed-word');
+  await expect(boxes).toHaveCount(3);
+  const widths=await boxes.evaluateAll(items=>items.map(item=>item.getBoundingClientRect().width));
+  expect(widths[0]).toBeCloseTo(64,0);
+  expect(widths[1]/widths[0]).toBeCloseTo(2,1);
+  expect(widths[2]/widths[1]).toBeCloseTo(2,1);
+  await expect(boxes.nth(1).locator('.word-timing-label')).toHaveText('0.20–0.60s');
+  const box=await boxes.nth(1).locator('button').boundingBox();
+  const label=await boxes.nth(1).locator('small').boundingBox();
+  expect(label.y).toBeGreaterThanOrEqual(box.y+box.height);
+  await page.getByLabel('TTS reference').evaluate(audio=>Object.defineProperty(audio,'currentTime',{configurable:true,writable:true,value:0}));
+  await page.getByRole('button',{name:'two',exact:true}).click();
+  expect(await page.getByLabel('TTS reference').evaluate(audio=>audio.currentTime)).toBe(.2);
+  await expect(page.locator('.current-word')).toHaveText('two');
+  await page.screenshot({path:'test-results/practice-duration-boxes.png',fullPage:true});
+});
+
+test('long and short word boxes stay inside the mobile viewport',async({page})=>{
+  const timing=[{text:'I',t0:0,t1:.02},{text:'practice',t0:.1,t1:.5},{text:'presentations',t0:.6,t1:2.6}];
+  await stub(page,false,timing);await page.setViewportSize({width:390,height:844});
+  await page.goto(`/practice?run=${runId}`);
+  await expect(page.locator('.timed-word')).toHaveCount(3);
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
+  const bounds=await page.locator('.word-script').boundingBox();
+  for(const box of await page.locator('.timed-word').all()) {
+    const b=await box.boundingBox();
+    expect(b.x+b.width).toBeLessThanOrEqual(bounds.x+bounds.width);
+  }
+  await page.screenshot({path:'test-results/practice-duration-mobile.png',fullPage:true});
+});
+
+
+test('trial playback uses the recorded durations instead of reference durations',async({page})=>{
+  const scoring={...goodScore,words:[{text:'Hello',user:{t0:.1,t1:.9}},{text:'world.',user:{t0:1,t1:1.7}}]};
+  await mockMic(page);await stub(page,false,words,scoring);await page.goto(`/practice?run=${runId}`);
+  const referenceWidth=(await page.locator('.timed-word').first().boundingBox()).width;
+  await page.locator('input[type=file]').setInputFiles({name:'voice.webm',mimeType:'audio/webm',buffer:Buffer.from('voice')});
+  const trial=page.getByLabel('Your trial recording');
+  await expect(trial).toBeVisible();
+  await trial.evaluate(audio=>{
+    Object.defineProperty(audio,'currentTime',{configurable:true,writable:true,value:.15});
+    audio.dispatchEvent(new Event('play'));
+  });
+  await expect(page.locator('.word-timing-label').first()).toHaveText('0.10–0.90s');
+  const trialWidth=(await page.locator('.timed-word').first().boundingBox()).width;
+  expect(trialWidth/referenceWidth).toBeCloseTo(2,1);
 });

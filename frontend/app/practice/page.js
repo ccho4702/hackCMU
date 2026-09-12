@@ -2,12 +2,16 @@
 
 import { useEffect, useRef, useState } from "react";
 import StudioHeader from "@/components/StudioHeader";
+import Link from "next/link";
 import { apiGet, apiPost, apiUpload } from "@/lib/coaching-api";
+import { useRequireUser } from "@/lib/useUser";
 import { clockTime, recordingError } from "@/lib/recording";
 import { activeWordAt, audioRecordingOptions, scoreLabel, SCORE_AXES } from "@/lib/practice";
 
 export default function Practice() {
+  useRequireUser();   // 로그인 없으면 /login 으로
   const [session, setSession] = useState(null);
+  const [board, setBoard] = useState(null);   // GET /runs/{id}/leaderboard
   const [error, setError] = useState("");
   const [phase, setPhase] = useState("idle");
   const [trial, setTrial] = useState(null);
@@ -38,6 +42,10 @@ export default function Practice() {
   const wordProgress = cueWord && wordDuration > 0 ? Math.min(100, Math.max(0, (time - cueWord.t0) / wordDuration * 100)) : 0;
   const cue = active >= 0 ? words[active]?.text : next >= 0 ? words[next]?.text : time > 0 ? "Nice work." : "Ready?";
 
+  function loadBoard(runId) {
+    apiGet(`/runs/${runId}/leaderboard`).then(data => { if (mounted.current) setBoard(data); }).catch(() => {});
+  }
+
   useEffect(() => {
     mounted.current = true;
     const runId = new URLSearchParams(window.location.search).get("run") || localStorage.getItem("rehearse.lastRun");
@@ -47,6 +55,7 @@ export default function Practice() {
       const data = await apiGet(`/runs/${runId}/practice`, { signal: controller.signal });
       if (!mounted.current) return;
       setSession(data);
+      loadBoard(runId);
       const inProgress = data.trials.find(t => ["queued", "running"].includes(t.status));
       setTrial(inProgress || data.trials[0] || null);
       if (inProgress) { setPhase("scoring"); operating.current = true; }
@@ -71,7 +80,7 @@ export default function Practice() {
           if (data.status === "failed") setError(data.error_message);
           try {
             const updated = await apiGet(`/runs/${session.run_id}/practice`, { signal: controller.signal });
-            if (!cancelled) setSession(updated);
+            if (!cancelled) { setSession(updated); loadBoard(session.run_id); }
           } finally {
             if (!cancelled) { setPhase("idle"); operating.current = false; }
           }
@@ -192,9 +201,22 @@ export default function Practice() {
         <div className="practice-grid">
           <section className="practice-script-card"><div className="card-heading"><div><span className="step-number">01</span><h2>Follow the script</h2></div><span className="count-pill">{mode === "trial" ? "YOUR TRIAL TIMING" : phase === "recording" ? "REFERENCE PACE GUIDE" : "REFERENCE TIMING"}</span></div>
             <div className={`word-cue ${phase === "recording" ? "guided" : ""}`} aria-live="off"><span>{phase === "countdown" ? "GET READY" : active >= 0 ? "NOW" : "UP NEXT"}</span><strong>{phase === "countdown" ? countdown : words.length ? cue : "Read naturally."}</strong><small>{phase === "recording" ? "Follow the reference timing. Your microphone is recording." : mode === "trial" ? "Aligned to your recorded voice" : "Play the reference to see each word light up"}</small>{cueWord && phase !== "countdown" && <div className="word-duration-panel"><div className="duration-title"><span>{mode === "trial" ? "Your word duration" : "Target word duration"}</span><strong>{wordDuration.toFixed(2)}<small> seconds</small></strong></div><div className="word-duration-track" role="progressbar" aria-label="Current word duration progress" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(wordProgress)}><i style={{width:`${wordProgress}%`}}/></div><div className="word-timestamps"><span>Start <b>{cueWord.t0.toFixed(2)}s</b></span><span>End <b>{cueWord.t1.toFixed(2)}s</b></span><span>{active >= 0 ? `${Math.max(0, cueWord.t1 - time).toFixed(2)}s remaining` : `Starts in ${Math.max(0, cueWord.t0 - time).toFixed(2)}s`}</span></div></div>}</div>
-            <div className="word-script" aria-label="Practice script">{words.length ? words.map((word,index) => <button key={`${index}-${word.text}`} ref={node => { wordElements.current[index] = node; }} disabled={busy} className={`spoken-word ${active === index ? "current-word" : word.t1 <= time ? "past-word" : ""}`} onClick={() => listenFrom(index)} aria-current={active === index ? "true" : undefined}>{word.text}</button>) : <p>{session.script}</p>}</div>
+            <div className="word-script" aria-label="Practice script">{words.length ? words.map((word,index) => {
+              const duration = Math.max(0, word.t1 - word.t0);
+              const timing = `${word.t0.toFixed(2)}–${word.t1.toFixed(2)}s`;
+              return <span key={`${index}-${word.text}`} className="timed-word"
+                ref={node => { wordElements.current[index] = node; }}
+                style={{ width: `${Math.max(64, duration * 320)}px` }}>
+                <button disabled={busy} className={`spoken-word ${active === index ? "current-word" : word.t1 <= time ? "past-word" : ""}`}
+                  onClick={() => listenFrom(index)} aria-current={active === index ? "true" : undefined}
+                  aria-describedby={`word-timing-${index}`} title={`${timing} · Duration ${duration.toFixed(2)}s`}>
+                  {word.text}
+                </button>
+                <small id={`word-timing-${index}`} className="word-timing-label">{timing}</small>
+              </span>;
+            }) : <p>{session.script}</p>}</div>
             {!session.words.length && <div className="alignment-action"><p>This earlier TTS recording needs word timing for the guided highlight.</p><button className="button secondary-button" onClick={getTiming} disabled={aligning || busy}>{aligning ? "Preparing word timing…" : "Prepare word highlights"}</button></div>}
-            <p className="practice-footnote">The recording guide follows the reference clock; it does not detect your words live. After scoring, replay your trial to follow your actual word timing.</p>
+            <p className="practice-footnote">Box width follows word duration; labels show start–end time. The recording guide follows the reference clock; it does not detect your words live. After scoring, replay your trial to follow your actual word timing.</p>
           </section>
           <section className="trial-recorder-card"><p className="eyebrow">02 / YOUR TURN</p><h2>One more try.</h2><p>Read the complete script in your natural voice. The reference stays silent while you record.</p><div className={`mic-orb ${phase === "recording" ? "pulsing" : ""}`} aria-hidden="true">{phase === "countdown" ? countdown : "♩"}</div><span className="trial-clock">{clockTime(seconds)} <small>/ {clockTime(session.max_trial_seconds)}</small></span>
             {phase === "recording" ? <button className="button stop-button" onClick={stop}><span className="stop-square"/>Stop & score</button> : <button className="button primary-button" onClick={start} disabled={busy || aligning}>{phase === "countdown" ? "Get ready…" : phase === "requesting" ? "Connecting microphone…" : phase === "uploading" ? "Saving your trial…" : phase === "scoring" ? "Scoring your trial…" : "Start voice trial"}</button>}
@@ -207,7 +229,8 @@ export default function Practice() {
           {trial.status === "complete" && !validScore && <div className="unreliable-result" role="status"><h3>Let’s try that once more.</h3><p>{score?.reason || "We couldn’t reliably match this recording to the script."}</p><p>Scores are hidden for this trial. Read every word with clear microphone audio.</p></div>}
           {validScore && <><div className="score-grid">{SCORE_AXES.map(([key,label,description]) => <div className="score-axis" key={key}><span>{label}</span><strong>{scoreLabel(key, score[key])}<small>{key !== "rate_ratio" && score[key] != null ? "/100" : ""}</small></strong><p>{description}</p>{key !== "rate_ratio" && Number.isFinite(score[key]) && <div className="score-track"><i style={{width:`${score[key]*100}%`}}/></div>}{key === "rate_ratio" && <p className="pace-note">1.00× matches the reference. Higher means slower.</p>}</div>)}</div><div className="word-feedback"><h3>Words worth another try</h3>{score.word_diff?.length ? score.word_diff.map((word,index) => <article key={index}><strong>{word.text}</strong><span>{word.note}</span><small>Reference {word.gt_dur.toFixed(2)}s · Your take {word.user_dur.toFixed(2)}s</small></article>) : <p>No large word-level deviations were flagged.</p>}</div><p className="results-note">These are experimental comparisons with your TTS reference, not a measure of overall speaking ability. Microphone conditions can affect the result.</p></>}
         </section>}
-        <section className="trial-history"><div className="section-heading"><div><p className="eyebrow">KEEP SHOWING UP</p><h2>Your practice history</h2></div><span className="count-pill">{session.trial_count} trials</span></div>{session.trials.length ? <div className="history-list">{session.trials.map(item => <button key={item.trial_id} className={trial?.trial_id === item.trial_id ? "selected-trial" : ""} disabled={busy} onClick={() => chooseTrial(item)}><strong>Trial {item.trial_number}</strong><span>{item.status === "complete" ? item.score?.status === "ok" ? `Pronunciation ${scoreLabel("pronunciation_score",item.score.pronunciation_score)} · Rhythm ${scoreLabel("rhythm_score",item.score.rhythm_score)}` : "Try again · unreliable alignment" : item.status}</span><small>{new Date(item.created_at).toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"})}</small></button>)}</div> : <p className="muted">Your first trial is a starting point. Every new recording gets its own result.</p>}</section>
+        {board && board.trials.length > 0 && <section className="trial-history"><div className="section-heading"><div><p className="eyebrow">LEADERBOARD</p><h2>Your best takes</h2></div><Link className="count-pill" href={`/leaderboard?run=${session.run_id}`}>All recordings →</Link></div><div className="history-list">{board.trials.map(item => <button key={item.trial_id} className={trial?.trial_id === item.trial_id ? "selected-trial" : ""} disabled={busy} onClick={() => { const found = session.trials.find(t => t.trial_id === item.trial_id); if (found) chooseTrial(found); }}><strong>{item.rank ? `#${item.rank}` : "–"} · Trial {item.trial_number}{item.best && <span className="count-pill" style={{marginLeft:8}}>BEST</span>}</strong><span>{item.overall != null ? `Avg ${Math.round(item.overall*100)} · Pronunciation ${Math.round((item.axes?.pronunciation ?? 0)*100)} · Rhythm ${Math.round((item.axes?.rhythm ?? 0)*100)} · Emphasis ${Math.round((item.axes?.stress ?? 0)*100)}` : "Unreliable · not ranked"}</span><small>{new Date(item.created_at).toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"})}</small></button>)}</div></section>}
+        <section className="trial-history"><div className="section-heading"><div><p className="eyebrow">KEEP SHOWING UP</p><h2>Your practice history</h2></div><span className="count-pill">{session.trial_count} trials</span></div>{session.trials.length ? <div className="history-list">{session.trials.map(item => <button key={item.trial_id} className={trial?.trial_id === item.trial_id ? "selected-trial" : ""} disabled={busy} onClick={() => chooseTrial(item)}><strong>Trial {item.trial_number}{board?.best_trial_id === item.trial_id && <span className="count-pill" style={{marginLeft:8}}>BEST</span>}</strong><span>{item.status === "complete" ? item.score?.status === "ok" ? `Pronunciation ${scoreLabel("pronunciation_score",item.score.pronunciation_score)} · Rhythm ${scoreLabel("rhythm_score",item.score.rhythm_score)}` : "Try again · unreliable alignment" : item.status}</span><small>{new Date(item.created_at).toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"})}</small></button>)}</div> : <p className="muted">Your first trial is a starting point. Every new recording gets its own result.</p>}</section>
       </>}
     </main><footer><span className="footer-brand">Mellonaires</span><span>Practice makes progress.</span></footer>
   </div>;

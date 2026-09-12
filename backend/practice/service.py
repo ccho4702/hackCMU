@@ -217,6 +217,8 @@ def evaluate_trial(run_dir, trial_dir, source, reference):
                 result["words"] = []
         save_json(trial_dir / "outputs/score.json", result)
         checkpoint("complete", status="complete", score=result, duration_seconds=round(duration, 3))
+        from backend import history
+        history.record_trial(run_dir.name, manifest, result)   # 리더보드용 기록 (Mongo 미설정이면 no-op)
     except Exception as exc:
         message = str(exc) if isinstance(exc, ValueError) else "Scoring could not finish. Please retry after the scoring engine is ready."
         checkpoint("failed", status="failed", error_message=message, error_type=type(exc).__name__)

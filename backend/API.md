@@ -130,3 +130,25 @@ backend/.venv/bin/pytest -c backend/pytest.ini backend/tests/test_database_api.p
 
 The original implementation and commit authorship from `gmin` by **gmint0125** are
 preserved through a Git merge, including `0c94ed5`, `f6b736f`, and `e3791f2`.
+
+## 이력 (로그인 사용자 기준) — `routers/history.py`
+
+기존 파일 기반 흐름(`/api/pipeline` → `artifacts/runs/{run_id}`, `/api/runs/{id}/trials`)은 그대로 두고,
+"이 run 은 누구 것이고 이 trial 점수는 얼마였나"만 Mongo 에 적는다 (`backend/history.py`).
+Mongo 가 없으면 기록을 건너뛰고 기존 기능은 그대로 돈다.
+
+| 엔드포인트 | 하는 일 |
+|---|---|
+| `GET /api/me` | 사용자 정보 + run/trial 개수 |
+| `GET /api/me/runs` | 내 영상 목록. 최신순. `status`(success/running/failed/missing), `title`(개선 스크립트 첫 줄), `has_reference`, `trial_count`, `best_overall`, `urls.evaluation`, `urls.practice` |
+| `GET /api/runs/{run_id}/leaderboard` | 그 영상에 대한 내 트라이얼 순위. `rank`, `best`, `axes{pronunciation,rate,rhythm,intonation,stress}`, `overall`, `audio_url`. unreliable 은 뒤로 가고 rank 가 null |
+
+훅 두 곳: `pipeline/router.py` 의 `pipeline()` 이 run 생성 직후 `history.record_run`, `practice/service.py` 의 `evaluate_trial()` 이 채점 완료 직후 `history.record_trial`.
+run 의 소유자는 `POST /api/pipeline` 의 `user_id` 폼 필드다. 프론트는 로그인한 user_id 를 여기에 넣는다 (`frontend/lib/session.js` 의 `pipelineUserId`).
+
+### 프론트 연결
+
+- `/login` — 이름·이메일로 `POST /api/auth/login`, 결과를 localStorage(`rehearse.user`)에 저장.
+- `lib/coaching-api.js` 의 `request()` 가 모든 `/api` 요청에 `X-User-Id` 를 붙인다.
+- `/live`, `/streaming`, `/practice`, `/leaderboard` 는 `useRequireUser()` 로 로그인 없으면 `/login?next=` 로 보낸다.
+- `/leaderboard` — 내 영상 목록 + 고른 영상의 트라이얼 순위표. `/practice` 에도 같은 순위 패널과 BEST 표시가 뜬다.

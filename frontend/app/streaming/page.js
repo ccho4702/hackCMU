@@ -9,6 +9,8 @@ import { useEffect, useRef, useState } from "react";
 import { LAYERS, countLandmarks, drawLandmarks } from "./drawLandmarks";
 import { useLandmarkStream } from "./useLandmarkStream";
 import { useWebcam } from "./useWebcam";
+import { pipelineUserId } from "@/lib/session";
+import { useRequireUser } from "@/lib/useUser";
 
 const CAMERA_STATUS = {
   idle: { text: "Off", tone: "off" },
@@ -32,6 +34,7 @@ const TONE_DOT = {
 };
 
 export default function StreamingPage() {
+  useRequireUser();   // 로그인 없으면 /login 으로
   const router = useRouter();
   const { videoRef, status: cameraStatus, error: cameraError, start: startCamera, stop: stopCamera } = useWebcam();
   const [language, setLanguage] = useState("en");
@@ -66,8 +69,7 @@ export default function StreamingPage() {
     try {
       if(!file.size) throw new Error("The recording was empty. Please try again.");
       if(file.size>MAX_UPLOAD_BYTES) throw new Error("Please upload a recording smaller than 100 MB.");
-      let userId=localStorage.getItem("rehearse.userId");
-      if(!userId){userId=crypto.randomUUID();localStorage.setItem("rehearse.userId",userId);}
+      const userId=pipelineUserId();
       const job=await startPipeline(file,userId,language);
       localStorage.setItem("rehearse.lastRun",job.run_id);
       if(alive.current) router.push(`/evaluation?run=${job.run_id}`);

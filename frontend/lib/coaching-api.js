@@ -4,8 +4,13 @@
 // Relative URLs only resolve in the browser, so call these from Client Components
 // ("use client"). In Server Components, fetch `${process.env.BACKEND_URL}/api/...` directly.
 
+import { getUser } from "@/lib/session";
+
 async function request(path, options = {}) {
-  const res = await fetch(`/api${path}`, { cache: "no-store", ...options });
+  const headers = new Headers(options.headers || {});
+  const user = getUser();
+  if (user?.user_id && !headers.has("X-User-Id")) headers.set("X-User-Id", user.user_id);
+  const res = await fetch(`/api${path}`, { cache: "no-store", ...options, headers });
 
   const isJson = res.headers.get("content-type")?.includes("application/json");
   const body = isJson ? await res.json() : res;
