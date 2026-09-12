@@ -1,4 +1,4 @@
-"""One recording -> nonverbal feedback, revised script, reference speech."""
+"""One recording -> visual/vocal delivery feedback, revised script, reference speech."""
 import json
 import os
 import shutil
@@ -45,7 +45,7 @@ def process_recording(source, user_id, noisy_environment=False, *, tts_client=No
         video_meta = json.loads((logs / "video/presentation-analysis-meta.json").read_text())
         manifest["gemini_requests"]["video"] = video_meta["attempt_count"]
         if status:
-            raise RuntimeError("Nonverbal analysis failed; see video attempt logs")
+            raise RuntimeError("Delivery analysis failed; see video attempt logs")
         shutil.copy2(logs / "video/presentation-analysis.json", run_dir / "outputs/nonverbal_feedback.json")
         manifest["outputs"]["nonverbal_feedback"] = "nonverbal_feedback.json"
         manifest["stage"] = "transcription"

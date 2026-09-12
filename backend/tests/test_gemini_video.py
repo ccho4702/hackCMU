@@ -99,6 +99,18 @@ class RetryTests(unittest.TestCase):
         self.assertEqual(session.post.call_count, 3)
         self.assertEqual([a["status"] for a in meta["attempts"]], ["http_error", "network_error", "success"])
 
+    def test_vocal_feedback_uses_the_same_timestamp_schema_and_one_request(self):
+        vocal = [{"start_time": "00:05.000", "end_time": "00:08.000",
+                  "content": "말 속도: 문장 끝을 급하게 이어 말합니다. 핵심어 뒤에 짧게 쉬어주세요."}]
+        status, session, meta, _ = self.run_case([response(json.dumps(vocal))])
+        self.assertEqual(status, 0)
+        self.assertEqual(session.post.call_count, 1)
+        self.assertEqual(meta["assessment_scope"], ["visual", "vocal"])
+        body = session.post.call_args.kwargs["json"]
+        self.assertEqual(body["contents"][0]["parts"][0]["inlineData"]["mimeType"], "video/mp4")
+        self.assertEqual(set(vocal[0]), {"start_time", "end_time", "content"})
+        self.assertEqual(json.loads((self.output / "presentation-analysis.json").read_text()), vocal)
+
     def test_permission_error_does_not_retry(self):
         status, session, meta, _ = self.run_case([response(status=403, payload={"error": {"message": "permission denied"}})])
         self.assertEqual(status, 1)

@@ -22,13 +22,13 @@ an audio reference that reads the improved script in the speaker's cloned voice.
 
 | Result | What you get | Powered by |
 | --- | --- | --- |
-| **Nonverbal coaching** | Time ranges, observable gaze/gesture/posture problems, and actionable corrections | Gemini video understanding |
+| **Delivery coaching** | Timestamped feedback on gaze, gestures, speaking pace, pauses, articulation and vocal delivery | Gemini video understanding |
 | **Script coaching** | Original transcript, concrete script issues, and a revised presentation script | ElevenLabs Scribe + Gemini |
 | **Hear the improvement** | The revised script spoken with a cloned reference voice | ElevenLabs IVC + TTS |
 
 ```mermaid
 flowchart LR
-    A[Rehearsal video] --> B[Gemini: nonverbal analysis]
+    A[Rehearsal video] --> B[Gemini: visual + vocal analysis]
     A --> D[Extract audio]
     D --> I[ElevenLabs ASR]
     I --> C[Gemini: script revision]
@@ -39,7 +39,7 @@ flowchart LR
     E --> H[Practice audio]
 ```
 
-The normal flow makes **two Gemini generation requests**: one for nonverbal analysis
+The normal flow makes **two Gemini generation requests**: one for visual and vocal delivery analysis
 and one that improves the ElevenLabs transcript. ElevenLabs makes one ASR request
 and one TTS request when a voice is cached; a new voice also needs one IVC creation request.
 Video validation retries, when needed, add Gemini requests and are logged separately.
@@ -160,7 +160,7 @@ Individual stages can also be called independently. See the [backend guide](back
 
 ```text
 backend/
-  gemini_video/       Nonverbal analysis, validation, retries, attempt logs
+  gemini_video/       Visual/vocal analysis, validation, retries, attempt logs
   gemini_script/      Text-based script feedback and revision
   elevenlabs_asr/     Original speech transcription with Scribe v2
   elevenlabs_tts/     Audio extraction, voice cache, cloned-voice TTS
