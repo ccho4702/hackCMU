@@ -10,12 +10,18 @@ async function showReview(page, pending=false) {
     results:{transcript:{text:original},nonverbal_feedback:[],...(!pending?{script_feedback:{original_script:original,improved_script:improved,issues:[]}}:{})},
   }}));
   // A valid short WAV lets the native player load without a provider call.
-  const wav=Buffer.alloc(44+1600*2);
+  const wav=Buffer.alloc(44+16000*8*2);
   wav.write("RIFF");wav.writeUInt32LE(wav.length-8,4);wav.write("WAVEfmt ",8);
   wav.writeUInt32LE(16,16);wav.writeUInt16LE(1,20);wav.writeUInt16LE(1,22);
   wav.writeUInt32LE(16000,24);wav.writeUInt32LE(32000,28);wav.writeUInt16LE(2,32);wav.writeUInt16LE(16,34);
   wav.write("data",36);wav.writeUInt32LE(wav.length-44,40);
-  await page.route("**/reference.wav",route=>route.fulfill({contentType:"audio/wav",body:wav}));
+  await page.route("**/reference.wav", route => {
+    const range=route.request().headers()["range"]?.match(/bytes=(\d+)-(\d*)/);
+    const start=range?Number(range[1]):0;
+    const end=range?.[2]?Math.min(Number(range[2]),wav.length-1):wav.length-1;
+    return route.fulfill({status:range?206:200,contentType:"audio/wav",body:wav.subarray(start,end+1),
+      headers:{"Accept-Ranges":"bytes","Content-Length":String(end-start+1),...(range?{"Content-Range":`bytes ${start}-${end}/${wav.length}`}:{})}});
+  });
   await page.goto(`/evaluation?run=${runId}`);
 }
 
@@ -30,13 +36,13 @@ test("desktop keeps script comparison below the reference voice player",async({p
   const r=await revised.boundingBox(),o=await recorded.boundingBox();
   expect(r.x).toBeGreaterThan(o.x);
   expect(Math.abs(r.y-o.y)).toBeLessThan(2);
-  expect(r.width).toBeGreaterThan(o.width);
+  expect(Math.abs(r.width-o.width)).toBeLessThan(2);
   const recording=await page.getByRole("heading",{name:"Original recording",exact:true}).boundingBox();
   const voice=page.getByRole("region",{name:"Reference voice",exact:true});
   const v=await voice.boundingBox();
   expect(v.y).toBeGreaterThan(recording.y);
   expect(r.y).toBeGreaterThan(v.y+v.height);
-  await expect(voice.getByLabel("Improved speech")).toBeVisible();
+  await expect(voice.getByRole("button",{name:"Play reference voice"})).toBeVisible();
   await expect.poll(()=>voice.getByLabel("Improved speech").evaluate(audio=>audio.readyState)).toBeGreaterThan(0);
   await page.screenshot({path:"test-results/script-comparison-desktop.png",fullPage:true});
 });
@@ -53,7 +59,7 @@ test("mobile places the improved script first without horizontal overflow",async
   const voice=page.getByRole("region",{name:"Reference voice",exact:true});
   const v=await voice.boundingBox();
   expect(r.y).toBeGreaterThan(v.y+v.height);
-  await expect(voice.getByLabel("Improved speech")).toBeVisible();
+  await expect(voice.getByRole("button",{name:"Play reference voice"})).toBeVisible();
   expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
   await page.screenshot({path:"test-results/script-comparison-mobile.png",fullPage:true});
 });
@@ -63,4 +69,23 @@ test("the original script remains readable if revision fails",async({page})=>{
   await expect(page.getByRole("region",{name:"Reference voice",exact:true})).toContainText("Reference audio is not available");
   await expect(page.getByRole("region",{name:"Original script",exact:true})).toContainText(original);
   await expect(page.getByRole("region",{name:"Improved script",exact:true})).toContainText("Your improved script will appear here.");
+});
+
+
+test("reference player supports play, pause and keyboard seeking", async ({page}) => {
+  await showReview(page);
+  const voice=page.getByRole("region",{name:"Reference voice",exact:true});
+  const audio=voice.getByLabel("Improved speech");
+  await expect.poll(()=>audio.evaluate(element=>element.duration)).toBe(8);
+  await voice.getByRole("button",{name:"Play reference voice"}).click();
+  await expect(voice.getByRole("button",{name:"Pause reference voice"})).toBeVisible();
+  await voice.getByRole("button",{name:"Pause reference voice"}).click();
+  expect(await audio.evaluate(element=>element.paused)).toBe(true);
+  const slider=voice.getByRole("slider",{name:"Reference voice position"});
+  await slider.focus();
+  await slider.press("End");
+  await expect.poll(()=>audio.evaluate(element=>element.currentTime)).toBe(8);
+  await slider.press("Home");
+  await expect.poll(()=>audio.evaluate(element=>element.currentTime)).toBe(0);
+  await expect(voice.getByRole("link",{name:"Download reference audio"})).toHaveAttribute("href","/reference.wav");
 });
