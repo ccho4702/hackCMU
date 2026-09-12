@@ -1,9 +1,10 @@
+import json
 import os
 from pathlib import Path
 import time
-import json
 
 from google.genai import types
+from pydantic import ValidationError
 
 from backend.common.gemini import client as gemini_client
 from backend.gemini_script.schemas import ScriptAnalysis
@@ -29,7 +30,22 @@ Return the supplied JSON schema, with issues=[] when no specific issue is found.
 """
 
 
-def analyze_script(script: str = None, client=None, *, video_path=None, log_dir=None, language: Language | None = None, script_style: ScriptStyle = "presentation") -> ScriptAnalysis:
+def _retryable(exc):
+    if isinstance(exc, (ValidationError, json.JSONDecodeError, TimeoutError, ConnectionError)):
+        return True
+    return type(exc).__name__ in {"ClientError", "ServerError", "APIError"}
+
+
+def _accepted(result, script):
+    if script is not None:
+        kept = [issue for issue in result.issues if issue.original in script]
+        return result.model_copy(update={"original_script": script, "issues": kept})
+    if any(issue.original not in result.original_script for issue in result.issues):
+        raise ValueError("Script analysis quoted text that does not occur in the input")
+    return result
+
+
+def analyze_script(script: str = None, client=None, *, video_path=None, log_dir=None, language: Language | None = None, script_style: ScriptStyle = "presentation", max_attempts=None, retry_delay=None, sleep=time.sleep) -> ScriptAnalysis:
     language = resolve_language(language)
     script_style = validate_script_style(script_style)
     prompt = SYSTEM_PROMPT + "\nSELECTED SCRIPT SCENARIO: " + script_style + "\n" + STYLE_INSTRUCTIONS[script_style]
@@ -41,46 +57,61 @@ def analyze_script(script: str = None, client=None, *, video_path=None, log_dir=
         prompt += f"\nThe selected presentation language is {NAMES[language]}. Keep original_script verbatim.\n"
     if (script is None) == (video_path is None):
         raise ValueError("Provide exactly one of script or video_path")
-    contents = script if video_path is None else [
+    supplied = script.strip() if script is not None else None
+    contents = supplied if video_path is None else [
         types.Part.from_bytes(data=Path(video_path).read_bytes(), mime_type="video/mp4"),
         "Transcribe the speech, identify script problems, and return an improved presentation script.",
     ]
+    attempts = max_attempts if max_attempts is not None else int(os.getenv("SCRIPT_MAX_ATTEMPTS", "3"))
+    delay = retry_delay if retry_delay is not None else float(os.getenv("SCRIPT_RETRY_DELAY", "1"))
+    if not 1 <= attempts <= 10:
+        raise ValueError("Invalid script attempt count")
+    model = os.getenv("GEMINI_SCRIPT_MODEL", "gemini-3.8-flash")
     directory = Path(log_dir) if log_dir else None
     if directory:
         directory.mkdir(parents=True, exist_ok=True)
         (directory / "prompt.txt").write_text(prompt, encoding="utf-8")
-        log_event(directory / "attempts.jsonl", "attempt_started", attempt=1, script_style=script_style, model=os.getenv("GEMINI_SCRIPT_MODEL", "gemini-3.8-flash"))
     started = time.monotonic()
     owned = client is None
     if owned:
         client = gemini_client()
+    last_error = None
     try:
-        response = client.models.generate_content(
-            model=os.getenv("GEMINI_SCRIPT_MODEL", "gemini-3.8-flash"),
-            contents=contents,
-            config=types.GenerateContentConfig(system_instruction=prompt,
-                response_mime_type="application/json", response_schema=ScriptAnalysis, max_output_tokens=8192))
+        for attempt in range(1, attempts + 1):
+            if directory:
+                log_event(directory / "attempts.jsonl", "attempt_started", attempt=attempt, script_style=script_style, model=model)
+            try:
+                response = client.models.generate_content(
+                    model=model,
+                    contents=contents,
+                    config=types.GenerateContentConfig(system_instruction=prompt,
+                        response_mime_type="application/json", response_schema=ScriptAnalysis, max_output_tokens=8192))
+                if directory:
+                    (directory / "response.txt").write_text(response.text or "", encoding="utf-8")
+                result = _accepted(ScriptAnalysis.model_validate_json(response.text or ""), supplied)
+                if directory:
+                    usage = response.usage_metadata.model_dump(mode="json") if response.usage_metadata else {}
+                    record = {"status": "success", "language": language, "script_style": script_style, "attempt_count": attempt, "retry_count": attempt - 1,
+                              "elapsed_seconds": round(time.monotonic()-started, 2), "usage": usage}
+                    save_json(directory / "meta.json", record)
+                    log_event(directory / "attempts.jsonl", "attempt_finished", **record)
+                return result
+            except Exception as exc:
+                last_error = exc
+                if directory:
+                    log_event(directory / "attempts.jsonl", "attempt_finished", status="failed", attempt=attempt,
+                              error_type=type(exc).__name__, error=str(exc)[:500])
+                if attempt == attempts or not _retryable(exc):
+                    break
+                sleep(delay * attempt)
         if directory:
-            (directory / "response.txt").write_text(response.text or "", encoding="utf-8")
-        result = ScriptAnalysis.model_validate_json(response.text or "")
-        if script is not None and result.original_script != script:
-            raise ValueError("original_script does not match the supplied text")
-        if any(issue.original not in result.original_script for issue in result.issues):
-            raise ValueError("Script analysis quoted text that does not occur in the input")
-        if directory:
-            usage = response.usage_metadata.model_dump(mode="json") if response.usage_metadata else {}
-            record = {"status": "success", "language": language, "script_style": script_style, "attempt_count": 1, "retry_count": 0,
-                      "elapsed_seconds": round(time.monotonic()-started, 2), "usage": usage}
+            failed_attempt = attempt if last_error is not None else attempts
+            record = {"status": "failed", "language": language, "script_style": script_style,
+                      "attempt_count": failed_attempt, "retry_count": max(0, failed_attempt - 1),
+                      "error_type": type(last_error).__name__, "error": str(last_error)[:500],
+                      "elapsed_seconds": round(time.monotonic()-started, 2)}
             save_json(directory / "meta.json", record)
-            log_event(directory / "attempts.jsonl", "attempt_finished", **record)
-        return result
-    except Exception as exc:
-        if directory:
-            record = {"status": "failed", "language": language, "script_style": script_style, "attempt_count": 1, "retry_count": 0,
-                      "error_type": type(exc).__name__, "elapsed_seconds": round(time.monotonic()-started, 2)}
-            save_json(directory / "meta.json", record)
-            log_event(directory / "attempts.jsonl", "attempt_finished", **record)
-        raise
+        raise last_error
     finally:
         if owned:
             client.close()

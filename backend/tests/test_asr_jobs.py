@@ -3,6 +3,7 @@ import os
 from pathlib import Path
 import tempfile
 import unittest
+from types import SimpleNamespace
 from unittest.mock import Mock, patch
 
 from fastapi.testclient import TestClient
@@ -22,6 +23,17 @@ class AsrTests(unittest.TestCase):
             self.assertEqual(client.speech_to_text.convert.call_count,1)
             self.assertFalse(client.speech_to_text.convert.call_args.kwargs['no_verbatim'])
             self.assertEqual(json.loads((root/'logs/meta.json').read_text())['asr_requests'],1)
+
+    def test_transcription_retries_then_succeeds(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root=Path(temp);audio=root/'audio.mp3';audio.write_bytes(b'fake')
+            client=Mock()
+            client.speech_to_text.convert.side_effect=[RuntimeError('timeout'), SimpleNamespace(model_dump=lambda **_:{'text':'Hello.','language_code':'eng','words':[]})]
+            with patch('backend.elevenlabs_asr.service.time.sleep'):
+                result=transcribe_audio(audio,client=client,log_dir=root/'logs')
+            self.assertEqual(result['text'],'Hello.')
+            self.assertEqual(client.speech_to_text.convert.call_count,2)
+            self.assertEqual(json.loads((root/'logs/meta.json').read_text())['asr_requests'],2)
 
     def test_silent_transcription_fails_and_records_error(self):
         with tempfile.TemporaryDirectory() as temp:

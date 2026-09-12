@@ -14,25 +14,39 @@ def transcribe_audio(audio_path, *, client=None, log_dir=None, language: Languag
     logs = Path(log_dir) if log_dir else Path(audio_path).parent / "asr-logs"
     logs.mkdir(parents=True, exist_ok=True)
     started = time.monotonic()
-    meta = {"model": os.getenv("ELEVENLABS_ASR_MODEL", "scribe_v2"), "asr_requests": 1,
-            "status": "running", "requested_language": language}
+    attempts = int(os.getenv("ASR_MAX_ATTEMPTS", "3"))
+    meta = {"model": os.getenv("ELEVENLABS_ASR_MODEL", "scribe_v2"), "asr_requests": 0,
+            "status": "running", "requested_language": language, "max_attempts": attempts}
     log_event(logs / "events.jsonl", "asr_started", **meta)
+    last_error = None
     try:
-        with Path(audio_path).open("rb") as audio:
-            response = client.speech_to_text.convert(
-                file=audio, model_id=meta["model"], diarize=False,
-                **({"language_code": provider_language(language)} if language else {}),
-                tag_audio_events=False, timestamps_granularity="word", no_verbatim=False,
-                request_options={"max_retries": 0, "timeout_in_seconds": 120},
-            )
-        payload = response.model_dump(mode="json")
-        save_json(logs / "response.json", payload)
-        text = payload.get("text")
-        if not isinstance(text, str) or not text.strip():
-            raise ValueError("No speech was detected. Record a clearly audible presentation and try again.")
-        meta.update(status="success", language_code=payload.get("language_code"), characters=len(text))
-        return {"text": text.strip(), "language_code": payload.get("language_code"),
-                "words": payload.get("words") or []}
+        for attempt in range(1, max(1, attempts) + 1):
+            meta["asr_requests"] = attempt
+            try:
+                with Path(audio_path).open("rb") as audio:
+                    response = client.speech_to_text.convert(
+                        file=audio, model_id=meta["model"], diarize=False,
+                        **({"language_code": provider_language(language)} if language else {}),
+                        tag_audio_events=False, timestamps_granularity="word", no_verbatim=False,
+                        request_options={"max_retries": 0, "timeout_in_seconds": 120},
+                    )
+                payload = response.model_dump(mode="json")
+                save_json(logs / "response.json", payload)
+                text = payload.get("text")
+                if not isinstance(text, str) or not text.strip():
+                    raise ValueError("No speech was detected. Record a clearly audible presentation and try again.")
+                meta.update(status="success", language_code=payload.get("language_code"), characters=len(text))
+                return {"text": text.strip(), "language_code": payload.get("language_code"),
+                        "words": payload.get("words") or []}
+            except ValueError:
+                raise
+            except Exception as exc:
+                last_error = exc
+                log_event(logs / "events.jsonl", "asr_retry", attempt=attempt, error_type=type(exc).__name__)
+                if attempt == max(1, attempts):
+                    raise
+                time.sleep(0.5 * attempt)
+        raise last_error
     except Exception as exc:
         meta.update(status="failed", error_type=type(exc).__name__)
         raise

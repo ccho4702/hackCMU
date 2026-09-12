@@ -179,6 +179,63 @@ class ServiceTests(unittest.TestCase):
         manifest=json.loads((run/'manifest.json').read_text())
         self.assertEqual((manifest['status'],manifest['stage']),('failed','prepare'))
 
+    def test_script_retries_transient_gemini_errors(self):
+        class Transient(Exception):
+            pass
+        Transient.__name__ = 'ClientError'
+        provider = Mock()
+        provider.models.generate_content.side_effect = [
+            Transient('429 RESOURCE_EXHAUSTED'),
+            SimpleNamespace(text=json.dumps({'original_script':'Hi.','issues':[],'improved_script':'Hello there.'}), usage_metadata=None),
+        ]
+        result = analyze_script('Hello everyone.', client=provider, log_dir=self.root/'logs', retry_delay=0, sleep=lambda _: None)
+        self.assertEqual(result.original_script, 'Hello everyone.')
+        self.assertEqual(result.improved_script, 'Hello there.')
+        self.assertEqual(provider.models.generate_content.call_count, 2)
+        self.assertEqual(json.loads((self.root/'logs/meta.json').read_text())['retry_count'], 1)
+
+    def test_script_keeps_supplied_text_and_drops_unquoted_issues(self):
+        provider = Mock()
+        provider.models.generate_content.return_value = SimpleNamespace(
+            text=json.dumps({'original_script':'rewritten','issues':[{'original':'rewritten','problem':'changed','suggestion':'keep'},{'original':'Hello','problem':'ok','suggestion':'Hello everyone'}],'improved_script':'Hello everyone.'}),
+            usage_metadata=None)
+        result = analyze_script('Hello', client=provider)
+        self.assertEqual(result.original_script, 'Hello')
+        self.assertEqual(len(result.issues), 1)
+        self.assertEqual(result.issues[0].original, 'Hello')
+
+    def test_pipeline_continues_with_original_transcript_when_script_revision_fails(self):
+        run = self.root / ('c'*32)
+        for name in ['inputs','intermediates','outputs','logs']:(run/name).mkdir(parents=True)
+        source=run/'inputs/recording.mov'; source.write_bytes(b'original')
+        def fake_video(path, output, *args, **kwargs):
+            output.mkdir(parents=True)
+            (output/'presentation-analysis-meta.json').write_text('{"attempt_count":1}')
+            (output/'presentation-analysis.json').write_text(json.dumps({'nonverbal_feedback':[], 'vocal_feedback':[]}))
+            return 0
+        def fake_tts(*args, **kwargs):
+            kwargs['on_stage']('speech_generation')
+            (kwargs['output_dir']/'reference_speech.mp3').write_bytes(b'ID3test')
+            kwargs['log_dir'].mkdir(parents=True)
+            (kwargs['log_dir']/'meta.json').write_text('{"tts_requests":1,"clone_requests":1}')
+        class Transient(Exception):
+            pass
+        Transient.__name__ = 'ClientError'
+        with patch('backend.pipeline.service.prepare_video', return_value=run/'intermediates/analysis-input.mp4'), \
+             patch('backend.pipeline.service.extract_audio', return_value=str(run/'intermediates/voice_sample.mp3')), \
+             patch('backend.pipeline.service.transcribe_audio', return_value={'text':'hello','language_code':'eng','words':[]}), \
+             patch('backend.pipeline.service.video_duration', return_value=10), \
+             patch('backend.pipeline.service.google_project', return_value='test'), \
+             patch('backend.pipeline.service.gemini_session'), \
+             patch('backend.pipeline.service.run_analysis', side_effect=fake_video), \
+             patch('backend.pipeline.service.analyze_script', side_effect=Transient('429')), \
+             patch('backend.pipeline.service.synthesize', side_effect=fake_tts) as speech:
+            result=process_recording(source,'demo',tts_client=Mock(),language='en')
+        self.assertEqual(result['status'],'success')
+        self.assertEqual(speech.call_args.args[2], 'hello')
+        self.assertEqual((run/'outputs/improved_script.txt').read_text(), 'hello')
+        self.assertTrue((run/'logs/script/fallback.json').exists())
+
 
 class ApiTests(unittest.TestCase):
     def setUp(self):
