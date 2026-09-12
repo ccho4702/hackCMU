@@ -29,6 +29,8 @@
   --color-critical: var(--critical);
   --color-strong: var(--strong);
   --color-playhead: var(--playhead);
+  --color-primary: #2f6bff;
+  --color-primary-hover: #1f58e8;
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
