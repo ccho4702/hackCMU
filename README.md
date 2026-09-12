@@ -26,29 +26,10 @@ an audio reference that reads the improved script in the speaker's cloned voice.
 | **Script coaching** | Original transcript, concrete script issues, and a revised presentation script | ElevenLabs Scribe + Gemini |
 | **Hear the improvement** | The revised script spoken with a cloned reference voice | ElevenLabs IVC + TTS |
 
-```mermaid
-flowchart LR
-    classDef gemini fill:#e8f5ec,stroke:#1e8e3e,color:#0b3d1a
-    classDef eleven fill:#fdf2f8,stroke:#db2777,color:#4a0b2e
-    classDef user fill:#eef2ff,stroke:#4f6df5,color:#0f172a
-    classDef crown fill:#fef3c7,stroke:#d97706,stroke-width:2px,color:#78350f
-
-    L([🔑 Sign in]):::user --> V[📹 Live session<br/>MediaPipe feedback]:::user
-    V --> A[🎥 Rehearsal video]
-    A --> B[Gemini: visual + vocal analysis]:::gemini
-    A --> D[Extract audio]
-    D --> I[ElevenLabs ASR]:::eleven
-    I --> C[Gemini: script revision]:::gemini
-    C --> E[ElevenLabs voice clone + TTS]:::eleven
-    D --> E
-    B --> F[💬 Timestamped coaching]
-    C --> G[📝 Improved script]
-    E --> H[🔊 Practice audio]
-    H --> P[🎙️ Practice trials]
-    P --> S[📊 Five measures<br/>+ words to revisit]
-    S --> K[👑 Leaderboard<br/>best take per recording]:::crown
-    S -. next take .-> P
-```
+<p align="center">
+  <a href="docs/pipeline.svg"><img src="docs/pipeline.png" alt="How one rehearsal becomes a better take: sign in, live session, coaching pipeline, what you see, practice loop, leaderboard" width="100%"></a>
+</p>
+<p align="center"><sub>Ribbon width marks the main path; colors mark who does the work. Open <code>docs/pipeline.html</code> locally for zoom and pan, or regenerate with <code>python docs/build_pipeline_diagram.py</code>.</sub></p>
 
 The normal flow makes **two Gemini generation requests**: one for visual and vocal delivery analysis
 and one that improves the ElevenLabs transcript. ElevenLabs makes one ASR request
