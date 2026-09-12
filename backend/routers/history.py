@@ -46,6 +46,8 @@ def _title(run_id: str) -> str | None:
 @router.get("/me")
 def me(user_id: str = Depends(current_user_id)):
     user = db.users().find_one({"_id": ObjectId(user_id)})
+    if user.get("is_guest"):
+        user = {**user, "email": None}
     return {
         **db.public(user),
         "user_id": user_id,

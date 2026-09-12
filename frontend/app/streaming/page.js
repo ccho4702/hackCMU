@@ -1,5 +1,7 @@
 "use client";
 
+import { coachingStorage } from "@/lib/session";
+
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { LanguageSelect } from "@/components/LanguageSelect";
@@ -13,7 +15,7 @@ import { pipelineUserId } from "@/lib/session";
 import { useRequireUser } from "@/lib/useUser";
 
 export default function StreamingPage() {
-  useRequireUser();   // 로그인 없으면 /login 으로
+  useRequireUser();   // 로그인 또는 게스트 프로필 필요
   const router = useRouter();
   const { videoRef, status: cameraStatus, error: cameraError, start: startCamera, stop: stopCamera } = useWebcam();
   const [language, setLanguage] = useState("en");
@@ -45,13 +47,14 @@ export default function StreamingPage() {
   }, []);
 
   async function submitRecording(file) {
+    const storage = coachingStorage();
     setUploading(true);setRecordError("");
     try {
       if(!file.size) throw new Error("The recording was empty. Please try again.");
       if(file.size>MAX_UPLOAD_BYTES) throw new Error("Please upload a recording smaller than 100 MB.");
       const userId=pipelineUserId();
       const job=await startPipeline(file,userId,language,scriptStyle);
-      localStorage.setItem("rehearse.lastRun",job.run_id);
+      storage.setItem("rehearse.lastRun",job.run_id);
       if(alive.current) router.push(`/evaluation?run=${job.run_id}`);
     } catch(e) {
       if(alive.current){setRecordError(e.message);setUploading(false);}

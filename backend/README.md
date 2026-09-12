@@ -367,3 +367,16 @@ pauses, articulation and intonation without a regional-accent target. TTS reads 
 improved script with a fresh clone of the current recording and the configured model (default
 `eleven_multilingual_v2`), without injected accent tags or automatic model switching.
 Existing saved audio and PoC artifacts are unchanged.
+
+## Guest demo profiles and visible generation stages
+
+`POST /api/auth/guest` returns a fresh `{user_id, name, email: null, is_guest: true}`
+without requiring profile fields. MongoDB stores an independent guest record with a
+reserved unique key; `/api/auth/login` cannot reuse that key as an email. Guest IDs
+follow the existing X-User-Id history ownership checks. This remains the demo
+identity mechanism, not a replacement for production authentication.
+
+The recording pipeline exposes `voice_cloning` while IVC runs and
+`speech_generation` while TTS runs. These checkpoints drive frontend provider
+indicators; they add no model calls. Cloning failures preserve script/feedback and
+report the cloning stage instead of implying that synthesis started.

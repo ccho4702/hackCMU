@@ -1,3 +1,5 @@
+
+import { coachingStorage } from "@/lib/session";
 const files = new Map();
 const urls = new Map();
 
@@ -16,7 +18,7 @@ export function getVideoObjectUrl(analysisId) {
   const local = urls.get(analysisId);
   if (local) return local;
   if (typeof window !== "undefined") {
-    const run = localStorage.getItem(`mellonaires.coaching.${analysisId}`);
+    const run = coachingStorage().getItem(`mellonaires.coaching.${analysisId}`);
     if (run && /^[a-f0-9]{32}$/.test(run)) return `/api/runs/${run}/original`;
   }
   return undefined;

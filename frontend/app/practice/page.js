@@ -1,5 +1,7 @@
 "use client";
 
+import { coachingStorage } from "@/lib/session";
+
 import { useEffect, useRef, useState } from "react";
 import StudioHeader from "@/components/StudioHeader";
 import AutoFitWord from "@/components/AutoFitWord";
@@ -11,7 +13,7 @@ import { requestUserMedia } from "@/lib/media/userMedia";
 import { activeWordAt, audioProgress, audioRecordingOptions, scoreLabel, SCORE_AXES } from "@/lib/practice";
 
 export default function Practice() {
-  useRequireUser();   // 로그인 없으면 /login 으로
+  useRequireUser();   // 로그인 또는 게스트 프로필 필요
   const [session, setSession] = useState(null);
   const [board, setBoard] = useState(null);   // GET /runs/{id}/leaderboard
   const [error, setError] = useState("");
@@ -51,7 +53,7 @@ export default function Practice() {
 
   useEffect(() => {
     mounted.current = true;
-    const runId = new URLSearchParams(window.location.search).get("run") || localStorage.getItem("rehearse.lastRun");
+    const runId = new URLSearchParams(window.location.search).get("run") || coachingStorage().getItem("rehearse.lastRun");
     const controller = new AbortController();
     Promise.resolve().then(async () => {
       if (!runId) throw new Error("Finish a rehearsal and generate its TTS audio first, then open Voice practice.");

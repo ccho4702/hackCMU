@@ -63,8 +63,10 @@ class ServiceTests(unittest.TestCase):
         for i, data in enumerate([b'person A', b'person B'], 1):
             sample = self.root / f'{i}.mp3'; sample.write_bytes(data)
             run = self.root / f'run-{i}'
+            phases = []
             speech_pipeline('same-login', str(sample), 'Hi', client=provider,
-                            prepared_audio_path=sample, output_dir=run/'outputs', log_dir=run/'logs')
+                            prepared_audio_path=sample, output_dir=run/'outputs', log_dir=run/'logs', on_stage=phases.append)
+            self.assertEqual(phases, ['voice_cloning', 'speech_generation'])
             stats = json.loads((run/'logs/meta.json').read_text())
             provenance = json.loads((run/'logs/voice.json').read_text())
             self.assertEqual((stats['clone_requests'], stats['tts_requests']), (1,1))
@@ -134,6 +136,7 @@ class ServiceTests(unittest.TestCase):
             (output/'presentation-analysis.json').write_text(json.dumps({'nonverbal_feedback':[], 'vocal_feedback':[{'start_time':'00:01.000','end_time':'00:02.000','content':'Pause interrupts the phrase.'}]}))
             return 0
         def fake_tts(*args, **kwargs):
+            kwargs['on_stage']('speech_generation')
             (kwargs['output_dir']/'reference_speech.mp3').write_bytes(b'ID3test')
             kwargs['log_dir'].mkdir(parents=True)
             (kwargs['log_dir']/'meta.json').write_text('{"tts_requests":1,"clone_requests":1}')
@@ -159,6 +162,9 @@ class ServiceTests(unittest.TestCase):
         self.assertNotIn('video_path',script.call_args.kwargs)
         self.assertEqual(speech.call_args.args[2], 'Hello everyone.')
         self.assertEqual(result['gemini_requests'], {'video':1,'script':1})
+        stages=[json.loads(line)['stage'] for line in (run/'logs/pipeline.jsonl').read_text().splitlines()]
+        self.assertIn('voice_cloning', stages)
+        self.assertIn('speech_generation', stages)
         self.assertTrue((run/'intermediates/original_script.txt').exists())
         self.assertEqual(json.loads((run/'outputs/nonverbal_feedback.json').read_text()), [])
         self.assertEqual(len(json.loads((run/'outputs/vocal_feedback.json').read_text())), 1)

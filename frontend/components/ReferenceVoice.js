@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useRef, useState } from "react";
+import ProviderProgress from "@/components/ProviderProgress";
 import { Download, Pause, Play } from "lucide-react";
 
 function clock(seconds) {
@@ -8,7 +9,7 @@ function clock(seconds) {
   return `${Math.floor(value / 60)}:${String(value % 60).padStart(2, "0")}`;
 }
 
-export default function ReferenceVoice({ src, failed = false }) {
+export default function ReferenceVoice({ src, failed = false, progress=null, waitingForScript=false }) {
   const audio = useRef(null);
   const [playing, setPlaying] = useState(false);
   const [waiting, setWaiting] = useState(false);
@@ -61,7 +62,7 @@ export default function ReferenceVoice({ src, failed = false }) {
           <Download size={18} aria-hidden="true" />
         </a>
         {error && <p className="reference-error" role="alert">{error}</p>}
-      </div> : <p className="reference-pending">{failed ? "Reference audio is not available for this session." : "Preparing your audio…"}</p>}
+      </div> : progress&&!failed ? <ProviderProgress {...progress} compact /> : <p className="reference-pending">{failed ? "Reference audio is not available for this session." : waitingForScript ? "Your reference voice comes next, after the script is ready." : "Preparing your audio…"}</p>}
     </section>
   );
 }

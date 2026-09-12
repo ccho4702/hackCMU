@@ -6,6 +6,8 @@
 """
 from __future__ import annotations
 
+from secrets import token_bytes
+from bson import ObjectId
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from pymongo import ReturnDocument
@@ -33,3 +35,15 @@ def login(body: LoginBody):
         return_document=ReturnDocument.AFTER,
     )
     return {"user_id": str(doc["_id"]), "name": doc["name"], "email": doc["email"]}
+
+
+@router.post("/guest", status_code=201)
+def guest():
+    """Create a distinct demo identity without asking for a name or email."""
+    user_id = ObjectId(token_bytes(12))
+    db.users().insert_one({
+        "_id": user_id, "name": "Guest", "is_guest": True,
+        # Unique reserved key for the existing unique-email index, not an address.
+        "email": f"guest:{user_id}", "created_at": db.now(),
+    })
+    return {"user_id": str(user_id), "name": "Guest", "email": None, "is_guest": True}

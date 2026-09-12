@@ -23,3 +23,17 @@ controls. It loads on demand, with no autoplay or recording/analysis request.
 standalone frontend and Docker image. Keep these identical when replacing the demo;
 `public/demo/optune-demo-poster.png` mirrors the published poster. The deployment sync
 rules include only these public demo MP4s while excluding private recordings.
+
+## Guest mode and processing feedback
+
+Guest mode is available beside Log in and on the login form. It creates a unique
+MongoDB demo profile without name/email input. Its ID and run state live in this
+tab's sessionStorage, separately from registered profiles and other guests.
+Closing the tab forgets the local identity; it does not delete server recordings.
+History uses the existing per-user checks. MongoDB is still required.
+
+Evaluation shows the active provider and stage. Gemini handles delivery review and
+script refinement; ElevenLabs handles transcription, fresh voice cloning, and TTS.
+The indicator is indeterminate, with no invented completion percentage. Completed
+outputs remain visible while later stages run. Reduced-motion preferences disable
+the animated marks and progress sweep.

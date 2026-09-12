@@ -1,4 +1,6 @@
-export default function DeliveryFeedback({ title, description, items, pending, onSeek, tone = "nonverbal" }) {
+import ProviderProgress from "@/components/ProviderProgress";
+
+export default function DeliveryFeedback({ title, description, items, pending, onSeek, tone = "nonverbal", progress }) {
   return (
     <section className="panel feedback-card" data-tone={tone} aria-label={title}>
       <div className="card-heading"><h2>{title}</h2>{items && <span className="count-pill">{items.length} moments</span>}</div>
@@ -12,7 +14,7 @@ export default function DeliveryFeedback({ title, description, items, pending, o
             <p>{item.content}</p>
           </article>
         )) : <p className="empty-result">No clear issues were flagged in this category.</p>
-          : <p className="muted">{pending ? "Your feedback is being prepared." : "This analysis is not available for this saved session."}</p>}
+          : progress ? <ProviderProgress {...progress} compact /> : <p className="muted">{pending ? "Your feedback is being prepared." : "This analysis is not available for this saved session."}</p>}
       </div>
     </section>
   );

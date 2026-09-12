@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation";
 import { LogIn } from "lucide-react";
 import { Card, PageShell } from "@/components/ui/studio";
 import { apiPost } from "@/lib/coaching-api";
-import { setUser } from "@/lib/session";
+import GuestModeButton from "@/components/GuestModeButton";
+import { setUser, safeNextPath } from "@/lib/session";
 
 // 가짜 로그인: 이름과 이메일만. 같은 이메일이면 같은 사용자로 이어진다.
 export default function LoginPage() {
@@ -18,7 +19,7 @@ export default function LoginPage() {
   // ?next=/practice 처럼 돌아갈 곳. 제출 시점에 읽는다 (effect 안 setState 를 피하려고).
   function nextPath() {
     const target = new URLSearchParams(window.location.search).get("next");
-    return target && target.startsWith("/") ? target : "/";
+    return safeNextPath(target);
   }
 
   async function submit(event) {
@@ -69,6 +70,7 @@ export default function LoginPage() {
             {busy ? "Signing in…" : "Continue"}
           </button>
         </form>
+        <div className="login-guest-option"><span>or</span><GuestModeButton fullWidth /><p>No email needed. Guest history is tied to this browser tab.</p></div>
       </Card>
     </PageShell>
   );

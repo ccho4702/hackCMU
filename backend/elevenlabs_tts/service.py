@@ -100,7 +100,7 @@ def generate_gt_speech(voice_id: str, script: str, out_path: str, *, client=None
 
 def run_pipeline(user_id: str, recording_path: str, improved_script: str,
                  noisy_environment: bool = False, *, output_dir=None, intermediate_dir=None,
-                 log_dir=None, client=None, prepared_audio_path=None, language=None) -> str:
+                 log_dir=None, client=None, prepared_audio_path=None, language=None, on_stage=None) -> str:
     language = resolve_language(language)
     model = os.getenv("ELEVENLABS_TTS_MODEL", "eleven_multilingual_v2")
     if not user_id.strip() or not improved_script.strip():
@@ -120,7 +120,11 @@ def run_pipeline(user_id: str, recording_path: str, improved_script: str,
     log_event(logs / "events.jsonl", "tts_stage_started")
     try:
         audio_path = str(prepared_audio_path) if prepared_audio_path else extract_audio(str(source), str(intermediate / "voice_sample.mp3"))
+        if on_stage is not None:
+            on_stage("voice_cloning")
         voice_id = create_voice(user_id, audio_path, noisy_environment, client=client, stats=stats, log_dir=logs)
+        if on_stage is not None:
+            on_stage("speech_generation")
         stats["tts_requests"] += 1
         result = generate_gt_speech(voice_id, improved_script, str(directory / "reference_speech.mp3"), client=client, language=language)
         stats["status"] = "success"

@@ -122,3 +122,28 @@ def test_database_failure_does_not_expose_connection_credentials(monkeypatch):
 
 def test_unreliable_sentences_do_not_affect_summary():
     assert compute_summary([{'status':'unreliable','pronunciation_score':1}]) is None
+
+
+def test_guest_mode_creates_unique_profiles_without_email_input(api):
+    client, store = api
+    store.users.create_index('email', unique=True)
+    first = client.post('/api/auth/guest')
+    second = client.post('/api/auth/guest')
+    assert first.status_code == second.status_code == 201
+    a, b = first.json(), second.json()
+    assert a['is_guest'] and a['name'] == 'Guest' and a['email'] is None
+    assert a['user_id'] != b['user_id']
+    assert store.users.count_documents({'is_guest': True}) == 2
+    me = client.get('/api/me', headers={'X-User-Id': a['user_id']})
+    assert me.status_code == 200 and me.json()['email'] is None
+
+
+def test_guest_histories_keep_existing_ownership_checks(api):
+    client, store = api
+    a = client.post('/api/auth/guest').json()['user_id']
+    b = client.post('/api/auth/guest').json()['user_id']
+    owned = reference(client, {'X-User-Id': a}).json()
+    assert client.get('/api/references/'+owned['id'], headers={'X-User-Id': b}).status_code == 404
+    assert client.get('/api/references/'+owned['id'], headers=login(client)).status_code == 404
+    assert len(client.get('/api/references', headers={'X-User-Id': a}).json()['references']) == 1
+    assert client.get('/api/references', headers={'X-User-Id': b}).json()['references'] == []

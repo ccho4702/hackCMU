@@ -66,11 +66,16 @@ def process_recording(source, user_id, noisy_environment=False, *, tts_client=No
         (run_dir / "outputs/improved_script.txt").write_text(script.improved_script, encoding="utf-8")
         manifest["outputs"]["script_feedback"] = "script_feedback.json"
         manifest["outputs"]["improved_script"] = "improved_script.txt"
-        manifest["stage"] = "speech_generation"
+        manifest["stage"] = "voice_cloning"
         checkpoint()
+        def speech_stage(stage):
+            if manifest["stage"] != stage:
+                manifest["stage"] = stage
+                checkpoint()
+
         synthesize(user_id, str(source), script.improved_script, noisy_environment,
                    output_dir=run_dir / "outputs", intermediate_dir=run_dir / "intermediates",
-                   log_dir=logs / "elevenlabs", client=tts_client, prepared_audio_path=audio_path, language=language)
+                   log_dir=logs / "elevenlabs", client=tts_client, prepared_audio_path=audio_path, language=language, on_stage=speech_stage)
         manifest["elevenlabs_requests"] = json.loads((logs / "elevenlabs/meta.json").read_text())
         manifest["outputs"]["tts_audio"] = "reference_speech.mp3"
         if (run_dir / "outputs/reference_alignment.json").exists():
@@ -84,6 +89,7 @@ def process_recording(source, user_id, noisy_environment=False, *, tts_client=No
             "nonverbal_analysis": "Video analysis failed. Check Google Cloud model access or try again later.",
             "transcription": "Speech transcription failed. Check your ElevenLabs key, credits, and speech-to-text access.",
             "script_analysis": "Script revision failed. Your original transcript is still available.",
+            "voice_cloning": "Voice cloning failed. Check ElevenLabs cloning access and voice slots. Your feedback and revised script are saved.",
             "speech_generation": "Voice generation failed. Check ElevenLabs voice-cloning access and credits. Your feedback and revised script are saved.",
         }
         manifest.update(status="failed", error_type=type(exc).__name__,

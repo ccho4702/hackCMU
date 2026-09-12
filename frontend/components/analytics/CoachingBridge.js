@@ -1,4 +1,6 @@
 "use client";
+
+import { coachingStorage } from "@/lib/session";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
@@ -14,8 +16,8 @@ export function CoachingBridge({ analysisId }) {
   const [needsFile, setNeedsFile] = useState(false);
   useEffect(() => {
     Promise.resolve().then(() => {
-      setRunId(localStorage.getItem(`mellonaires.coaching.${analysisId}`));
-      setError(localStorage.getItem(`mellonaires.coaching.${analysisId}.error`) || "");
+      setRunId(coachingStorage().getItem(`mellonaires.coaching.${analysisId}`));
+      setError(coachingStorage().getItem(`mellonaires.coaching.${analysisId}.error`) || "");
     });
   }, [analysisId]);
   async function start(file) {
@@ -30,7 +32,7 @@ export function CoachingBridge({ analysisId }) {
     setRunId(id || null);
     if (!id)
       setError(
-        localStorage.getItem(`mellonaires.coaching.${analysisId}.error`) ||
+        coachingStorage().getItem(`mellonaires.coaching.${analysisId}.error`) ||
           "Could not start processing.",
       );
     setBusy(false);
