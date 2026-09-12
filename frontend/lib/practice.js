@@ -19,3 +19,10 @@ export function scoreLabel(key, value) {
   if (!Number.isFinite(value)) return "—";
   return key === "rate_ratio" ? `${value.toFixed(2)}×` : `${Math.round(value * 100)}`;
 }
+
+
+export function audioProgress(time, duration) {
+  const total=Number.isFinite(duration) && duration>0?duration:0;
+  const elapsed=total?Math.min(total,Math.max(0,Number.isFinite(time)?time:0)):0;
+  return {total,elapsed,remaining:Math.max(0,total-elapsed),percent:total?elapsed/total*100:0};
+}

@@ -4,6 +4,7 @@ import Link from "next/link";
 import DeliveryFeedback from "@/components/DeliveryFeedback";
 import ReferenceVoice from "@/components/ReferenceVoice";
 import StudioHeader from "@/components/StudioHeader";
+import { scriptStyleLabel } from "@/lib/script-styles";
 import { accentLabel } from "@/lib/accents";
 import { apiGet } from "@/lib/coaching-api";
 import { timestampSeconds } from "@/lib/recording";
@@ -55,7 +56,7 @@ export default function Evaluation() {
       </div>
       <ReferenceVoice key={job.outputs?.tts_audio || "pending"} src={job.outputs?.tts_audio} accent={job.accent} failed={job.status === "failed"} />
       <section className="panel script-card">
-        <div className="card-heading"><h2>Transcript</h2>{job.outputs?.improved_script && <a className="text-button" href={job.outputs.improved_script} download>Download revised script ↓</a>}</div>
+        <div className="card-heading"><div className="script-review-heading"><h2>Transcript</h2><span>{scriptStyleLabel(job.script_style)}</span></div>{job.outputs?.improved_script && <a className="text-button" href={job.outputs.improved_script} download>Download revised script ↓</a>}</div>
         <div className="script-comparison">
           <section className="script-version script-version-improved" aria-labelledby="improved-script-title">
             <h3 id="improved-script-title">Improved script</h3>

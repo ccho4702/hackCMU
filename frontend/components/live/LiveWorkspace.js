@@ -54,6 +54,7 @@ export function LiveWorkspace() {
 
   const [language, setLanguage] = useState("en");
   const [accent, setAccent] = useState("original");
+  const [scriptStyle, setScriptStyle] = useState("presentation");
   const [session, setSession] = useState(null);
   const [meshEnabled, setMeshEnabled] = useState(true);
   const [meshMode, setMeshMode] = useState("full");
@@ -259,7 +260,7 @@ export function LiveWorkspace() {
           },
         );
         stashVideoFile(stopped.analysisId, file);
-        await beginCoaching(file, stopped.analysisId, language, accent);
+        await beginCoaching(file, stopped.analysisId, language, accent, scriptStyle);
       }
       router.push(`/analysis/${stopped.analysisId}`);
     } catch (err) {
@@ -267,7 +268,7 @@ export function LiveWorkspace() {
       else setError(err instanceof Error ? err.message : "Could not stop the session.");
       setStopping(false);
     }
-  }, [router, stopping, collectRecording, language, accent]);
+  }, [router, stopping, collectRecording, language, accent, scriptStyle]);
 
   const failed = !session && !starting && error;
 
@@ -277,10 +278,10 @@ export function LiveWorkspace() {
       subtitle="Real-time face tracking & delivery metrics"
       mock={session?.mock}
     >
+      <LanguageSelect value={language} onChange={setLanguage} accent={accent} onAccentChange={setAccent} scriptStyle={scriptStyle} onScriptStyleChange={setScriptStyle} disabled={starting || Boolean(session) || stopping} />
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
         <div className="flex min-w-0 flex-col gap-6">
-          <LanguageSelect value={language} onChange={setLanguage} accent={accent} onAccentChange={setAccent} disabled={starting || Boolean(session) || stopping} />
-          <Stage ref={setContainer}>
+          <Stage ref={setContainer} className="live-camera-stage">
             {/* Mirrored like a selfie view; video and mesh flip together so they stay aligned */}
             <div className="absolute inset-0 origin-center -scale-x-100">
               <video

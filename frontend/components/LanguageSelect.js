@@ -1,26 +1,36 @@
 "use client";
 
 import { ACCENTS } from "@/lib/accents";
-const selectStyle="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary/40 disabled:opacity-60";
+import { SCRIPT_STYLES } from "@/lib/script-styles";
 
-export function LanguageSelect({ value, onChange, accent="original", onAccentChange, disabled=false }) {
+export function LanguageSelect({ value, onChange, accent="original", onAccentChange, scriptStyle="presentation", onScriptStyleChange, disabled=false }) {
+  const selectedStyle=SCRIPT_STYLES.find(option=>option.value===scriptStyle) || SCRIPT_STYLES[0];
   return (
-    <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
-      <label className="flex items-center gap-2 text-sm text-slate-600">
-        <span>Presentation language</span>
-        <select value={value} disabled={disabled} className={selectStyle}
-          onChange={event=>{onChange(event.target.value); if(event.target.value!=="en") onAccentChange?.("original");}}>
-          <option value="en">English</option>
-          <option value="ko">한국어</option>
-        </select>
-      </label>
-      {value==="en" && onAccentChange && <label className="flex items-center gap-2 text-sm text-slate-600">
-        <span>Target accent</span>
-        <select value={accent} disabled={disabled} className={selectStyle} onChange={event=>onAccentChange(event.target.value)}>
-          {ACCENTS.map(option=><option key={option.value} value={option.value}>{option.label}</option>)}
-        </select>
-      </label>}
-      {value==="en" && accent!=="original" && <p className="w-full text-xs text-slate-500">Used for voice feedback and reference speech. Accent strength can vary with your voice.</p>}
-    </div>
+    <section className="session-settings" aria-label="Session settings">
+      <div className="session-settings-heading"><h2>Session settings</h2><p>Set the context for your next take.</p></div>
+      <div className="session-settings-fields">
+        <label>
+          <span>Presentation language</span>
+          <select value={value} disabled={disabled} onChange={event=>{onChange(event.target.value);if(event.target.value!=="en")onAccentChange?.("original");}}>
+            <option value="en">English</option><option value="ko">한국어</option>
+          </select>
+          <small>The language you’ll speak.</small>
+        </label>
+        {onScriptStyleChange && <label>
+          <span>Script style</span>
+          <select value={scriptStyle} disabled={disabled} onChange={event=>onScriptStyleChange(event.target.value)}>
+            {SCRIPT_STYLES.map(option=><option key={option.value} value={option.value}>{option.label}</option>)}
+          </select>
+          <small>{selectedStyle.description}</small>
+        </label>}
+        {value==="en" && onAccentChange && <label>
+          <span>Target accent</span>
+          <select value={accent} disabled={disabled} onChange={event=>onAccentChange(event.target.value)}>
+            {ACCENTS.map(option=><option key={option.value} value={option.value}>{option.label}</option>)}
+          </select>
+          <small>For voice feedback and TTS. Accent strength may vary.</small>
+        </label>}
+      </div>
+    </section>
   );
 }

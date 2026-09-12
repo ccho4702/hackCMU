@@ -10,7 +10,7 @@ test.beforeEach(async ({page}) => {
 const analysisId = "anl_language_test";
 const runId = "e".repeat(32);
 
-async function mockAnalysis(page, language, accent="original") {
+async function mockAnalysis(page, language, accent="original", scriptStyle="presentation") {
   let uploads = 0;
   await page.route("**/api/**", async route => {
     const path = new URL(route.request().url()).pathname;
@@ -19,6 +19,7 @@ async function mockAnalysis(page, language, accent="original") {
       const body = route.request().postDataBuffer().toString();
       expect(body).toMatch(new RegExp(`name="language"\\r\\n\\r\\n${language}\\r\\n`));
       expect(body).toMatch(new RegExp(`name="accent"\\r\\n\\r\\n${accent}\\r\\n`));
+      expect(body).toMatch(new RegExp(`name="script_style"\\r\\n\\r\\n${scriptStyle}\\r\\n`));
       return route.fulfill({status:202,json:{run_id:runId,status:"queued",outputs:{}}});
     }
     if (path === "/api/v1/analyses") return route.fulfill({status:202,json:{analysisId,status:"queued"}});
@@ -90,4 +91,35 @@ test("Korean selection clears English accent guidance", async ({page}) => {
   await page.locator('input[type="file"]').setInputFiles({name:"talk.mp4",mimeType:"video/mp4",buffer:Buffer.from("test recording")});
   await expect(page).toHaveURL(new RegExp(`/evaluation\\?run=${runId}$`));
   expect(uploads()).toBe(1);
+});
+
+
+for (const style of ["presentation","interview","formal","informal","friend","pitch"]) {
+  test(`script scenario ${style} is sent with language and accent`, async ({page}) => {
+    const count=await mockAnalysis(page,"en","british",style);
+    await page.goto("/streaming");
+    const settings=page.getByRole("region",{name:"Session settings"});
+    await settings.getByRole("combobox",{name:"Script style"}).selectOption(style);
+    await settings.getByRole("combobox",{name:"Target accent"}).selectOption("british");
+    const settingsBox=await settings.boundingBox();
+    const stageBox=await page.getByLabel("Live camera preview").boundingBox();
+    expect(settingsBox.y+settingsBox.height).toBeLessThanOrEqual(stageBox.y);
+    if(style==="interview") await page.screenshot({path:"test-results/session-settings-desktop.png",fullPage:true});
+    await page.locator('input[type="file"]').setInputFiles({name:"talk.mp4",mimeType:"video/mp4",buffer:Buffer.from("recording")});
+    await expect(page).toHaveURL(new RegExp(`/evaluation\\?run=${runId}$`));
+    expect(count()).toBe(1);
+  });
+}
+
+test("session settings stay readable on mobile",async({page})=>{
+  await mockAnalysis(page,"en");
+  await page.setViewportSize({width:390,height:844});
+  await page.goto("/live");
+  await expect(page.getByRole("combobox",{name:"Script style"})).toBeVisible();
+  await expect(page.getByRole("combobox",{name:"Target accent"})).toBeVisible();
+  const stage=await page.locator(".live-camera-stage").boundingBox();
+  const start=await page.getByRole("button",{name:"Start live analysis",exact:true}).boundingBox();
+  expect(start.y+start.height).toBeLessThanOrEqual(stage.y+stage.height);
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
+  await page.screenshot({path:"test-results/session-settings-mobile.png",fullPage:true});
 });

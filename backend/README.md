@@ -368,3 +368,29 @@ curl http://localhost:8000/api/pipeline \
 `POST /api/video/analyze` and `POST /api/tts/generate` also accept `accent`.
 [ElevenLabs accent tags](https://elevenlabs.io/blog/eleven-v3-audio-tags-emulating-accents-with-precision)
 explain the supported direction and its voice-dependent behavior.
+
+## Script scenarios and overall practice progress
+
+The setup controls appear above recording/upload and accept `script_style`:
+`presentation` (default), `interview`, `formal`, `informal`, `friend`, or `pitch`.
+The selected scenario guides the Gemini script revision while the original transcript
+stays verbatim and source facts remain unchanged. Interview/pitch prompts explicitly
+forbid inventing experience, results, metrics or promises. Style controls apply in
+English and Korean, alongside the existing independent target-accent selection.
+The revised text is passed to TTS; no additional model request is added.
+
+`POST /api/pipeline` and `POST /api/script/analyze-video` accept the field as multipart
+form data. `POST /api/script/analyze` accepts it in JSON. It is saved in the run
+manifest and script logs, retained on retries, and shown beside the reviewed transcript.
+
+```bash
+curl http://localhost:8000/api/pipeline \
+  -F 'file=@test-input.mov' -F 'user_id=demo-user' \
+  -F 'language=en' -F 'accent=british' -F 'script_style=interview'
+```
+
+Practice now shows elapsed time and total audio duration in one continuous progress
+bar. It uses the full TTS recording during reference playback or the silent recording
+guide, and the selected trial's full duration during trial playback. The reference
+guide stops at 100% if the user continues recording. Word highlighting and timing
+boxes remain available, but no longer reset the progress bar at each word boundary.

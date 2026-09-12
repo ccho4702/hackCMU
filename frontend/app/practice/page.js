@@ -6,7 +6,7 @@ import Link from "next/link";
 import { apiGet, apiPost, apiUpload } from "@/lib/coaching-api";
 import { useRequireUser } from "@/lib/useUser";
 import { clockTime, recordingError } from "@/lib/recording";
-import { activeWordAt, audioRecordingOptions, scoreLabel, SCORE_AXES } from "@/lib/practice";
+import { activeWordAt, audioProgress, audioRecordingOptions, scoreLabel, SCORE_AXES } from "@/lib/practice";
 
 export default function Practice() {
   useRequireUser();   // 로그인 없으면 /login 으로
@@ -16,6 +16,8 @@ export default function Practice() {
   const [phase, setPhase] = useState("idle");
   const [trial, setTrial] = useState(null);
   const [time, setTime] = useState(0);
+  const [referenceDuration, setReferenceDuration] = useState(0);
+  const [trialDuration, setTrialDuration] = useState(0);
   const [seconds, setSeconds] = useState(0);
   const [countdown, setCountdown] = useState(3);
   const [mode, setMode] = useState("reference");
@@ -37,9 +39,8 @@ export default function Practice() {
   const words = mode === "trial" ? (score?.words || []).filter(w => w.user?.t0 != null).map(w => ({ text: w.text, t0: w.user.t0, t1: w.user.t1 })) : session?.words || [];
   const active = activeWordAt(words, time);
   const next = words.findIndex(w => w.t0 > time);
-  const cueWord = active >= 0 ? words[active] : next >= 0 ? words[next] : null;
-  const wordDuration = cueWord ? Math.max(0, cueWord.t1 - cueWord.t0) : 0;
-  const wordProgress = cueWord && wordDuration > 0 ? Math.min(100, Math.max(0, (time - cueWord.t0) / wordDuration * 100)) : 0;
+  const totalDuration = mode === "trial" ? trialDuration || trial?.duration_seconds || 0 : referenceDuration || session?.duration_seconds || 0;
+  const progress = audioProgress(time, totalDuration);
   const cue = active >= 0 ? words[active]?.text : next >= 0 ? words[next]?.text : time > 0 ? "Nice work." : "Ready?";
 
   function loadBoard(runId) {
@@ -187,7 +188,7 @@ export default function Practice() {
 
   function chooseTrial(item) {
     if (busy) return;
-    refAudio.current?.pause(); trialAudio.current?.pause(); setTrial(item); setTime(0); setMode("reference"); setError("");
+    refAudio.current?.pause(); trialAudio.current?.pause(); setTrial(item); setTrialDuration(0); setTime(0); setMode("reference"); setError("");
   }
 
   return <div className="app-shell">
@@ -197,10 +198,14 @@ export default function Practice() {
       {error && <div className="error-banner" role="alert"><p>{error}</p></div>}
       {!session && !error && <p className="muted">Loading your script and reference voice…</p>}
       {session && <>
-        <section className="practice-reference"><div><p className="eyebrow">YOUR TTS REFERENCE</p><h2>The voice to practice with</h2><p>{Math.round(session.duration_seconds)} seconds · same script, every trial</p></div><audio ref={refAudio} controls src={session.reference_audio_url} aria-label="TTS reference" onPlay={() => { if (busy) { refAudio.current.pause(); return; } trialAudio.current?.pause(); setMode("reference"); setTime(refAudio.current.currentTime); }} onSeeked={() => { setMode("reference"); setTime(refAudio.current.currentTime); }}/></section>
+        <section className="practice-reference"><div><p className="eyebrow">YOUR TTS REFERENCE</p><h2>The voice to practice with</h2><p>{Math.round(session.duration_seconds)} seconds · same script, every trial</p></div><audio ref={refAudio} controls src={session.reference_audio_url} aria-label="TTS reference" onEnded={event => { setMode("reference"); setTime(Number.isFinite(event.currentTarget.duration) ? event.currentTarget.duration : session.duration_seconds); }} onDurationChange={event => setReferenceDuration(Number.isFinite(event.currentTarget.duration) ? event.currentTarget.duration : 0)} onPlay={() => { if (busy) { refAudio.current.pause(); return; } trialAudio.current?.pause(); setMode("reference"); setTime(refAudio.current.currentTime); }} onSeeked={() => { setMode("reference"); setTime(refAudio.current.currentTime); }}/></section>
         <div className="practice-grid">
           <section className="practice-script-card"><div className="card-heading"><div><span className="step-number">01</span><h2>Follow the script</h2></div><span className="count-pill">{mode === "trial" ? "YOUR TRIAL TIMING" : phase === "recording" ? "REFERENCE PACE GUIDE" : "REFERENCE TIMING"}</span></div>
-            <div className={`word-cue ${phase === "recording" ? "guided" : ""}`} aria-live="off"><span>{phase === "countdown" ? "GET READY" : active >= 0 ? "NOW" : "UP NEXT"}</span><strong>{phase === "countdown" ? countdown : words.length ? cue : "Read naturally."}</strong><small>{phase === "recording" ? "Follow the reference timing. Your microphone is recording." : mode === "trial" ? "Aligned to your recorded voice" : "Play the reference to see each word light up"}</small>{cueWord && phase !== "countdown" && <div className="word-duration-panel"><div className="duration-title"><span>{mode === "trial" ? "Your word duration" : "Target word duration"}</span><strong>{wordDuration.toFixed(2)}<small> seconds</small></strong></div><div className="word-duration-track" role="progressbar" aria-label="Current word duration progress" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(wordProgress)}><i style={{width:`${wordProgress}%`}}/></div><div className="word-timestamps"><span>Start <b>{cueWord.t0.toFixed(2)}s</b></span><span>End <b>{cueWord.t1.toFixed(2)}s</b></span><span>{active >= 0 ? `${Math.max(0, cueWord.t1 - time).toFixed(2)}s remaining` : `Starts in ${Math.max(0, cueWord.t0 - time).toFixed(2)}s`}</span></div></div>}</div>
+            <div className={`word-cue ${phase === "recording" ? "guided" : ""}`} aria-live="off"><span>{phase === "countdown" ? "GET READY" : active >= 0 ? "NOW" : "UP NEXT"}</span><strong>{phase === "countdown" ? countdown : words.length ? cue : "Read naturally."}</strong><small>{phase === "recording" ? (progress.total && time >= progress.total ? "Reference guide complete. Finish your recording when ready." : "Follow the reference timing. Your microphone is recording.") : mode === "trial" ? "Aligned to your recorded voice" : "Play the reference to see each word light up"}</small>{phase !== "countdown" && <div className="audio-progress-panel">
+              <div className="audio-progress-title"><span>{mode === "trial" ? "Your recording" : phase === "recording" ? "Reference guide" : "Reference audio"}</span><strong>{Math.round(progress.percent)}<small>%</small></strong></div>
+              <div className="audio-progress-track" role="progressbar" aria-label="Overall audio progress" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(progress.percent)} aria-valuetext={`${clockTime(progress.elapsed)} of ${progress.total ? clockTime(progress.total) : "unknown duration"}`}><i style={{width:`${progress.percent}%`}}/></div>
+              <div className="audio-progress-times"><span>{clockTime(progress.elapsed)} elapsed</span><span>{progress.total ? `${clockTime(progress.total)} total` : "Loading duration…"}</span></div>
+            </div>}</div>
             <div className="word-script" aria-label="Practice script">{words.length ? words.map((word,index) => {
               const duration = Math.max(0, word.t1 - word.t0);
               const timing = `${word.t0.toFixed(2).replace(/(\.\d)0$/, "$1")}–${word.t1.toFixed(2).replace(/(\.\d)0$/, "$1")}s`;
@@ -225,7 +230,7 @@ export default function Practice() {
             <p className="practice-footnote">{session.model.status === "loading" ? "The scoring engine is warming up. Your first result may take longer." : "Five separate measures. No single overall score."}</p>
           </section>
         </div>
-        {trial && <section className="trial-results"><div className="section-heading"><div><p className="eyebrow">LISTEN. COMPARE. TRY AGAIN.</p><h2>Trial {trial.trial_number || ""}</h2></div>{trial.audio_url && <audio key={trial.trial_id} ref={trialAudio} controls src={trial.audio_url} aria-label="Your trial recording" onPlay={() => { if (busy) { trialAudio.current.pause(); return; } refAudio.current?.pause(); setMode("trial"); setTime(trialAudio.current.currentTime); }} onSeeked={() => { setMode("trial"); setTime(trialAudio.current.currentTime); }}/>}</div>
+        {trial && <section className="trial-results"><div className="section-heading"><div><p className="eyebrow">LISTEN. COMPARE. TRY AGAIN.</p><h2>Trial {trial.trial_number || ""}</h2></div>{trial.audio_url && <audio key={trial.trial_id} ref={trialAudio} controls src={trial.audio_url} aria-label="Your trial recording" onEnded={event => { setMode("trial"); setTime(Number.isFinite(event.currentTarget.duration) ? event.currentTarget.duration : trial.duration_seconds || 0); }} onDurationChange={event => setTrialDuration(Number.isFinite(event.currentTarget.duration) ? event.currentTarget.duration : 0)} onPlay={() => { if (busy) { trialAudio.current.pause(); return; } refAudio.current?.pause(); setMode("trial"); setTime(trialAudio.current.currentTime); }} onSeeked={() => { setMode("trial"); setTime(trialAudio.current.currentTime); }}/>}</div>
           {trial.status === "complete" && !validScore && <div className="unreliable-result" role="status"><h3>Let’s try that once more.</h3><p>{score?.reason || "We couldn’t reliably match this recording to the script."}</p><p>Scores are hidden for this trial. Read every word with clear microphone audio.</p></div>}
           {validScore && <><div className="score-grid">{SCORE_AXES.map(([key,label,description]) => <div className="score-axis" key={key}><span>{label}</span><strong>{scoreLabel(key, score[key])}<small>{key !== "rate_ratio" && score[key] != null ? "/100" : ""}</small></strong><p>{description}</p>{key !== "rate_ratio" && Number.isFinite(score[key]) && <div className="score-track"><i style={{width:`${score[key]*100}%`}}/></div>}{key === "rate_ratio" && <p className="pace-note">1.00× matches the reference. Higher means slower.</p>}</div>)}</div><div className="word-feedback"><h3>Words worth another try</h3>{score.word_diff?.length ? score.word_diff.map((word,index) => <article key={index}><strong>{word.text}</strong><span>{word.note}</span><small>Reference {word.gt_dur.toFixed(2)}s · Your take {word.user_dur.toFixed(2)}s</small></article>) : <p>No large word-level deviations were flagged.</p>}</div><p className="results-note">These are experimental comparisons with your TTS reference, not a measure of overall speaking ability. Microphone conditions can affect the result.</p></>}
         </section>}

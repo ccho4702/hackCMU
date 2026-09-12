@@ -30,11 +30,11 @@ async function mockMic(page) {
 
 async function stub(page, unreliable=false, timing=words, scoring=goodScore) {
   let count=0;const trials=[];
-  const session=()=>({run_id:runId,script:'Hello world.',scoring_text:'Hello world.',reference_audio_url:`/api/runs/${runId}/outputs/reference_speech.mp3`,duration_seconds:1.2,max_trial_seconds:30,words:timing,model:{status:'ready'},trials:[...trials].reverse(),trial_count:count});
+  const session=()=>({run_id:runId,script:'Hello world.',scoring_text:'Hello world.',reference_audio_url:`/api/runs/${runId}/outputs/reference_speech.mp3`,duration_seconds:Math.max(1.2,...timing.map(word=>word.t1+.2)),max_trial_seconds:30,words:timing,model:{status:'ready'},trials:[...trials].reverse(),trial_count:count});
   await page.route(`**/api/runs/${runId}/practice`,route=>route.fulfill({json:session()}));
   await page.route(`**/api/runs/${runId}/trials`,route=>{
     count++;const id=String(count).padStart(32,'a');
-    trials.push({trial_id:id,trial_number:count,created_at:new Date().toISOString(),status:'complete',stage:'complete',audio_url:`/api/runs/${runId}/trials/${id}/audio`,score:unreliable?{...scoring,status:'unreliable',reason:'Please read the complete script.'}:scoring});
+    trials.push({trial_id:id,trial_number:count,created_at:new Date().toISOString(),status:'complete',stage:'complete',duration_seconds:2,audio_url:`/api/runs/${runId}/trials/${id}/audio`,score:unreliable?{...scoring,status:'unreliable',reason:'Please read the complete script.'}:scoring});
     return route.fulfill({status:202,json:{trial_id:id,trial_number:count,status:'queued',stage:'queued'}});
   });
   await page.route(new RegExp(`/api/runs/${runId}/trials/[a-f0-9]{32}$`),route=>route.fulfill({json:trials.at(-1)}));
@@ -47,10 +47,10 @@ test('reference playback highlights the current word',async({page})=>{
   await page.getByLabel('TTS reference').evaluate(audio=>{Object.defineProperty(audio,'currentTime',{configurable:true,writable:true,value:.55});audio.dispatchEvent(new Event('seeked'));});
   await expect(page.locator('.current-word .word-box-text')).toHaveText('world.');
   await expect(page.locator('.word-cue > strong')).toHaveText('world.');
-  await expect(page.locator('.duration-title strong')).toContainText('0.50');
-  await expect(page.locator('.word-timestamps')).toContainText('Start 0.50s');
-  await expect(page.locator('.word-timestamps')).toContainText('End 1.00s');
-  await expect(page.getByRole('progressbar', { name: 'Current word duration progress' })).toHaveAttribute('aria-valuenow', '10');
+  await expect(page.getByRole('progressbar', {name:'Overall audio progress'})).toHaveAttribute('aria-valuenow','46');
+  await page.getByLabel('TTS reference').evaluate(audio=>{audio.currentTime=.8;audio.dispatchEvent(new Event('seeked'));});
+  await expect(page.getByRole('progressbar', {name:'Overall audio progress'})).toHaveAttribute('aria-valuenow','67');
+  await expect(page.locator('.audio-progress-times')).toContainText('00:01 total');
 });
 
 test('microphone trial scores, keeps history, and can be repeated',async({page})=>{
@@ -142,10 +142,11 @@ test('trial playback uses the recorded durations instead of reference durations'
   const trial=page.getByLabel('Your trial recording');
   await expect(trial).toBeVisible();
   await trial.evaluate(audio=>{
-    Object.defineProperty(audio,'currentTime',{configurable:true,writable:true,value:.15});
+    Object.defineProperty(audio,'currentTime',{configurable:true,writable:true,value:.6});
     audio.dispatchEvent(new Event('play'));
   });
   await expect(page.locator('.word-timing-label').first()).toHaveText('0.1–0.9s');
+  await expect(page.getByRole('progressbar',{name:'Overall audio progress'})).toHaveAttribute('aria-valuenow','30');
   const trialWidth=(await page.locator('.timed-word').first().boundingBox()).width;
   expect(trialWidth/referenceWidth).toBeCloseTo(2,1);
 });

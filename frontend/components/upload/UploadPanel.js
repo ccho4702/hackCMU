@@ -13,6 +13,7 @@ export function UploadPanel() {
   const router = useRouter();
   const [language, setLanguage] = useState("en");
   const [accent, setAccent] = useState("original");
+  const [scriptStyle, setScriptStyle] = useState("presentation");
   const [file, setFile] = useState(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(null);
@@ -24,7 +25,7 @@ export function UploadPanel() {
     try {
       const accepted = await createAnalysis(file);
       stashVideoFile(accepted.analysisId, file);
-      await beginCoaching(file, accepted.analysisId, language, accent);
+      await beginCoaching(file, accepted.analysisId, language, accent, scriptStyle);
       router.push(`/analysis/${accepted.analysisId}`);
     } catch (err) {
       if (err instanceof ApiError) setError(`${err.code}: ${err.message}`);
@@ -35,7 +36,7 @@ export function UploadPanel() {
 
   return (
     <div className="w-full">
-      <div className="mb-4"><LanguageSelect value={language} onChange={setLanguage} accent={accent} onAccentChange={setAccent} disabled={busy} /></div>
+      <div className="mb-4"><LanguageSelect value={language} onChange={setLanguage} accent={accent} onAccentChange={setAccent} scriptStyle={scriptStyle} onScriptStyleChange={setScriptStyle} disabled={busy} /></div>
       <label className="group flex cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed border-primary/25 bg-white px-6 py-14 text-center transition-colors hover:border-primary/50 hover:bg-primary/5">
         <span className="grid size-14 place-items-center rounded-2xl bg-primary/10 text-primary ring-1 ring-primary/30">
           <UploadCloud className="size-6" />
