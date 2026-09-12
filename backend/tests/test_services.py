@@ -37,12 +37,9 @@ class ServiceTests(unittest.TestCase):
         self.assertNotIn('test-only', cache.read_text())
         self.assertNotIn('../user', cache.read_text())
 
-    def test_stream_failure_preserves_previous_audio_and_removes_partial(self):
+    def test_tts_failure_preserves_previous_audio_and_removes_partial(self):
         provider = Mock()
-        def broken():
-            yield b'partial'
-            raise RuntimeError('interrupted')
-        provider.text_to_speech.convert.return_value = broken()
+        provider.text_to_speech.convert_with_timestamps.side_effect = RuntimeError("interrupted")
         out = self.root / 'audio.mp3'
         out.write_bytes(b'previous-success')
         with self.assertRaises(RuntimeError):

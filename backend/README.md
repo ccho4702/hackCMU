@@ -107,3 +107,47 @@ backend/.venv/bin/python -m backend.experiments.check_gemini
 The root analysis entry point remains for compatibility. Earlier Gemini TTS and
 voice replication tests live under `experiments/`; they are not stages of the new
 pipeline. See `.env.example` for configuration.
+
+## Voice practice and word timing
+
+After TTS completes, **Practice this script** opens `/practice?run=<run_id>`.
+The page plays the fixed TTS reference, displays its script with a current-word cue,
+records microphone-only trials with a three-second count-in, and shows a history of
+pronunciation, pace, rhythm, intonation, and emphasis measurements. No overall score
+is calculated. `unreliable` results hide all numeric scores and invite another take.
+
+- `GET /api/runs/{run_id}/practice`: reference, word times, scoring-engine state, and recent trials.
+- `POST /api/runs/{run_id}/practice/alignment`: prepare timing for an older TTS recording; cached by audio hash.
+- `POST /api/runs/{run_id}/trials`: multipart audio `file`; returns 202 with a trial ID.
+- `GET /api/runs/{run_id}/trials/{trial_id}`: state and score.
+- `GET /api/runs/{run_id}/trials/{trial_id}/audio`: replay the uploaded trial as 16kHz mono WAV.
+
+Trial files live under `artifacts/runs/<run_id>/trials/<trial_id>/`, with separate
+`inputs/`, `intermediates/`, `outputs/score.json`, `logs/`, and `manifest.json`.
+The reference is selected by the server from that run's TTS output and improved script;
+clients cannot replace the reference audio or submit a different scoring transcript.
+
+New TTS uses ElevenLabs `convert_with_timestamps`: audio and character alignment arrive
+in the same generation request. Character times are grouped into words and saved as
+`outputs/reference_alignment.json`. Older outputs use the Forced Alignment API when
+permitted; if unavailable, the local MMS aligner supplies estimated word times. The
+alignment source and audio hash are recorded. Timing preparation is a separate explicit
+POST for older outputs; opening the page does not invoke an additional ElevenLabs API.
+
+During reference playback, highlights use `audio.currentTime`. During recording, a
+silent visual guide follows the reference clock. It is **not live speech recognition**.
+After scoring, trial playback uses that recording's own forced-alignment word times.
+The reference player is paused during recording to prevent speaker audio entering the mic.
+
+`backend/scoring/` comes from `gmin` commit `0c94ed5`; see its README for the formulas
+and calibration limits. Torch and TorchAudio are pinned to 2.8 because forced alignment
+was removed in 2.9. A first-time MMS model download is about 1.2GB. Loading begins in
+the background when the practice page is opened, then the model is reused. CPU scoring
+is serialized to protect the feature hook. Set `SCORING_CPU_THREADS` (default 4) to
+control CPU load. Practice currently supports English scripts; numbers are expanded
+for alignment. The imported normalizer was fixed to exclude CTC blank characters
+(e.g. the hyphen in `twenty-seven`) from target tokens.
+
+Scoring runs locally and makes no Gemini or ElevenLabs generation calls. The numerical
+scores are experimental reference comparisons; real microphone conditions can affect
+absolute scores. Keep one backend worker for the local cache/locks.

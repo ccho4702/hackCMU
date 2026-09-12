@@ -11,7 +11,7 @@ from backend.pipeline.service import process_recording
 from backend.common.logging import save_json
 
 router = APIRouter(tags=["Presentation pipeline"])
-OUTPUT_FILES = {"nonverbal_feedback.json", "script_feedback.json", "transcript.json", "improved_script.txt", "reference_speech.mp3"}
+OUTPUT_FILES = {"reference_alignment.json", "nonverbal_feedback.json", "script_feedback.json", "transcript.json", "improved_script.txt", "reference_speech.mp3"}
 
 
 def get_run(run_id):

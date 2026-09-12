@@ -132,3 +132,19 @@ Set `REAL_RUN_ID` to also inspect an already-generated result without new genera
 
 Generated coaching and speech remain model
 outputs to review and rehearse with; they are not guarantees of perfect delivery.
+
+## Practice the next take
+
+Once the reference audio is ready, choose **Practice this script**. The voice-practice
+page keeps the script and reference together, highlights each word during playback,
+and offers microphone-only recording for repeated trials. Each take is compared with
+the same TTS reference using the scoring module contributed on `gmin`.
+
+See five separate measures—pronunciation, pace, rhythm, intonation, and emphasis—plus
+words to revisit. Replay a trial to follow its own word timing. Unreliable alignment
+produces a retry message instead of a score. The guided recording highlight follows
+reference timing; it does not claim to recognize speech live.
+
+New TTS responses include timing in the same ElevenLabs request. Earlier recordings
+can prepare timing once and reuse it. Scoring is local and requires an initial ~1.2GB
+model download. See the [backend guide](backend/README.md#voice-practice-and-word-timing).

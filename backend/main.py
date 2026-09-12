@@ -20,6 +20,7 @@ from backend.gemini_script.router import router as script_router
 from backend.elevenlabs_tts.router import router as tts_router
 from backend.pipeline.router import router as pipeline_router
 from backend.elevenlabs_asr.router import router as asr_router
+from backend.practice.router import router as practice_router
 
 app = FastAPI(title="HackCMU Presentation Coach API")
 
@@ -63,4 +64,5 @@ api.include_router(script_router)
 api.include_router(tts_router)
 api.include_router(asr_router)
 api.include_router(pipeline_router)
+api.include_router(practice_router)
 app.include_router(api)

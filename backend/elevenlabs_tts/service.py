@@ -2,6 +2,7 @@
 
 Generated speech is a practice reference; naturalness/pronunciation are not guaranteed.
 """
+import base64
 import hashlib
 import json
 import os
@@ -15,6 +16,7 @@ from elevenlabs.client import ElevenLabs
 from backend.common.config import artifacts_dir
 from backend.common.media import run_media_command
 from backend.common.logging import log_event, save_json
+from backend.elevenlabs_tts.alignment import character_to_words
 
 _CACHE_LOCK = threading.RLock()
 
@@ -83,18 +85,20 @@ def generate_gt_speech(voice_id: str, script: str, out_path: str, *, client=None
     destination.parent.mkdir(parents=True, exist_ok=True)
     partial = destination.with_name(destination.name + ".part")
     try:
-        audio = client.text_to_speech.convert(voice_id=voice_id, text=script,
+        response = client.text_to_speech.convert_with_timestamps(voice_id=voice_id, text=script,
             model_id=os.getenv("ELEVENLABS_TTS_MODEL", "eleven_multilingual_v2"),
             output_format="mp3_44100_128",
             request_options={"max_retries": 0},
             voice_settings={"stability": 0.6, "similarity_boost": 0.8, "style": 0.2})
-        with partial.open("wb") as stream:
-            for chunk in audio:
-                if chunk:
-                    stream.write(chunk)
+        payload = response.model_dump(mode="json")
+        audio = base64.b64decode(payload["audio_base64"], validate=True)
+        alignment = character_to_words(payload.get("normalized_alignment") or payload.get("alignment") or {})
+        alignment.update(source="elevenlabs_tts", audio_sha256=hashlib.sha256(audio).hexdigest())
+        partial.write_bytes(audio)
         if not partial.stat().st_size:
             raise ValueError("ElevenLabs returned empty audio")
         partial.replace(destination)
+        save_json(destination.parent / "reference_alignment.json", alignment)
     finally:
         partial.unlink(missing_ok=True)
     return str(destination)

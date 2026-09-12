@@ -70,6 +70,8 @@ def process_recording(source, user_id, noisy_environment=False, *, tts_client=No
                    log_dir=logs / "elevenlabs", client=tts_client, prepared_audio_path=audio_path)
         manifest["elevenlabs_requests"] = json.loads((logs / "elevenlabs/meta.json").read_text())
         manifest["outputs"]["tts_audio"] = "reference_speech.mp3"
+        if (run_dir / "outputs/reference_alignment.json").exists():
+            manifest["outputs"]["word_alignment"] = "reference_alignment.json"
         manifest.update(status="success", stage="complete")
         checkpoint()
         return manifest

@@ -22,6 +22,8 @@ achievements, quotes, or credentials. Each issue's original must be an exact sub
 of original_script. Give problem and suggestion feedback in Korean. Write improved_script
 in the original draft's language. Do not evaluate gaze, body movement, audio pronunciation,
 or other properties that cannot be observed from text. Do not promise perfect delivery.
+For improved_script, spell numbers, times, and percentages as spoken words so the
+text can be aligned with the generated speech. Preserve their values.
 Return the supplied JSON schema, with issues=[] when no specific issue is found.
 """
 
