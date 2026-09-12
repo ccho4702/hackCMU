@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 
 export function PageShell({ title, subtitle, right, mock, runId, className, children }) {
   return (
-    <div className="min-h-screen bg-[#f4f7ff] font-sans text-slate-900">
+    <div className="min-h-screen bg-white font-sans text-slate-900">
       <AppHeader title={title} subtitle={subtitle} right={right} mock={mock} runId={runId} />
       <main className={cn("mx-auto flex max-w-7xl flex-col gap-6 px-4 py-6 sm:px-6", className)}>
         {children}
@@ -14,29 +14,12 @@ export function PageShell({ title, subtitle, right, mock, runId, className, chil
   );
 }
 
-const TONE_DOT = {
-  off: "bg-slate-300",
-  pending: "bg-amber-400 animate-pulse",
-  ok: "bg-emerald-500",
-  error: "bg-rose-500",
-};
-
-export function StatusPill({ label, text, tone }) {
-  return (
-    <span className="flex items-center gap-2 rounded-full bg-white px-3 py-1.5 text-xs ring-1 ring-slate-200">
-      {tone ? <span className={cn("size-2 rounded-full", TONE_DOT[tone])} /> : null}
-      <span className="text-slate-500">{label}</span>
-      <span className="max-w-[16rem] truncate font-medium text-slate-900">{text}</span>
-    </span>
-  );
-}
-
 export function Card({ title, action, children, className }) {
   return (
-    <section className={cn("rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200/70", className)}>
+    <section className={cn("rounded-2xl bg-[#f5f5f7] p-5", className)}>
       {title || action ? (
         <div className="mb-3 flex items-center justify-between gap-3">
-          <h2 className="text-xs font-semibold uppercase tracking-wider text-slate-500">{title}</h2>
+          <h2 className="text-[15px] font-semibold text-slate-900">{title}</h2>
           {action}
         </div>
       ) : null}
@@ -47,7 +30,7 @@ export function Card({ title, action, children, className }) {
 
 export function StatTile({ label, value, unit }) {
   return (
-    <div className="rounded-xl bg-[#f4f7ff] px-3 py-3">
+    <div className="rounded-xl bg-white px-3 py-3">
       <p className="text-xs text-slate-500">{label}</p>
       <p className="mt-1 text-2xl font-semibold tabular-nums text-slate-900">
         {value}
@@ -83,7 +66,7 @@ export function Switch({ checked, onChange, label, disabled = false }) {
 
 export function Segmented({ value, options, onChange }) {
   return (
-    <div className="flex rounded-full bg-slate-100 p-0.5">
+    <div className="flex rounded-full bg-slate-200/60 p-0.5">
       {options.map((option) => (
         <button
           key={option.value}
@@ -109,7 +92,7 @@ export function Stage({ ref, className, children }) {
     <section
       ref={ref}
       className={cn(
-        "relative aspect-video overflow-hidden rounded-3xl bg-slate-950 shadow-xl shadow-primary/10 ring-1 ring-slate-900/5",
+        "relative aspect-video overflow-hidden rounded-3xl bg-slate-950 shadow-lg shadow-slate-900/10",
         className,
       )}
     >

@@ -18,7 +18,6 @@ import {
   Segmented,
   Stage,
   StageMessage,
-  StatusPill,
 } from "@/components/ui/studio";
 import { useAlertToasts } from "@/hooks/useAlertToasts";
 import { useDisplayRect } from "@/hooks/useDisplayRect";
@@ -270,32 +269,12 @@ export function LiveWorkspace() {
   }, [router, stopping, collectRecording, language]);
 
   const failed = !session && !starting && error;
-  const cameraStatus = session
-    ? { text: stopping ? "Stopping" : "Live", tone: stopping ? "pending" : "ok" }
-    : starting
-      ? { text: "Starting", tone: "pending" }
-      : failed
-        ? { text: "Error", tone: "error" }
-        : { text: "Off", tone: "off" };
-  const serverStatus = session
-    ? error
-      ? { text: "Error", tone: "error" }
-      : { text: "Connected", tone: "ok" }
-    : starting
-      ? { text: "Connecting", tone: "pending" }
-      : { text: "Off", tone: "off" };
 
   return (
     <PageShell
       title="Live Analysis"
       subtitle="Real-time face tracking & delivery metrics"
       mock={session?.mock}
-      right={
-        <>
-          <StatusPill label="Camera" {...cameraStatus} />
-          <StatusPill label="Server" {...serverStatus} />
-        </>
-      }
     >
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
         <div className="flex min-w-0 flex-col gap-6">
@@ -330,7 +309,7 @@ export function LiveWorkspace() {
                   type="button"
                   onClick={() => void start()}
                   disabled={starting}
-                  className="rounded-full bg-primary px-6 py-2.5 text-sm font-semibold text-white shadow-lg shadow-primary/40 transition-colors hover:bg-primary-hover disabled:opacity-60"
+                  className="rounded-full bg-primary px-6 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-primary-hover disabled:opacity-60"
                 >
                   {starting ? "Starting…" : failed ? "Try again" : "Start live analysis"}
                 </button>

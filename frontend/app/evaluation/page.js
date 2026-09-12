@@ -38,11 +38,11 @@ export default function Evaluation() {
   const transcript=job?.results?.transcript?.text || script?.original_script;
   const working=job && !["success","failed"].includes(job.status);
   const stage=STAGES.findIndex(([id])=>id===job?.stage);
-  return <div className="studio-app"><StudioHeader title="Evaluation" subtitle="Your recording, feedback, and next take" active="evaluation" runId={job?.run_id}><span className={`status-pill ${working ? "pending" : job?.status === "success" ? "ok" : ""}`}><i/>{working ? "Processing" : job?.status === "success" ? "Complete" : "Ready"}</span></StudioHeader><main className="studio-container evaluation-layout">
+  return <div className="studio-app"><StudioHeader title="Evaluation" subtitle="Your recording, feedback, and next take" active="evaluation" runId={job?.run_id}/><main className="studio-container evaluation-layout">
     {error && <div className="error-banner" role="alert"><p>{error}</p><Link className="button secondary-button" href="/live">Start live analysis</Link></div>}
     {!job && !error && <div className="panel loading-panel"><span className="spinner"/>Loading your evaluation…</div>}
     {job && <>
-      <div className="evaluation-intro"><div>{analysisId && <Link className="text-button" href={`/analysis/${analysisId}`}>← Back to facial metrics</Link>}<span className="blue-eyebrow">SESSION REVIEW</span><h2>Your next take starts here.</h2></div><Link href="/live" className="button secondary-button">New recording</Link></div>
+      <section className="evaluation-intro"><div>{analysisId && <Link className="text-button" href={`/analysis/${analysisId}`}>← Back to facial metrics</Link>}<span className="blue-eyebrow">Evaluation</span><h2>How you look, sound, and speak.</h2><ul className="evaluation-tags" aria-label="What this session reviews"><li>Delivery</li><li>Pronunciation</li><li>Script</li></ul></div><Link href="/live" className="button secondary-button">New recording</Link></section>
       {working && <section className="panel progress-card" aria-live="polite"><div className="progress-heading"><span className="spinner"/><div><h2>{STAGES[stage]?.[1] || "Your recording is queued"}</h2><p>Completed results appear below as each stage finishes.</p></div></div><ol className="stage-list">{STAGES.map(([id,title],i)=><li key={id} className={i===stage?"active":i<stage?"done":""}><span>{i<stage?"✓":i+1}</span>{title}</li>)}</ol></section>}
       {job.status === "failed" && <div className="error-banner" role="alert"><div><strong>This session could not finish.</strong><p>{job.error_message || "Available results are preserved below."}</p></div><Link className="button secondary-button" href="/live">Try a new recording</Link></div>}
       <div className="evaluation-grid">

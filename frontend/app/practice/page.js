@@ -193,7 +193,7 @@ export default function Practice() {
   return <div className="app-shell">
     <StudioHeader title="Voice Practice" subtitle="Follow your reference and improve each trial" active="practice" runId={session?.run_id}/>
     <main className="workspace practice-workspace">
-      <section className="practice-intro"><p className="eyebrow">VOICE PRACTICE / YOUR NEXT TAKE</p><h1>Practice your next take.</h1><p>Listen to your reference. Read the same script.<br/>See what changes with every try.</p></section>
+      <section className="practice-intro"><p className="blue-eyebrow">VOICE PRACTICE / YOUR NEXT TAKE</p><h1>Practice your next take.</h1><p>Listen to your reference. Read the same script.<br/>See what changes with every try.</p></section>
       {error && <div className="error-banner" role="alert"><p>{error}</p></div>}
       {!session && !error && <p className="muted">Loading your script and reference voice…</p>}
       {session && <>

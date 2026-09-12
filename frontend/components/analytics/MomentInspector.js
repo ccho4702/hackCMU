@@ -34,7 +34,7 @@ function MetricRow({ label, metric, value, unavailable, tone }) {
           </span>
         )}
       </div>
-      <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-slate-100">
+      <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-slate-200/70">
         <div
           className={cn("h-full rounded-full transition-[width] duration-300", TONE_BAR[tone] ?? "bg-primary")}
           style={{ width: `${Math.max(0, Math.min(100, value ?? 0))}%` }}
@@ -103,7 +103,7 @@ export function MomentInspector({
                     <span className="truncate text-slate-600">{name}</span>
                     <span className="font-mono tabular-nums text-slate-900">{value.toFixed(2)}</span>
                   </div>
-                  <div className="mt-1 h-1 overflow-hidden rounded-full bg-slate-100">
+                  <div className="mt-1 h-1 overflow-hidden rounded-full bg-slate-200/70">
                     <div className="h-full rounded-full bg-[#8fb4ff]" style={{ width: `${value * 100}%` }} />
                   </div>
                 </li>

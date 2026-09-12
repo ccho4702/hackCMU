@@ -19,7 +19,6 @@ import {
   PageShell,
   Stage,
   StageMessage,
-  StatusPill,
 } from "@/components/ui/studio";
 import { useAlertToasts } from "@/hooks/useAlertToasts";
 import { useDisplayRect } from "@/hooks/useDisplayRect";
@@ -88,7 +87,6 @@ export function Workspace({ result, videoUrl }) {
       title="Session Review"
       subtitle={`${isLive ? "Live session" : result.video.fileName} · ${result.config.analysisFps} fps analysis`}
       mock={result.provenance.mock}
-      right={<StatusPill label="Source" text={isLive ? "Live camera" : "Upload"} />}
     >
       <CoachingBridge analysisId={result.analysisId} />
 
@@ -113,7 +111,7 @@ export function Workspace({ result, videoUrl }) {
                 title="Video not loaded"
                 description="Re-select the original video to enable playback with the overlay."
               >
-                <label className="cursor-pointer rounded-full bg-primary px-6 py-2.5 text-sm font-semibold text-white shadow-lg shadow-primary/40 transition-colors hover:bg-primary-hover">
+                <label className="cursor-pointer rounded-full bg-primary px-6 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-primary-hover">
                   Choose video
                   <input
                     type="file"

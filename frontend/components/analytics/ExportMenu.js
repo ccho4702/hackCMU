@@ -23,7 +23,7 @@ export function ExportMenu({ analysisId }) {
             key={option.label}
             type="button"
             onClick={() => download(option.url, option.file)}
-            className="flex items-center gap-1.5 rounded-full bg-white px-3 py-1.5 text-xs font-medium text-slate-700 ring-1 ring-slate-200 transition-colors hover:text-primary hover:ring-primary/40"
+            className="flex items-center gap-1.5 rounded-full bg-white px-3 py-1.5 text-xs font-medium text-slate-700 transition-colors hover:text-primary"
           >
             <Download className="size-3.5" />
             {option.label}

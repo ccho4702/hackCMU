@@ -53,7 +53,7 @@ test("record, stop, upload once, render results, and release camera/microphone",
   await page.getByRole("button", { name: "Start recording", exact: true }).click();
   await expect(page.getByRole("button", { name: "Stop & analyze" })).toBeVisible();
   await page.getByRole("button", { name: "Stop & analyze" }).click();
-  await expect(page.getByText("Complete", { exact: true })).toBeVisible();
+  await expect(page.getByRole("link", { name: /Practice this script/ })).toBeVisible();
   await expect(page.getByRole("region", { name: "Improved script", exact: true })).toContainText("I have an idea to share.");
   await expect(page.getByRole("region", { name: "Original script", exact: true })).toContainText("Um, I has an idea.");
   await expect(page.getByLabel("Improved speech")).toHaveAttribute("src", manifest.outputs.tts_audio);
@@ -83,7 +83,7 @@ test("uploaded recording preserves partial results on TTS failure", async ({ pag
 test("a saved job restores after reload without a second upload", async ({ page }) => {
   const uploads = await stubPipeline(page);
   await page.goto(`/evaluation?run=${runId}`);
-  await expect(page.getByText("Complete", { exact: true })).toBeVisible();
+  await expect(page.getByRole("link", { name: /Practice this script/ })).toBeVisible();
   await page.reload();
   await expect(page.getByRole("region", { name: "Improved script", exact: true })).toContainText("I have an idea to share.");
   expect(uploads()).toBe(0);
@@ -101,7 +101,7 @@ test("real saved run loads its transcript, revision, and playable audio", async 
   let generationCalls = 0;
   page.on("request", request => { if (request.url().endsWith("/api/pipeline")) generationCalls++; });
   await page.goto(`/evaluation?run=${process.env.REAL_RUN_ID}`);
-  await expect(page.getByText("Complete", { exact: true })).toBeVisible();
+  await expect(page.getByRole("link", { name: /Practice this script/ })).toBeVisible();
   await expect(page.getByRole("region", { name: "Improved script", exact: true })).not.toBeEmpty();
   await expect(page.getByLabel("Original recording")).toBeVisible();
   const audio = page.getByLabel("Improved speech");

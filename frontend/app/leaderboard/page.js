@@ -73,7 +73,7 @@ export default function HistoryPage() {
         <Card title="My recordings" action={runs ? <span className="text-xs text-slate-500">{runs.length} total</span> : null}>
           {!runs && !error ? <p className="text-sm text-slate-500">Loading your recordings…</p> : null}
           {runs && runs.length === 0 ? (
-            <div className="rounded-xl bg-[#f4f7ff] p-5 text-sm text-slate-600">
+            <div className="rounded-xl bg-white p-5 text-sm text-slate-600">
               <p className="font-medium text-slate-900">No recordings yet.</p>
               <p className="mt-1">Record a live session first. Its improved script and reference voice will show up here.</p>
               <Link href="/live" className="mt-3 inline-flex items-center gap-2 rounded-full bg-primary px-4 py-2 text-xs font-semibold text-white">
@@ -92,7 +92,7 @@ export default function HistoryPage() {
                     onClick={() => setSelected(run.run_id)}
                     className={cn(
                       "w-full rounded-xl px-4 py-3 text-left ring-1 transition",
-                      active ? "bg-primary/5 ring-primary/40" : "bg-white ring-slate-200/70 hover:ring-primary/30",
+                      active ? "bg-primary/5 ring-primary/40" : "bg-white ring-transparent hover:ring-primary/30",
                     )}
                   >
                     <div className="flex items-center justify-between gap-3">
@@ -129,7 +129,7 @@ export default function HistoryPage() {
           {current && boardErrorFor ? <p className="text-sm text-rose-700">{boardErrorFor}</p> : null}
           {current && !boardFor && !boardErrorFor ? <p className="text-sm text-slate-500">Loading trials…</p> : null}
           {boardFor && boardFor.trials.length === 0 ? (
-            <div className="rounded-xl bg-[#f4f7ff] p-5 text-sm text-slate-600">
+            <div className="rounded-xl bg-white p-5 text-sm text-slate-600">
               <p className="font-medium text-slate-900">No trials for this recording yet.</p>
               <p className="mt-1">Open Practice, read the improved script in your own voice, and each take will be ranked here.</p>
             </div>

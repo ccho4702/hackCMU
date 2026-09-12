@@ -16,7 +16,7 @@ export function SegmentList({ title, segments, onSeek }) {
               <button
                 type="button"
                 onClick={() => onSeek(segment.startMs)}
-                className="flex w-full items-center justify-between gap-2 rounded-xl px-2 py-2 text-left transition-colors hover:bg-slate-50"
+                className="flex w-full items-center justify-between gap-2 rounded-xl px-2 py-2 text-left transition-colors hover:bg-white"
               >
                 <span className="truncate text-sm text-slate-700">{segmentLabel(segment.type)}</span>
                 <span className="flex shrink-0 items-center gap-2">
