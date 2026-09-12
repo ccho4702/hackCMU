@@ -8,13 +8,13 @@ export const METRIC_LABELS = {
 };
 
 export const METRIC_HELP = {
-  gaze: "How much you look toward the camera (0–100). The score falls when your eyes or head turn away.",
+  gaze: "Share of this second you stay on camera (0–100). Drift and look-aways lower the score; blinks are ignored.",
   expressionActivity:
-    "How much your face is moving (0–100). A still or frozen face scores lower; natural motion scores higher.",
+    "How fast facial action-unit intensity is changing (0–100). A frozen face scores low; natural motion scores higher.",
   stability:
-    "How steady your head stays (0–100). Fast yaw, pitch, or roll drops the score; calm posture keeps it high.",
+    "How steady your head stays (0–100). Slow emphasis is fine; fast yaw, pitch, roll, or jitter drops the score.",
   expressiveness:
-    "How much of your facial range you use (0–100). Small, repeated motions score lower; broader movement scores higher.",
+    "How much of your facial action-unit range you use (0–100). One repeated motion scores lower than a broader set.",
 };
 
 export const DEFAULT_METRIC_THRESHOLDS = {

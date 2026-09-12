@@ -2,8 +2,8 @@ from __future__ import annotations
 
 from typing import Any
 
-SCHEMA_VERSION = "1.1.0"
-SCORING_VERSION = "heuristic_v1"
+SCHEMA_VERSION = "1.2.0"
+SCORING_VERSION = "heuristic_v2"
 
 DEFAULT_ANALYSIS_FPS = 12.0
 DEFAULT_WINDOW_SIZE_MS = 1000
@@ -61,6 +61,17 @@ GAZE_DEVIATION_BREAKPOINTS: list[tuple[float, float]] = [
     (0.32, 50.0),
     (0.52, 22.0),
     (0.80, 0.0),
+]
+
+# Fraction of the window spent on-camera. ~80% is the actionable target
+# used in automated public-speaking assessment (Kimani et al., ICMI 2020).
+GAZE_OCCUPANCY_BREAKPOINTS: list[tuple[float, float]] = [
+    (0.00, 8.0),
+    (0.35, 22.0),
+    (0.55, 50.0),
+    (0.70, 76.0),
+    (0.85, 91.0),
+    (1.00, 100.0),
 ]
 
 # Blendshape L2 velocity per second.

@@ -1,0 +1,16 @@
+.git
+.venv
+backend/.venv
+backend/artifacts
+frontend/node_modules
+frontend/.next
+frontend/.env.local
+frontend/coverage
+**/__pycache__
+**/.pytest_cache
+**/.mypy_cache
+.DS_Store
+*.mov
+*.mp4
+*.wav
+*.mp3

@@ -4,12 +4,13 @@ from dataclasses import dataclass
 
 import numpy as np
 
+from backend.app.features.au_map import au_channel_names, au_intensity_vector, mean_au_intensity
 from backend.app.features.blendshape_features import (
     activation_diversity,
     blendshape_variance,
-    ordered_values,
     robust_range,
 )
+from backend.app.features.gaze_estimator import camera_occupancy
 from backend.app.features.temporal_features import jitter_from_speeds, mean_or_none
 from backend.app.schemas.analysis import FrameAnalysis, WindowAnalysis, WindowFeatures, WindowMetrics
 from backend.app.scoring.strategy import ScoringStrategy
@@ -90,6 +91,11 @@ def _score_window(
     valid_coverage = face_n / sample_count
 
     vectors = [p.vector for p in selected if p.vector is not None]
+    gaze_pairs = [
+        (p.frame.gaze.horizontal, p.frame.gaze.vertical)
+        for p in selected
+        if p.frame.quality.gaze_valid and p.frame.gaze
+    ]
     features = WindowFeatures(
         head_yaw_mean=mean_or_none(
             [p.frame.head_pose.yaw_deg for p in selected if p.frame.head_pose]
@@ -106,6 +112,7 @@ def _score_window(
         gaze_vertical_mean=mean_or_none(
             [p.frame.gaze.vertical for p in selected if p.frame.quality.gaze_valid and p.frame.gaze]
         ),
+        gaze_camera_occupancy=camera_occupancy(gaze_pairs),
         blendshape_variance=blendshape_variance(vectors) if vectors else None,
         expression_velocity=mean_or_none([p.velocity for p in selected if p.velocity is not None]),
         head_angular_speed=mean_or_none(
@@ -116,6 +123,7 @@ def _score_window(
         ),
         expressiveness_range=robust_range(vectors) if vectors else None,
         activation_diversity=activation_diversity(vectors) if vectors else None,
+        au_intensity_mean=mean_au_intensity(vectors) if vectors else None,
     )
 
     def gated(count: int, scorer) -> int | None:
@@ -169,7 +177,7 @@ def prepare_next_frame(
 
     dt = ((frame.timestamp_ms - prev.timestamp_ms) / 1000.0) if prev else 0.0
     if names is None and frame.blendshapes:
-        names = list(frame.blendshapes.keys())
+        names = au_channel_names(frame.blendshapes) or list(frame.blendshapes.keys())
     vel = (
         expression_velocity(prev.blendshapes if prev else None, frame.blendshapes, dt, names)
         if prev
@@ -180,7 +188,7 @@ def prepare_next_frame(
         if prev
         else None
     )
-    vector = ordered_values(frame.blendshapes, names)
+    vector = au_intensity_vector(frame.blendshapes, names)
     return PreparedFrame(frame=frame, velocity=vel, angular_speed=speed, vector=vector), names
 
 

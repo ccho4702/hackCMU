@@ -4,6 +4,7 @@ from backend.app.core.defaults import (
     ACTIVITY_VELOCITY_BREAKPOINTS,
     EXPRESSIVENESS_RANGE_BREAKPOINTS,
     GAZE_DEVIATION_BREAKPOINTS,
+    GAZE_OCCUPANCY_BREAKPOINTS,
     SCORING_VERSION,
     STABILITY_VELOCITY_BREAKPOINTS,
 )
@@ -12,10 +13,12 @@ from backend.app.utils.piecewise import clamp_score, piecewise_linear
 
 
 class HeuristicV1Strategy:
-    """Deterministic presentation-delivery heuristics.
+    """Windowed delivery scores from observable face geometry.
 
-    All maps are piecewise-linear and configurable. Insufficient evidence
-    returns None rather than 0.
+    Expressions are scored as Action Unit intensities over time, not as emotion
+    labels (Sanchez-Lozano et al., IEEE TAFFC 2021). Each 1 s window is its own
+    quality state so a speaker can change that interval (Kimani et al., ICMI 2020;
+    Dimitriadou & Lanitis, 2024). Missing evidence returns None, never 0.
     """
 
     version = SCORING_VERSION
@@ -24,7 +27,15 @@ class HeuristicV1Strategy:
         if features.gaze_horizontal_mean is None or features.gaze_vertical_mean is None:
             return None
         deviation = (features.gaze_horizontal_mean**2 + features.gaze_vertical_mean**2) ** 0.5
-        return clamp_score(piecewise_linear(deviation, GAZE_DEVIATION_BREAKPOINTS))
+        deviation_score = piecewise_linear(deviation, GAZE_DEVIATION_BREAKPOINTS)
+        if features.gaze_camera_occupancy is None:
+            return clamp_score(deviation_score)
+        occupancy_score = piecewise_linear(
+            features.gaze_camera_occupancy, GAZE_OCCUPANCY_BREAKPOINTS
+        )
+        # Occupancy is the practice target (% time on camera); deviation catches
+        # a window that is mostly on-camera but still drifting.
+        return clamp_score(0.70 * occupancy_score + 0.30 * deviation_score)
 
     def score_expression_activity(
         self, features: WindowFeatures, config: AnalysisConfig
@@ -34,6 +45,12 @@ class HeuristicV1Strategy:
         score = piecewise_linear(features.expression_velocity, ACTIVITY_VELOCITY_BREAKPOINTS)
         if features.blendshape_variance is not None and features.blendshape_variance < 0.0004:
             score = min(score, 42.0)
+        if (
+            features.au_intensity_mean is not None
+            and features.au_intensity_mean < 0.04
+            and (features.blendshape_variance is None or features.blendshape_variance < 0.0008)
+        ):
+            score = min(score, 38.0)
         return clamp_score(score)
 
     def score_stability(self, features: WindowFeatures, config: AnalysisConfig) -> float | None:
@@ -41,8 +58,7 @@ class HeuristicV1Strategy:
             return None
         score = piecewise_linear(features.head_angular_speed, STABILITY_VELOCITY_BREAKPOINTS)
         if features.jitter is not None:
-            # Bounded penalty for high-frequency jitter; slow intentional motion
-            # is already represented by angular speed.
+            # Within-window high-frequency motion, separate from slow pose change.
             penalty = min(28.0, features.jitter * 0.35)
             score -= penalty
         return clamp_score(score)
@@ -54,6 +70,6 @@ class HeuristicV1Strategy:
             return None
         score = piecewise_linear(features.expressiveness_range, EXPRESSIVENESS_RANGE_BREAKPOINTS)
         if features.activation_diversity is not None:
-            # Small bounded bonus for using a broader set of facial actions.
-            score += 8.0 * max(0.0, min(1.0, features.activation_diversity))
+            # Broader set of active AU channels, not repeated motion on one unit.
+            score += 10.0 * max(0.0, min(1.0, features.activation_diversity))
         return clamp_score(score)

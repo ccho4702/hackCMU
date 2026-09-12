@@ -1,0 +1,14 @@
+{
+	auto_https off
+	default_sni {$SITE_HOST}
+	fallback_sni {$SITE_HOST}
+}
+
+http://{$SITE_HOST} {
+	redir https://{$SITE_HOST}{uri} 308
+}
+
+https://{$SITE_HOST}, https:// {
+	tls /certs/cert.pem /certs/key.pem
+	reverse_proxy frontend:3000
+}

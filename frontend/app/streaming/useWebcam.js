@@ -1,5 +1,6 @@
 "use client";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { requestUserMedia } from "@/lib/media/userMedia";
 
 export function useWebcam() {
   const videoRef = useRef(null);
@@ -16,8 +17,7 @@ export function useWebcam() {
   const start = useCallback(async () => {
     setStatus("starting");setError(null);
     try {
-      if (!navigator.mediaDevices?.getUserMedia) throw new Error("Camera recording requires localhost or HTTPS. You can upload a recording instead.");
-      const media = await navigator.mediaDevices.getUserMedia({video:{width:{ideal:1280},height:{ideal:720},facingMode:"user"},audio:true});
+      const media = await requestUserMedia({video:{width:{ideal:1280},height:{ideal:720},facingMode:"user"},audio:true});
       if (!mounted.current) {media.getTracks().forEach(track=>track.stop());return null;}
       streamRef.current=media;
       if (!media.getAudioTracks().length) throw new Error("A microphone is required for script analysis and reference speech.");

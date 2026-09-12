@@ -30,6 +30,8 @@ def windows_to_csv(result: AnalysisResult) -> str:
             "headPitchMean",
             "blendshapeVariance",
             "expressionVelocity",
+            "gazeCameraOccupancy",
+            "auIntensityMean",
         ]
     )
     for window in result.windows:
@@ -47,6 +49,8 @@ def windows_to_csv(result: AnalysisResult) -> str:
                 _num(window.features.head_pitch_mean),
                 _num(window.features.blendshape_variance),
                 _num(window.features.expression_velocity),
+                _num(window.features.gaze_camera_occupancy),
+                _num(window.features.au_intensity_mean),
             ]
         )
     return buffer.getvalue()

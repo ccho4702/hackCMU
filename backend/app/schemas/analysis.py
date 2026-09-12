@@ -140,12 +140,14 @@ class WindowFeatures(APIModel):
     head_roll_mean: float | None = None
     gaze_horizontal_mean: float | None = None
     gaze_vertical_mean: float | None = None
+    gaze_camera_occupancy: float | None = None
     blendshape_variance: float | None = None
     expression_velocity: float | None = None
     head_angular_speed: float | None = None
     jitter: float | None = None
     expressiveness_range: float | None = None
     activation_diversity: float | None = None
+    au_intensity_mean: float | None = None
 
 
 class WindowAnalysis(APIModel):
