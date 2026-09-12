@@ -154,7 +154,7 @@ def align_words(enc: dict, text: str) -> list[dict]:
     display, norm = normalize_words(text)
     idx = [i for i, w in enumerate(norm) if w]
     if not idx:
-        raise ValueError("정렬 가능한 단어가 없습니다: " + text)
+        raise ValueError("No words could be aligned: " + text)
 
     _, _, tokenizer, aligner = _aligner()
     with torch.inference_mode():
@@ -372,11 +372,11 @@ def word_diff(gw: list[dict], uw: list[dict], dev: list[Optional[float]]) -> lis
         sev_str = abs(gap) / STRESS_GAP_THR if (gap is not None and long_enough) else 0.0
 
         if sev_pron >= 1.0:
-            note = "발음 불명확"
+            note = "Unclear pronunciation"
         elif sev_dur > 1.0:
-            note = "급하게 지나감" if d < 0 else "늘어짐"
+            note = "Rushed" if d < 0 else "Drawn out"
         elif sev_str > 1.0:
-            note = "강세 빠짐" if gap > 0 else "강세 과함"
+            note = "Missing stress" if gap > 0 else "Overstressed"
         else:
             note = None
 
@@ -475,12 +475,12 @@ def score_shadowing(
 # CLI
 # =============================================================================
 def _main(argv=None):
-    p = argparse.ArgumentParser(description="쉐도잉 점수: GT wav vs 사용자 wav")
+    p = argparse.ArgumentParser(description="Shadowing score: reference wav vs user wav")
     p.add_argument("gt_wav")
     p.add_argument("user_wav")
     p.add_argument("text")
-    p.add_argument("--gt-words", help="GT 단어 타임스탬프 JSON [{text,t0,t1}]")
-    p.add_argument("--compact", action="store_true", help="words[] 생략")
+    p.add_argument("--gt-words", help="Reference word timestamps JSON [{text,t0,t1}]")
+    p.add_argument("--compact", action="store_true", help="Omit words[]")
     a = p.parse_args(argv)
 
     gt_words = json.load(open(a.gt_words)) if a.gt_words else None

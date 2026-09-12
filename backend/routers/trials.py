@@ -54,7 +54,7 @@ def present(doc: dict, brief: bool = False) -> dict:
 def _owned_trial(trial_id: str, user_id: str) -> dict:
     doc = db.trials().find_one({"_id": parse_oid(trial_id), "user_id": user_id})
     if not doc:
-        raise HTTPException(status_code=404, detail="trial 이 없습니다")
+        raise HTTPException(status_code=404, detail="Trial not found")
     return doc
 
 
@@ -63,7 +63,7 @@ def _reference_for(reference_id: Optional[str], user_id: str) -> Optional[dict]:
         return None
     ref = db.references().find_one({"_id": parse_oid(reference_id, "reference_id"), "user_id": user_id})
     if not ref:
-        raise HTTPException(status_code=404, detail="reference 가 없습니다")
+        raise HTTPException(status_code=404, detail="Reference not found")
     return ref
 
 
@@ -149,10 +149,10 @@ def create_trial(
     user_id: str = Depends(current_user_id),
 ):
     if kind not in KINDS:
-        raise HTTPException(status_code=400, detail=f"kind 는 {KINDS} 중 하나")
+        raise HTTPException(status_code=400, detail=f"kind must be one of {KINDS}")
     ref = _reference_for(reference_id, user_id)
     if kind == "shadow" and not ref:
-        raise HTTPException(status_code=400, detail="shadow trial 은 reference_id 가 필요합니다")
+        raise HTTPException(status_code=400, detail="A shadow trial requires reference_id")
 
     tid = ObjectId()
     rel_dir = f"{user_id}/trials/{tid}"
@@ -232,11 +232,11 @@ def upload_sentence(
     """쉐도잉 카드 흐름. 문장 하나 녹음을 올리면 그 자리에서 채점해 돌려준다."""
     t = _owned_trial(trial_id, user_id)
     if not t.get("reference_id"):
-        raise HTTPException(status_code=400, detail="이 trial 에는 reference 가 없습니다")
+        raise HTTPException(status_code=400, detail="This trial has no reference")
     ref = _reference_for(t["reference_id"], user_id)
     s = next((x for x in ref["script"] if x["id"] == sentence_id), None)
     if not s:
-        raise HTTPException(status_code=404, detail=f"reference 에 문장 {sentence_id} 가 없습니다")
+        raise HTTPException(status_code=404, detail=f"Sentence {sentence_id} not found in reference")
 
     rel_dir = f"{user_id}/trials/{trial_id}/sentences"
     raw = media.save_upload(file, rel_dir, sentence_id)
@@ -246,7 +246,7 @@ def upload_sentence(
         entry = _score_sentence(s, media.abs_path(wav), {"segment": None, "wav": wav})
     except Exception as e:
         traceback.print_exc()
-        raise HTTPException(status_code=500, detail="채점 실패. 서버 로그를 확인하세요.")
+        raise HTTPException(status_code=500, detail="Scoring failed. Check the server logs.")
 
     order = {x["id"]: i for i, x in enumerate(ref["script"])}
     shadowing = [x for x in t.get("shadowing", []) if x["sentence_id"] != sentence_id] + [entry]
