@@ -20,22 +20,24 @@ export default function HomePage() {
   return (
     <PageShell>
       <div className="flex flex-col w-full">
-        <div className="relative overflow-hidden rounded-2xl">
-          <video 
+        {/* 배너: 영상이 없어도(banner1.mov 는 .gitignore 대상) 높이가 유지되도록 텍스트를 흐름 안에 둔다 */}
+        <div className="relative overflow-hidden rounded-2xl bg-slate-950">
+          <video
             src="/banner1.mov"
+            poster="/banner.png"
             autoPlay
             muted
             loop
             playsInline
-            className="w-full rounded-2xl"
+            className="absolute inset-0 h-full w-full object-cover"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-950/20 to-transparent"/>
-          <div className="absolute inset-0 flex flex-col justify-end p-5 text-white sm:p-10 lg:p-14">
+          <div className="absolute inset-0 bg-gradient-to-t from-slate-950/85 via-slate-950/30 to-slate-950/10"/>
+          <div className="relative flex min-h-[260px] flex-col justify-end p-5 text-white sm:min-h-[360px] sm:p-10 lg:min-h-[420px] lg:p-14">
             <span className="h-1 w-10 rounded-full bg-white sm:w-14" />
-            <h1 className="mt-3 sm:mt-5">
-              <Image src="/optune-logo-white.png" alt="Optune" width={1326} height={680} priority className="h-10 w-auto drop-shadow-lg sm:h-16 lg:h-20" />
+            <h1 className="mt-4 sm:mt-6">
+              <Image src="/optune-logo-white.png" alt="Optune" width={1326} height={680} priority className="h-12 w-auto drop-shadow-lg sm:h-20 lg:h-24" />
             </h1>
-            <p className="mt-2 max-w-md text-sm font-semibold text-shadow-md sm:mt-4 sm:text-xl lg:text-2xl">
+            <p className="mt-3 max-w-md text-base font-semibold text-shadow-md sm:mt-5 sm:text-xl lg:text-2xl">
               Optimize your voice. Hear your best.
             </p>
           </div>
