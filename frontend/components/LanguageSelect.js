@@ -12,7 +12,7 @@ export function LanguageSelect({ value, onChange, accent="original", onAccentCha
         <label>
           <span>Presentation language</span>
           <select value={value} disabled={disabled} onChange={event=>{onChange(event.target.value);if(event.target.value!=="en")onAccentChange?.("original");}}>
-            <option value="en">English</option><option value="ko">한국어</option>
+            <option value="en">English</option><option value="ko">Korean</option>
           </select>
           <small>The language you’ll speak.</small>
         </label>

@@ -23,7 +23,7 @@ from backend.common.logging import log_event, save_json
 ROOT = Path(__file__).resolve().parents[2]
 PROMPT = """You are a presentation delivery coach. Watch AND listen to the ENTIRE video.
 Assess BOTH visible nonverbal delivery and audible vocal delivery in this single call.
-Return observed presentation delivery problems with localized timestamps, in Korean.
+Return observed presentation delivery problems with localized timestamps, in English.
 This is feedback on this recording, not an assessment of the person's character,
 mental state, health, or ability.
 
@@ -60,7 +60,7 @@ observations (intonation, loudness, pace, pauses, fillers, articulation).
 Never mix visual and vocal observations in one item. If both occur in the same
 interval, put separate modality-specific observations in their respective arrays.
 Every item in either array must have EXACTLY these three fields:
-{"start_time": "MM:SS.sss", "end_time": "MM:SS.sss", "content": "Korean problem description"}.
+{"start_time": "MM:SS.sss", "end_time": "MM:SS.sss", "content": "English problem description"}.
 No markdown, summary, scores, or additional fields. Times are relative
 to the beginning of this video. Require 0 <= start_time < end_time <= video duration.
 Sort each array independently by start_time. Overlapping intervals are
@@ -162,7 +162,7 @@ def run_analysis(path, output, project, model, duration, session, max_attempts=3
     run_dir = output / "presentation-analysis-runs" / run_id
     run_dir.mkdir(parents=True)
     log_path = run_dir / "attempts.jsonl"
-    base_prompt = PROMPT.replace("Korean", NAMES[language]) if language else PROMPT
+    base_prompt = PROMPT.replace("English", NAMES[language]) if language else PROMPT   # 미지정이면 영어
     if accent != 'original':
         base_prompt += (f"\nThe user-selected practice target is {ACCENT_NAMES[accent]}. "
             "For vocal_feedback only, use this target's pronunciation, stress, rhythm and intonation as a practice reference. "
@@ -295,7 +295,7 @@ def main():
     parser.add_argument("--input", type=Path, default=ROOT / "outputs/presentation-analysis-input.mp4")
     parser.add_argument("--output-dir", type=Path, default=ROOT / "outputs")
     parser.add_argument("--max-attempts", type=int, choices=range(1, 11), default=3, help="Total attempts including the first request (default: 3)")
-    parser.add_argument("--language", choices=("en", "ko"), help="Feedback language; omitted retains legacy Korean")
+    parser.add_argument("--language", choices=("en", "ko"), help="Feedback language; omitted defaults to English")
     parser.add_argument("--accent", choices=("original", *ACCENT_NAMES), default="original")
     args = parser.parse_args()
     path = args.input.resolve()

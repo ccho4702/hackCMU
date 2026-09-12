@@ -39,7 +39,7 @@ def say(path: Path, text: str, rate: int = 170, voice: str = "Samantha") -> Path
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--keep", action="store_true", help="테스트 데이터를 DB 와 data/ 에 남긴다")
+    ap.add_argument("--keep", action="store_true", help="keep test data in the DB and data/")
     a = ap.parse_args()
 
     tmp = Path(tempfile.mkdtemp(prefix="smoke_"))
@@ -79,7 +79,7 @@ def main():
         r = c.post("/api/trials", headers=H, data={"question": QUESTION, "kind": "shadow", "reference_id": ref["id"]})
         assert r.status_code == 200, r.text
         t1 = r.json()
-        print("trial A     ", t1["id"], "(문장별)", t1["status"])
+        print("trial A     ", t1["id"], "(per-sentence)", t1["status"])
         variants = {"s0": (150, None), "s1": (150, None), "s2": (150, ("sixty", "fifty"))}
         for sid, text in SCRIPT:
             rate, sub = variants[sid]
@@ -96,7 +96,7 @@ def main():
             if sid == "s2":
                 dump("sentence_upload", s)
                 if not (wd and wd[0]["text"] == "sixty"):
-                    print("   WARN: sixty→fifty 가 word_diff 1위가 아님")
+                    print("   WARN: sixty→fifty is not the top word_diff entry")
 
         # 4. shadow trial, 전체 녹음 한 번에 (백그라운드에서 문장으로 잘라 채점)
         p = say(tmp / "u2_full.wav", " ".join(t for _, t in SCRIPT), 190)
@@ -106,7 +106,7 @@ def main():
         assert r.status_code == 200, r.text
         t2 = c.get(f"/api/trials/{r.json()['id']}", headers=H).json()   # TestClient 는 background task 를 응답 전에 끝낸다
         dump("trial_full", t2)
-        print("trial B     ", t2["id"], "(전체녹음)", t2["status"], t2.get("error") or "",
+        print("trial B     ", t2["id"], "(full recording)", t2["status"], t2.get("error") or "",
               "overall=", (t2["summary"] or {}).get("overall"))
         assert t2["status"] == "ready", t2.get("error")
         for s in t2["shadowing"]:
@@ -152,7 +152,7 @@ def main():
         print("auth guard  ok")
 
         if a.keep:
-            print("kept        user", user["user_id"], "(DB 와 data/ 에 남김)")
+            print("kept        user", user["user_id"], "(kept in DB and data/)")
         else:
             from backend import db, media
             db.trials().delete_many({"user_id": user["user_id"]})
@@ -161,7 +161,7 @@ def main():
             media.remove_dir(user["user_id"])
             print("cleanup     ok")
 
-    print("\nSMOKE OK  (examples/*.json 갱신됨)")
+    print("\nSMOKE OK  (examples/*.json refreshed)")
 
 
 if __name__ == "__main__":
