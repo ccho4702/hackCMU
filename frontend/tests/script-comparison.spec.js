@@ -5,14 +5,21 @@ const improved="Hello everyone. Today, I’ll introduce our presentation practic
 
 async function showReview(page, pending=false) {
   await page.route(`**/api/runs/${runId}`,route=>route.fulfill({json:{
-    run_id:runId,status:pending?"failed":"success",stage:pending?"script_analysis":"complete",outputs:{},
+    run_id:runId,status:pending?"failed":"success",stage:pending?"script_analysis":"complete",outputs:pending?{}:{tts_audio:"/reference.wav"},
     original_video_url:"/test-video.mp4",
     results:{transcript:{text:original},nonverbal_feedback:[],...(!pending?{script_feedback:{original_script:original,improved_script:improved,issues:[]}}:{})},
   }}));
+  // A valid short WAV lets the native player load without a provider call.
+  const wav=Buffer.alloc(44+1600*2);
+  wav.write("RIFF");wav.writeUInt32LE(wav.length-8,4);wav.write("WAVEfmt ",8);
+  wav.writeUInt32LE(16,16);wav.writeUInt16LE(1,20);wav.writeUInt16LE(1,22);
+  wav.writeUInt32LE(16000,24);wav.writeUInt32LE(32000,28);wav.writeUInt16LE(2,32);wav.writeUInt16LE(16,34);
+  wav.write("data",36);wav.writeUInt32LE(wav.length-44,40);
+  await page.route("**/reference.wav",route=>route.fulfill({contentType:"audio/wav",body:wav}));
   await page.goto(`/evaluation?run=${runId}`);
 }
 
-test("desktop shows both scripts together and emphasizes the improved version",async({page})=>{
+test("desktop keeps script comparison below the reference voice player",async({page})=>{
   await page.setViewportSize({width:1440,height:1000});
   await showReview(page);
   const revised=page.getByRole("region",{name:"Improved script",exact:true});
@@ -25,7 +32,12 @@ test("desktop shows both scripts together and emphasizes the improved version",a
   expect(Math.abs(r.y-o.y)).toBeLessThan(2);
   expect(r.width).toBeGreaterThan(o.width);
   const recording=await page.getByRole("heading",{name:"Original recording",exact:true}).boundingBox();
-  expect(r.y+r.height).toBeLessThan(recording.y);
+  const voice=page.getByRole("region",{name:"Reference voice",exact:true});
+  const v=await voice.boundingBox();
+  expect(v.y).toBeGreaterThan(recording.y);
+  expect(r.y).toBeGreaterThan(v.y+v.height);
+  await expect(voice.getByLabel("Improved speech")).toBeVisible();
+  await expect.poll(()=>voice.getByLabel("Improved speech").evaluate(audio=>audio.readyState)).toBeGreaterThan(0);
   await page.screenshot({path:"test-results/script-comparison-desktop.png",fullPage:true});
 });
 
@@ -38,12 +50,17 @@ test("mobile places the improved script first without horizontal overflow",async
   await expect(recorded).toContainText(original);
   const r=await revised.boundingBox(),o=await recorded.boundingBox();
   expect(o.y).toBeGreaterThan(r.y+r.height);
+  const voice=page.getByRole("region",{name:"Reference voice",exact:true});
+  const v=await voice.boundingBox();
+  expect(r.y).toBeGreaterThan(v.y+v.height);
+  await expect(voice.getByLabel("Improved speech")).toBeVisible();
   expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
   await page.screenshot({path:"test-results/script-comparison-mobile.png",fullPage:true});
 });
 
 test("the original script remains readable if revision fails",async({page})=>{
   await showReview(page,true);
+  await expect(page.getByRole("region",{name:"Reference voice",exact:true})).toContainText("Reference audio is not available");
   await expect(page.getByRole("region",{name:"Original script",exact:true})).toContainText(original);
   await expect(page.getByRole("region",{name:"Improved script",exact:true})).toContainText("Your improved script will appear here.");
 });

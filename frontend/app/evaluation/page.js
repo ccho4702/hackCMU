@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { Volume2 } from "lucide-react";
 import StudioHeader from "@/components/StudioHeader";
 import { apiGet } from "@/lib/coaching-api";
 import { timestampSeconds } from "@/lib/recording";
@@ -42,6 +43,14 @@ export default function Evaluation() {
       <div className="evaluation-intro"><div>{analysisId && <Link className="text-button" href={`/analysis/${analysisId}`}>← Back to facial metrics</Link>}<span className="blue-eyebrow">SESSION REVIEW</span><h2>Your next take starts here.</h2></div><Link href="/live" className="button secondary-button">New recording</Link></div>
       {working && <section className="panel progress-card" aria-live="polite"><div className="progress-heading"><span className="spinner"/><div><h2>{STAGES[stage]?.[1] || "Your recording is queued"}</h2><p>Completed results appear below as each stage finishes.</p></div></div><ol className="stage-list">{STAGES.map(([id,title],i)=><li key={id} className={i===stage?"active":i<stage?"done":""}><span>{i<stage?"✓":i+1}</span>{title}</li>)}</ol></section>}
       {job.status === "failed" && <div className="error-banner" role="alert"><div><strong>This session could not finish.</strong><p>{job.error_message || "Available results are preserved below."}</p></div><Link className="button secondary-button" href="/live">Try a new recording</Link></div>}
+      <div className="evaluation-grid"><section className="panel original-card"><div className="card-heading"><h2>Original recording</h2><span className="count-pill">CAMERA + AUDIO</span></div><video ref={player} controls playsInline preload="metadata" src={job.original_video_url} aria-label="Original recording"/></section><section className="panel feedback-card"><div className="card-heading"><h2>Delivery notes</h2>{feedback && <span className="count-pill">{feedback.length} moments</span>}</div><p className="card-description">Select a timestamp to review your gaze, gestures, or posture.</p><div className="feedback-list">{feedback ? feedback.length ? feedback.map((item,i)=><article key={i} className="feedback-item"><button className="time-link" onClick={()=>seek(item.start_time)}>▷ {item.start_time.slice(0,5)} – {item.end_time.slice(0,5)}</button><p>{item.content}</p></article>) : <p className="empty-result">No clear nonverbal issues were flagged.</p> : <p className="muted">Your delivery feedback is being prepared.</p>}</div></section></div>
+      <section className="panel audio-card" aria-labelledby="reference-voice-title">
+        <div className="audio-card-intro">
+          <span className="audio-card-icon" aria-hidden="true"><Volume2 size={28} /></span>
+          <div><span className="blue-eyebrow">YOUR IMPROVED AUDIO</span><h2 id="reference-voice-title">Reference voice</h2><p>Listen to your improved script, then try it yourself.</p></div>
+        </div>
+        {job.outputs?.tts_audio ? <div className="audio-player"><audio controls src={job.outputs.tts_audio} preload="metadata" aria-label="Improved speech"/><a className="text-button" href={job.outputs.tts_audio} download>Download audio ↓</a></div> : <p className="muted">{job.status==="failed"?"Reference audio is not available for this session.":"Your reference voice is being prepared. The player will appear here when it’s ready."}</p>}
+      </section>
       <section className="panel script-card">
         <div className="card-heading"><h2>Original &amp; improved</h2>{job.outputs?.improved_script && <a className="text-button" href={job.outputs.improved_script} download>Download script ↓</a>}</div>
         <div className="script-comparison">
@@ -58,8 +67,6 @@ export default function Evaluation() {
         </div>
         {script?.issues?.length>0 && <details className="script-changes"><summary>{script.issues.length} script improvements</summary>{script.issues.map((item,i)=><article key={i} className="script-issue"><q>{item.original}</q><p>{item.problem}</p><p className="suggestion">↳ {item.suggestion}</p></article>)}</details>}
       </section>
-      <div className="evaluation-grid"><section className="panel original-card"><div className="card-heading"><h2>Original recording</h2><span className="count-pill">CAMERA + AUDIO</span></div><video ref={player} controls playsInline preload="metadata" src={job.original_video_url} aria-label="Original recording"/></section><section className="panel feedback-card"><div className="card-heading"><h2>Delivery notes</h2>{feedback && <span className="count-pill">{feedback.length} moments</span>}</div><p className="card-description">Select a timestamp to review your gaze, gestures, or posture.</p><div className="feedback-list">{feedback ? feedback.length ? feedback.map((item,i)=><article key={i} className="feedback-item"><button className="time-link" onClick={()=>seek(item.start_time)}>▷ {item.start_time.slice(0,5)} – {item.end_time.slice(0,5)}</button><p>{item.content}</p></article>) : <p className="empty-result">No clear nonverbal issues were flagged.</p> : <p className="muted">Your delivery feedback is being prepared.</p>}</div></section></div>
-      <section className="panel audio-card"><div><span className="blue-eyebrow">REFERENCE VOICE</span><h2>Hear your improved script.</h2><p>Listen to the revised presentation in your reference voice.</p></div>{job.outputs?.tts_audio ? <div className="audio-player"><audio controls src={job.outputs.tts_audio} preload="metadata" aria-label="Improved speech"/><a className="text-button" href={job.outputs.tts_audio} download>Download audio ↓</a></div> : <p className="muted">{job.status==="failed"?"Reference audio is not available for this session.":"Your audio will appear here when it’s ready."}</p>}</section>
       {job.outputs?.tts_audio && <section className="practice-cta"><div><h3>Ready for your next trial?</h3><p>Follow word timing and compare your voice with this reference.</p></div><Link className="button primary-button" href={`/practice?run=${job.run_id}`}>Practice this script →</Link></section>}
       <p className="results-note">Review the transcript, especially names and technical terms. Feedback is a practice reference, not a measure of overall speaking ability.</p>
     </>}
