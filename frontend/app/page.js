@@ -7,6 +7,7 @@ import { ArrowUpRight, Mic2, Video, Upload, Play, AudioLines } from "lucide-reac
 import { PageShell } from "@/components/ui/studio";
 import { UploadPanel } from "@/components/upload/UploadPanel";
 import OverviewDemo from "@/components/OverviewDemo";
+import OverviewThesis from "@/components/OverviewThesis";
 
 export default function HomePage(){
   const router=useRouter();
@@ -19,6 +20,7 @@ export default function HomePage(){
       <div className="feature-copy"><span className="studio-kicker">YOUR PERSONAL SPEAKING STUDIO</span><h2>Sound more like<br/>your best self.</h2><p>Record your ideas. Find your rhythm. Turn a good rehearsal into a great delivery.</p><div className="feature-actions"><Link href="/live" className="studio-primary"><Play size={16} fill="currentColor"/> Start recording</Link><button className="studio-secondary" onClick={()=>setUpload(!upload)} aria-expanded={upload} aria-controls="studio-upload"><Upload size={16}/> Upload a video</button></div></div>
     </section>
     {upload&&<section id="studio-upload" className="studio-upload"><div className="studio-section-heading"><h2>Bring your own recording</h2><button onClick={()=>setUpload(false)} className="studio-secondary">Close</button></div><UploadPanel/></section>}
+    <OverviewThesis />
     <OverviewDemo />
     <section><div className="studio-section-heading"><h2>Find your next take</h2><span>ONE SESSION, THREE WAYS TO IMPROVE</span></div>
       <div className="studio-collection">
