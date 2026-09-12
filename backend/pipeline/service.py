@@ -4,10 +4,9 @@ import os
 import shutil
 import time
 
-import google.auth
-from google.auth.transport.requests import AuthorizedSession
 
 from backend.common.config import google_project
+from backend.common.gemini import session as gemini_session
 from backend.common.logging import log_event, save_json
 from backend.common.media import prepare_video
 from backend.elevenlabs_tts.service import run_pipeline as synthesize
@@ -36,8 +35,7 @@ def process_recording(source, user_id, noisy_environment=False, *, tts_client=No
         audio_path = extract_audio(str(source), str(run_dir / "intermediates/voice_sample.mp3"))
         manifest["stage"] = "nonverbal_analysis"
         checkpoint()
-        credentials, _ = google.auth.default(scopes=["https://www.googleapis.com/auth/cloud-platform"])
-        with AuthorizedSession(credentials) as session:
+        with gemini_session() as session:
             status = run_analysis(video, logs / "video", google_project(),
                                   os.getenv("GEMINI_VIDEO_MODEL", "gemini-3.8-flash"),
                                   video_duration(video), session,

@@ -21,3 +21,6 @@ mediapipe==0.10.35
 opencv-python-headless>=4.9.0
 pydantic-settings>=2.4.0
 pytest>=8.0.0
+
+# gmin MongoDB persistence (SRV support included through dnspython)
+pymongo>=4.10,<5
