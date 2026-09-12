@@ -5,6 +5,7 @@ from fastapi import APIRouter, BackgroundTasks, Form, HTTPException, UploadFile
 from fastapi.responses import FileResponse
 
 from backend.common.language import Language, resolve_language
+from backend.common.accent import Accent, validate_accent
 from backend.common.config import artifacts_dir
 from backend.common.media import save_upload
 from backend.elevenlabs_tts.service import get_client
@@ -40,9 +41,9 @@ def public_manifest(manifest):
     return result
 
 
-def process_in_background(source, user_id, noisy_environment, client, language=None):
+def process_in_background(source, user_id, noisy_environment, client, language=None, accent: Accent = 'original'):
     try:
-        process_recording(source, user_id, noisy_environment, tts_client=client, language=language)
+        process_recording(source, user_id, noisy_environment, tts_client=client, language=language, accent=accent)
     except Exception:
         # process_recording persists the failed stage and partial outputs.
         # Do not re-raise after the 202 response has already been sent.
@@ -52,8 +53,12 @@ def process_in_background(source, user_id, noisy_environment, client, language=N
 @router.post("/pipeline", status_code=202)
 def pipeline(file: UploadFile, background_tasks: BackgroundTasks,
              user_id: str = Form(min_length=1, max_length=128),
-             noisy_environment: bool = Form(False), language: Language | None = Form(None)):
+             noisy_environment: bool = Form(False), language: Language | None = Form(None), accent: Accent = Form("original")):
     language = resolve_language(language)
+    try:
+        accent = validate_accent(accent, language)
+    except ValueError as exc:
+        raise HTTPException(422, str(exc)) from exc
     if not user_id.strip():
         raise HTTPException(422, "user_id must contain text")
     # Fail before paid Gemini calls if the required TTS configuration is missing.
@@ -62,11 +67,11 @@ def pipeline(file: UploadFile, background_tasks: BackgroundTasks,
     except RuntimeError as exc:
         raise HTTPException(503, str(exc)) from exc
     run_id, source = save_upload(file, {".mov", ".mp4", ".webm", ".mkv"})
-    manifest = {"run_id": run_id, "language": language, "status": "queued", "stage": "queued", "outputs": {},
+    manifest = {"run_id": run_id, "language": language, "accent": accent, "status": "queued", "stage": "queued", "outputs": {},
                 "source_filename": source.name}
     save_json(source.parent.parent / "manifest.json", manifest)
     history.record_run(run_id, user_id, language)   # 누구 영상인지 Mongo 에 기록 (미설정이면 no-op)
-    background_tasks.add_task(process_in_background, source, user_id, noisy_environment, client, language)
+    background_tasks.add_task(process_in_background, source, user_id, noisy_environment, client, language, accent)
     return {**public_manifest(manifest), "status_url": f"/api/runs/{run_id}"}
 
 

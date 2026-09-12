@@ -44,10 +44,11 @@ export function apiUpload(path, file, field = "file") {
   return request(path, { method: "POST", body: form });
 }
 
-export function startPipeline(file, userId, language) {
+export function startPipeline(file, userId, language, accent="original") {
   const form = new FormData();
   form.append("file", file);
   form.append("user_id", userId);
   if (language) form.append("language", language);
+  form.append("accent", language === "en" ? accent : "original");
   return request("/pipeline", { method: "POST", body: form });
 }

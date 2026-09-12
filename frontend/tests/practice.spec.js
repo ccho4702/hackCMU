@@ -1,5 +1,12 @@
 import { test, expect } from '@playwright/test';
 
+
+test.beforeEach(async ({page}) => {
+  await page.addInitScript(() => localStorage.setItem('rehearse.user',JSON.stringify({
+    user_id:'aaaaaaaaaaaaaaaaaaaaaaaa',name:'Test User',email:'tester@example.test',
+  })));
+});
+
 const runId='b'.repeat(32);
 const words=[{text:'Hello',t0:0,t1:.4},{text:'world.',t0:.5,t1:1}];
 const goodScore={status:'ok',pronunciation_score:.84,rate_ratio:1.12,rhythm_score:.78,intonation_score:.91,stress_match:.82,word_diff:[{text:'world.',note:'늘어짐',gt_dur:.5,user_dur:.7}],words:words.map(w=>({text:w.text,user:{t0:w.t0+.1,t1:w.t1+.1}}))};
@@ -38,7 +45,7 @@ test('reference playback highlights the current word',async({page})=>{
   await mockMic(page);await stub(page);await page.goto(`/practice?run=${runId}`);
   await expect(page.getByRole('button',{name:'Hello',exact:true})).toBeVisible();
   await page.getByLabel('TTS reference').evaluate(audio=>{Object.defineProperty(audio,'currentTime',{configurable:true,writable:true,value:.55});audio.dispatchEvent(new Event('seeked'));});
-  await expect(page.locator('.current-word')).toHaveText('world.');
+  await expect(page.locator('.current-word .word-box-text')).toHaveText('world.');
   await expect(page.locator('.word-cue > strong')).toHaveText('world.');
   await expect(page.locator('.duration-title strong')).toContainText('0.50');
   await expect(page.locator('.word-timestamps')).toContainText('Start 0.50s');
@@ -87,7 +94,7 @@ test('real reference timing and saved scoring results render',async({page})=>{
 });
 
 
-test('word boxes scale with spoken duration and show timing underneath',async({page})=>{
+test('word boxes scale with spoken duration and show timing inside the lower edge',async({page})=>{
   const timing=[{text:'One',t0:0,t1:.2},{text:'two',t0:.2,t1:.6},{text:'three',t0:.6,t1:1.4}];
   await mockMic(page);await stub(page,false,timing);
   await page.setViewportSize({width:1440,height:1000});
@@ -95,17 +102,19 @@ test('word boxes scale with spoken duration and show timing underneath',async({p
   const boxes=page.locator('.timed-word');
   await expect(boxes).toHaveCount(3);
   const widths=await boxes.evaluateAll(items=>items.map(item=>item.getBoundingClientRect().width));
-  expect(widths[0]).toBeCloseTo(64,0);
-  expect(widths[1]/widths[0]).toBeCloseTo(2,1);
+  expect(widths[0]).toBeCloseTo(56,0);
+  expect(widths[1]).toBeCloseTo(64,0);
   expect(widths[2]/widths[1]).toBeCloseTo(2,1);
-  await expect(boxes.nth(1).locator('.word-timing-label')).toHaveText('0.20–0.60s');
+  await expect(boxes.nth(1).locator('.word-timing-label')).toHaveText('0.2–0.6s');
   const box=await boxes.nth(1).locator('button').boundingBox();
   const label=await boxes.nth(1).locator('small').boundingBox();
-  expect(label.y).toBeGreaterThanOrEqual(box.y+box.height);
+  expect(label.y).toBeGreaterThan(box.y+box.height/2);
+  expect(label.y+label.height).toBeLessThanOrEqual(box.y+box.height);
+  expect(await boxes.nth(1).locator("button").evaluate(el=>parseFloat(getComputedStyle(el).fontSize))).toBeLessThanOrEqual(13);
   await page.getByLabel('TTS reference').evaluate(audio=>Object.defineProperty(audio,'currentTime',{configurable:true,writable:true,value:0}));
   await page.getByRole('button',{name:'two',exact:true}).click();
   expect(await page.getByLabel('TTS reference').evaluate(audio=>audio.currentTime)).toBe(.2);
-  await expect(page.locator('.current-word')).toHaveText('two');
+  await expect(page.locator('.current-word .word-box-text')).toHaveText('two');
   await page.screenshot({path:'test-results/practice-duration-boxes.png',fullPage:true});
 });
 
@@ -114,6 +123,7 @@ test('long and short word boxes stay inside the mobile viewport',async({page})=>
   await stub(page,false,timing);await page.setViewportSize({width:390,height:844});
   await page.goto(`/practice?run=${runId}`);
   await expect(page.locator('.timed-word')).toHaveCount(3);
+  expect(await page.locator('.spoken-word').first().evaluate(el=>parseFloat(getComputedStyle(el).fontSize))).toBeLessThanOrEqual(13);
   expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
   const bounds=await page.locator('.word-script').boundingBox();
   for(const box of await page.locator('.timed-word').all()) {
@@ -135,7 +145,7 @@ test('trial playback uses the recorded durations instead of reference durations'
     Object.defineProperty(audio,'currentTime',{configurable:true,writable:true,value:.15});
     audio.dispatchEvent(new Event('play'));
   });
-  await expect(page.locator('.word-timing-label').first()).toHaveText('0.10–0.90s');
+  await expect(page.locator('.word-timing-label').first()).toHaveText('0.1–0.9s');
   const trialWidth=(await page.locator('.timed-word').first().boundingBox()).width;
   expect(trialWidth/referenceWidth).toBeCloseTo(2,1);
 });
