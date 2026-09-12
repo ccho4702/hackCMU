@@ -19,6 +19,7 @@ export default function HomePage(){
       <div className="feature-copy"><span className="studio-kicker">YOUR PERSONAL SPEAKING STUDIO</span><h2>Sound more like<br/>your best self.</h2><p>Record your ideas. Find your rhythm. Turn a good rehearsal into a great delivery.</p><div className="feature-actions"><Link href="/live" className="studio-primary"><Play size={16} fill="currentColor"/> Start recording</Link><button className="studio-secondary" onClick={()=>setUpload(!upload)} aria-expanded={upload} aria-controls="studio-upload"><Upload size={16}/> Upload a video</button></div></div>
     </section>
     {upload&&<section id="studio-upload" className="studio-upload"><div className="studio-section-heading"><h2>Bring your own recording</h2><button onClick={()=>setUpload(false)} className="studio-secondary">Close</button></div><UploadPanel/></section>}
+    <OverviewDemo />
     <section><div className="studio-section-heading"><h2>Find your next take</h2><span>ONE SESSION, THREE WAYS TO IMPROVE</span></div>
       <div className="studio-collection">
         <Link href="/live" className="studio-album"><div className="album-art album-record"><Video size={40}/><span>01 / RECORD</span><i><ArrowUpRight size={21}/></i></div><h3>Put your ideas on record</h3><p>Camera on. A fresh take starts here.</p></Link>
@@ -26,7 +27,6 @@ export default function HomePage(){
         <Link href="/practice" className="studio-album"><div className="album-art album-practice"><Mic2 size={40}/><span>03 / REHEARSE</span><i><ArrowUpRight size={21}/></i></div><h3>Make the words your own</h3><p>Listen, follow along, and try again.</p></Link>
       </div>
     </section>
-    <OverviewDemo />
     <section className="studio-list"><div className="studio-section-heading"><h2>Built around your voice</h2><span>YOUR REHEARSAL TOOLKIT</span></div>{[["01","See your delivery","Eye contact, gestures & posture","/evaluation"],["02","Shape your message","Choose a language & script style","/live"],["03","Find your rhythm","Reference audio & word-by-word practice","/practice"]].map(([n,title,detail,href])=><Link href={href} key={n}><span>{n}</span><strong>{title}</strong><p>{detail}</p><ArrowUpRight size={17}/></Link>)}</section>
 
   </div></PageShell>;
