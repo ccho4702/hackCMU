@@ -24,6 +24,15 @@ def capabilities(request: Request):
                               for route in request.app.routes), "live_analysis": any(route.path == "/api/v1/live/sessions" for route in request.app.routes), "recording_pipeline": True, "voice_practice": True}
 
 
+@api.get("/languages")
+def languages():
+    from backend.common.language import resolve_language
+    return {"default": resolve_language(), "supported": [
+        {"code": "en", "name": "English", "analysis": True, "asr": True, "tts": True, "practice_scoring": True},
+        {"code": "ko", "name": "한국어", "analysis": True, "asr": True, "tts": True, "practice_scoring": False},
+    ]}
+
+
 class EchoRequest(BaseModel):
     message: str
 

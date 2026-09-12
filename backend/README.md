@@ -241,3 +241,44 @@ for setup and contracts. `MONGODB_URI` is optional; without it, the current loca
 coaching flow works and DB endpoints report that MongoDB is unconfigured.
 These APIs do not automatically migrate existing file-based runs or change frontend
 behavior. Run database tests with the dependencies in `requirements-test.txt`.
+
+## English and Korean
+
+Optional `language=en` or `language=ko` is accepted by the multipart pipeline,
+video analysis, script-video analysis, ASR and TTS endpoints. For text-only script
+analysis, include `language` in the JSON body. `GET /api/languages` advertises
+supported languages and the scoring limitation. Invalid request language codes
+return HTTP 422 before any provider call. The frontend should send the language
+selected by the user with each request. There is no server-wide language setting.
+Omission is supported only for backward compatibility with existing clients.
+
+```bash
+curl http://localhost:8000/api/pipeline \
+  -F 'file=@test-input.mov' -F 'user_id=demo-user' -F 'language=ko'
+
+curl http://localhost:8000/api/script/analyze \
+  -H 'Content-Type: application/json' \
+  -d '{"script":"Hello everyone. Today I will introduce our project.","language":"en"}'
+```
+
+The selected language describes the recording/script language and controls Gemini
+feedback and the improved script. `original_script` stays verbatim. Gemini uses
+explicit language instructions; this is a generative instruction, not a guaranteed
+language validator. ASR receives `eng`/`kor`. With the default
+`eleven_multilingual_v2`, TTS infers language from the revised text: that model
+supports English and Korean but does **not** support forcing `language_code`.
+Other configured TTS models receive the selected ISO language code. For standalone
+TTS calls, supply a script already written in the selected language.
+
+When no language is selected, existing behavior is retained: Korean feedback,
+original-language improved script, and automatic ASR/TTS language inference. Selected
+language is saved in run manifests and provider metadata. The frontend source is
+unchanged; a language selector can call these APIs when integrated by its owner.
+
+**Practice pronunciation scoring remains English-only.** Korean analysis, script
+revision, TTS and generated word timing are supported; the existing MMS pronunciation
+scorer is not a Korean scorer, and practice creation continues to reject unsupported
+scripts rather than producing misleading scores.
+
+Provider references: [ASR language hint](https://elevenlabs.io/docs/api-reference/speech-to-text/convert),
+[TTS language parameter limitations](https://elevenlabs.io/docs/api-reference/text-to-speech/convert-with-timestamps).

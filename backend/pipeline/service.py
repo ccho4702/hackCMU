@@ -5,6 +5,7 @@ import shutil
 import time
 
 
+from backend.common.language import Language, resolve_language
 from backend.common.config import google_project
 from backend.common.gemini import session as gemini_session
 from backend.common.logging import log_event, save_json
@@ -16,9 +17,10 @@ from backend.gemini_script.service import analyze_script
 from backend.gemini_video.service import run_analysis, video_duration
 
 
-def process_recording(source, user_id, noisy_environment=False, *, tts_client=None):
+def process_recording(source, user_id, noisy_environment=False, *, tts_client=None, language: Language | None = None):
+    language = resolve_language(language)
     run_dir = source.parent.parent
-    manifest = {"run_id": run_dir.name, "status": "running", "stage": "prepare",
+    manifest = {"run_id": run_dir.name, "language": language, "status": "running", "stage": "prepare",
                 "gemini_requests": {"video": 0, "script": 0}, "asr_requests": 0,
                 "outputs": {}, "source_filename": source.name}
     started = time.monotonic()
@@ -39,7 +41,7 @@ def process_recording(source, user_id, noisy_environment=False, *, tts_client=No
             status = run_analysis(video, logs / "video", google_project(),
                                   os.getenv("GEMINI_VIDEO_MODEL", "gemini-3.8-flash"),
                                   video_duration(video), session,
-                                  max_attempts=int(os.getenv("VIDEO_MAX_ATTEMPTS", "3")))
+                                  max_attempts=int(os.getenv("VIDEO_MAX_ATTEMPTS", "3")), language=language)
         video_meta = json.loads((logs / "video/presentation-analysis-meta.json").read_text())
         manifest["gemini_requests"]["video"] = video_meta["attempt_count"]
         if status:
@@ -49,14 +51,14 @@ def process_recording(source, user_id, noisy_environment=False, *, tts_client=No
         manifest["stage"] = "transcription"
         checkpoint()
         manifest["asr_requests"] = 1
-        transcript = transcribe_audio(audio_path, client=tts_client, log_dir=logs / "asr")
+        transcript = transcribe_audio(audio_path, client=tts_client, log_dir=logs / "asr", language=language)
         save_json(run_dir / "outputs/transcript.json", transcript)
         (run_dir / "intermediates/original_script.txt").write_text(transcript["text"], encoding="utf-8")
         manifest["outputs"]["transcript"] = "transcript.json"
         manifest["stage"] = "script_analysis"
         checkpoint()
         manifest["gemini_requests"]["script"] = 1
-        script = analyze_script(script=transcript["text"], log_dir=logs / "script")
+        script = analyze_script(script=transcript["text"], log_dir=logs / "script", language=language)
         save_json(run_dir / "outputs/script_feedback.json", script.model_dump())
         (run_dir / "outputs/improved_script.txt").write_text(script.improved_script, encoding="utf-8")
         manifest["outputs"]["script_feedback"] = "script_feedback.json"
@@ -65,7 +67,7 @@ def process_recording(source, user_id, noisy_environment=False, *, tts_client=No
         checkpoint()
         synthesize(user_id, str(source), script.improved_script, noisy_environment,
                    output_dir=run_dir / "outputs", intermediate_dir=run_dir / "intermediates",
-                   log_dir=logs / "elevenlabs", client=tts_client, prepared_audio_path=audio_path)
+                   log_dir=logs / "elevenlabs", client=tts_client, prepared_audio_path=audio_path, language=language)
         manifest["elevenlabs_requests"] = json.loads((logs / "elevenlabs/meta.json").read_text())
         manifest["outputs"]["tts_audio"] = "reference_speech.mp3"
         if (run_dir / "outputs/reference_alignment.json").exists():
