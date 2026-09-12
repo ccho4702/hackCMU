@@ -5,7 +5,6 @@ import DeliveryFeedback from "@/components/DeliveryFeedback";
 import ReferenceVoice from "@/components/ReferenceVoice";
 import StudioHeader from "@/components/StudioHeader";
 import { scriptStyleLabel } from "@/lib/script-styles";
-import { accentLabel } from "@/lib/accents";
 import { apiGet } from "@/lib/coaching-api";
 import { timestampSeconds } from "@/lib/recording";
 
@@ -51,10 +50,10 @@ export default function Evaluation() {
         <section className="panel original-card"><div className="card-heading"><h2>Original recording</h2><span className="count-pill">CAMERA + AUDIO</span></div><video ref={player} controls playsInline preload="metadata" src={job.original_video_url} aria-label="Original recording"/></section>
         <div className="delivery-sections">
           <DeliveryFeedback title="Nonverbal delivery" description="Gaze, gestures, posture, and body movement." items={feedback} pending={working} onSeek={seek} />
-          <DeliveryFeedback title="Vocal delivery" description={`Intonation, loudness, pace, pauses, and articulation.${job.accent && job.accent !== "original" ? ` Target: ${accentLabel(job.accent)}.` : ""}`} items={vocalFeedback} pending={working} onSeek={seek} />
+          <DeliveryFeedback title="Vocal delivery" description="Intonation, loudness, pace, pauses, and articulation." items={vocalFeedback} pending={working} onSeek={seek} />
         </div>
       </div>
-      <ReferenceVoice key={job.outputs?.tts_audio || "pending"} src={job.outputs?.tts_audio} accent={job.accent} failed={job.status === "failed"} />
+      <ReferenceVoice key={job.outputs?.tts_audio || "pending"} src={job.outputs?.tts_audio} failed={job.status === "failed"} />
       <section className="panel script-card">
         <div className="card-heading"><div className="script-review-heading"><h2>Transcript</h2><span>{scriptStyleLabel(job.script_style)}</span></div>{job.outputs?.improved_script && <a className="text-button" href={job.outputs.improved_script} download>Download revised script ↓</a>}</div>
         <div className="script-comparison">

@@ -53,7 +53,6 @@ export function LiveWorkspace() {
   const unmounted = useRef(false);
 
   const [language, setLanguage] = useState("en");
-  const [accent, setAccent] = useState("original");
   const [scriptStyle, setScriptStyle] = useState("presentation");
   const [session, setSession] = useState(null);
   const [meshEnabled, setMeshEnabled] = useState(true);
@@ -260,7 +259,7 @@ export function LiveWorkspace() {
           },
         );
         stashVideoFile(stopped.analysisId, file);
-        await beginCoaching(file, stopped.analysisId, language, accent, scriptStyle);
+        await beginCoaching(file, stopped.analysisId, language, scriptStyle);
       }
       router.push(`/analysis/${stopped.analysisId}`);
     } catch (err) {
@@ -268,7 +267,7 @@ export function LiveWorkspace() {
       else setError(err instanceof Error ? err.message : "Could not stop the session.");
       setStopping(false);
     }
-  }, [router, stopping, collectRecording, language, accent, scriptStyle]);
+  }, [router, stopping, collectRecording, language, scriptStyle]);
 
   const failed = !session && !starting && error;
 
@@ -278,7 +277,7 @@ export function LiveWorkspace() {
       subtitle="Real-time face tracking & delivery metrics"
       mock={session?.mock}
     >
-      <LanguageSelect value={language} onChange={setLanguage} accent={accent} onAccentChange={setAccent} scriptStyle={scriptStyle} onScriptStyleChange={setScriptStyle} disabled={starting || Boolean(session) || stopping} />
+      <LanguageSelect value={language} onChange={setLanguage} scriptStyle={scriptStyle} onScriptStyleChange={setScriptStyle} disabled={starting || Boolean(session) || stopping} />
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
         <div className="flex min-w-0 flex-col gap-6">
           <Stage ref={setContainer} className="live-camera-stage">

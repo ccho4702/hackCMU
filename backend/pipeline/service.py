@@ -6,7 +6,6 @@ import time
 
 from backend.common.language import Language, resolve_language
 from backend.common.script_style import ScriptStyle, validate_script_style
-from backend.common.accent import Accent, validate_accent
 from backend.common.config import google_project
 from backend.common.gemini import session as gemini_session
 from backend.common.logging import log_event, save_json
@@ -18,12 +17,11 @@ from backend.gemini_script.service import analyze_script
 from backend.gemini_video.service import run_analysis, video_duration
 
 
-def process_recording(source, user_id, noisy_environment=False, *, tts_client=None, language: Language | None = None, accent: Accent = "original", script_style: ScriptStyle = "presentation"):
+def process_recording(source, user_id, noisy_environment=False, *, tts_client=None, language: Language | None = None, script_style: ScriptStyle = "presentation"):
     language = resolve_language(language)
-    accent = validate_accent(accent, language)
     script_style = validate_script_style(script_style)
     run_dir = source.parent.parent
-    manifest = {"run_id": run_dir.name, "language": language, "accent": accent, "script_style": script_style, "status": "running", "stage": "prepare",
+    manifest = {"run_id": run_dir.name, "language": language, "script_style": script_style, "status": "running", "stage": "prepare",
                 "gemini_requests": {"video": 0, "script": 0}, "asr_requests": 0,
                 "outputs": {}, "source_filename": source.name}
     started = time.monotonic()
@@ -44,7 +42,7 @@ def process_recording(source, user_id, noisy_environment=False, *, tts_client=No
             status = run_analysis(video, logs / "video", google_project(),
                                   os.getenv("GEMINI_VIDEO_MODEL", "gemini-3.8-flash"),
                                   video_duration(video), session,
-                                  max_attempts=int(os.getenv("VIDEO_MAX_ATTEMPTS", "3")), language=language, accent=accent)
+                                  max_attempts=int(os.getenv("VIDEO_MAX_ATTEMPTS", "3")), language=language)
         video_meta = json.loads((logs / "video/presentation-analysis-meta.json").read_text())
         manifest["gemini_requests"]["video"] = video_meta["attempt_count"]
         if status:
@@ -72,7 +70,7 @@ def process_recording(source, user_id, noisy_environment=False, *, tts_client=No
         checkpoint()
         synthesize(user_id, str(source), script.improved_script, noisy_environment,
                    output_dir=run_dir / "outputs", intermediate_dir=run_dir / "intermediates",
-                   log_dir=logs / "elevenlabs", client=tts_client, prepared_audio_path=audio_path, language=language, accent=accent)
+                   log_dir=logs / "elevenlabs", client=tts_client, prepared_audio_path=audio_path, language=language)
         manifest["elevenlabs_requests"] = json.loads((logs / "elevenlabs/meta.json").read_text())
         manifest["outputs"]["tts_audio"] = "reference_speech.mp3"
         if (run_dir / "outputs/reference_alignment.json").exists():

@@ -1,7 +1,6 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { accentLabel } from "@/lib/accents";
 import { Download, Pause, Play } from "lucide-react";
 
 function clock(seconds) {
@@ -9,7 +8,7 @@ function clock(seconds) {
   return `${Math.floor(value / 60)}:${String(value % 60).padStart(2, "0")}`;
 }
 
-export default function ReferenceVoice({ src, failed = false, accent = "original" }) {
+export default function ReferenceVoice({ src, failed = false }) {
   const audio = useRef(null);
   const [playing, setPlaying] = useState(false);
   const [waiting, setWaiting] = useState(false);
@@ -31,7 +30,7 @@ export default function ReferenceVoice({ src, failed = false, accent = "original
     <section className="reference-voice" aria-labelledby="reference-voice-title">
       <div className="reference-voice-heading">
         <h2 id="reference-voice-title">Reference voice</h2>
-        <p>{accent !== "original" ? `${accentLabel(accent)} · Revised script.` : "Listen to the revised script."}</p>
+        <p>Listen to the revised script.</p>
       </div>
       {src ? <div className="reference-transport">
         <audio ref={audio} src={src} preload="metadata" aria-label="Improved speech"

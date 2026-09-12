@@ -1,9 +1,8 @@
 "use client";
 
-import { ACCENTS } from "@/lib/accents";
 import { SCRIPT_STYLES } from "@/lib/script-styles";
 
-export function LanguageSelect({ value, onChange, accent="original", onAccentChange, scriptStyle="presentation", onScriptStyleChange, disabled=false }) {
+export function LanguageSelect({ value, onChange, scriptStyle="presentation", onScriptStyleChange, disabled=false }) {
   const selectedStyle=SCRIPT_STYLES.find(option=>option.value===scriptStyle) || SCRIPT_STYLES[0];
   return (
     <section className="session-settings" aria-label="Session settings">
@@ -11,7 +10,7 @@ export function LanguageSelect({ value, onChange, accent="original", onAccentCha
       <div className="session-settings-fields">
         <label>
           <span>Presentation language</span>
-          <select value={value} disabled={disabled} onChange={event=>{onChange(event.target.value);if(event.target.value!=="en")onAccentChange?.("original");}}>
+          <select value={value} disabled={disabled} onChange={event=>{onChange(event.target.value);}}>
             <option value="en">English</option><option value="ko">한국어</option>
           </select>
           <small>The language you’ll speak.</small>
@@ -23,13 +22,7 @@ export function LanguageSelect({ value, onChange, accent="original", onAccentCha
           </select>
           <small>{selectedStyle.description}</small>
         </label>}
-        {value==="en" && onAccentChange && <label>
-          <span>Target accent</span>
-          <select value={accent} disabled={disabled} onChange={event=>onAccentChange(event.target.value)}>
-            {ACCENTS.map(option=><option key={option.value} value={option.value}>{option.label}</option>)}
-          </select>
-          <small>For voice feedback and TTS. Accent strength may vary.</small>
-        </label>}
+
       </div>
     </section>
   );

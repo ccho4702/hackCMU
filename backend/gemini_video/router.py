@@ -4,7 +4,6 @@ import os
 from fastapi import APIRouter, HTTPException, Response, UploadFile, Form
 
 from backend.common.language import Language
-from backend.common.accent import Accent, validate_accent
 from backend.common.config import google_project
 from backend.common.gemini import session as gemini_session
 from backend.common.media import prepare_video, save_upload
@@ -16,11 +15,7 @@ router = APIRouter(prefix="/video", tags=["Gemini video analysis"])
 
 
 @router.post("/analyze", response_model=DeliveryAnalysis)
-def analyze_video(file: UploadFile, response: Response, language: Language | None = Form(None), accent: Accent = Form("original")):
-    try:
-        validate_accent(accent, language)
-    except ValueError as exc:
-        raise HTTPException(422, str(exc)) from exc
+def analyze_video(file: UploadFile, response: Response, language: Language | None = Form(None)):
     run_id, source = save_upload(file, {".mov", ".mp4", ".webm", ".mkv"})
     run_dir = source.parent.parent
     response.headers["X-Run-ID"] = run_id
@@ -30,7 +25,7 @@ def analyze_video(file: UploadFile, response: Response, language: Language | Non
             status = run_analysis(video, run_dir / "logs/video", google_project(),
                                   os.getenv("GEMINI_VIDEO_MODEL", "gemini-3.8-flash"),
                                   video_duration(video), session,
-                                  max_attempts=int(os.getenv("VIDEO_MAX_ATTEMPTS", "3")), language=language, accent=accent)
+                                  max_attempts=int(os.getenv("VIDEO_MAX_ATTEMPTS", "3")), language=language)
         if status:
             raise HTTPException(502, {"message": "Video analysis failed; inspect the run logs", "run_id": run_id})
         result = json.loads((run_dir / "logs/video/presentation-analysis.json").read_text())

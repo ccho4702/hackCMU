@@ -6,7 +6,6 @@ import base64
 import hashlib
 import json
 from backend.common.language import resolve_language
-from backend.common.accent import speech_options, validate_accent
 import os
 from pathlib import Path
 import threading
@@ -18,7 +17,7 @@ from elevenlabs.client import ElevenLabs
 from backend.common.config import artifacts_dir
 from backend.common.media import run_media_command
 from backend.common.logging import log_event, save_json
-from backend.elevenlabs_tts.alignment import character_to_words, remove_injected_accent_tag
+from backend.elevenlabs_tts.alignment import character_to_words
 
 _CACHE_LOCK = threading.RLock()
 
@@ -79,11 +78,13 @@ def get_or_create_voice(user_id: str, audio_path: str, noisy_environment=False, 
         return voice.voice_id
 
 
-def generate_gt_speech(voice_id: str, script: str, out_path: str, *, client=None, language=None, accent='original') -> str:
+def generate_gt_speech(voice_id: str, script: str, out_path: str, *, client=None, language=None) -> str:
     language = resolve_language(language)
     if not script.strip():
         raise ValueError("script must contain text")
-    model, spoken_text, tag = speech_options(script, accent, language)
+    model = os.getenv("ELEVENLABS_TTS_MODEL", "eleven_multilingual_v2")
+    if model == "eleven_v3" and len(script) > 5000:
+        raise ValueError("Eleven v3 supports up to 5,000 characters")
     client = client or get_client()
     destination = Path(out_path)
     destination.parent.mkdir(parents=True, exist_ok=True)
@@ -91,7 +92,7 @@ def generate_gt_speech(voice_id: str, script: str, out_path: str, *, client=None
     # Multilingual v2 supports en/ko, but infers language from text; no language_code support.
     language_options = {"language_code": language} if language and model != "eleven_multilingual_v2" else {}
     try:
-        response = client.text_to_speech.convert_with_timestamps(voice_id=voice_id, text=spoken_text,
+        response = client.text_to_speech.convert_with_timestamps(voice_id=voice_id, text=script,
             model_id=model, **language_options,
             output_format="mp3_44100_128",
             request_options={"max_retries": 0},
@@ -99,8 +100,8 @@ def generate_gt_speech(voice_id: str, script: str, out_path: str, *, client=None
         payload = response.model_dump(mode="json")
         audio = base64.b64decode(payload["audio_base64"], validate=True)
         raw_alignment = payload.get("normalized_alignment") or payload.get("alignment") or {}
-        alignment = character_to_words(remove_injected_accent_tag(raw_alignment, tag))
-        alignment.update(source="elevenlabs_tts", requested_accent=accent, model=model, audio_sha256=hashlib.sha256(audio).hexdigest())
+        alignment = character_to_words(raw_alignment)
+        alignment.update(source="elevenlabs_tts", model=model, audio_sha256=hashlib.sha256(audio).hexdigest())
         partial.write_bytes(audio)
         if not partial.stat().st_size:
             raise ValueError("ElevenLabs returned empty audio")
@@ -113,10 +114,9 @@ def generate_gt_speech(voice_id: str, script: str, out_path: str, *, client=None
 
 def run_pipeline(user_id: str, recording_path: str, improved_script: str,
                  noisy_environment: bool = False, *, output_dir=None, intermediate_dir=None,
-                 log_dir=None, client=None, cache_path=None, prepared_audio_path=None, language=None, accent='original') -> str:
+                 log_dir=None, client=None, cache_path=None, prepared_audio_path=None, language=None) -> str:
     language = resolve_language(language)
-    validate_accent(accent, language)
-    model, _, _ = speech_options(improved_script, accent, language)
+    model = os.getenv("ELEVENLABS_TTS_MODEL", "eleven_multilingual_v2")
     if not user_id.strip() or not improved_script.strip():
         raise ValueError("user_id and improved_script are required")
     source = Path(recording_path).resolve()
@@ -130,13 +130,13 @@ def run_pipeline(user_id: str, recording_path: str, improved_script: str,
     intermediate.mkdir(parents=True, exist_ok=True)
     logs.mkdir(parents=True, exist_ok=True)
     started = time.monotonic()
-    stats = {"status": "running", "language": language, "requested_accent": accent, "model": model, "accent_control": "audio_tag" if accent != "original" else "voice_default", "voice_cache_hit": False, "clone_requests": 0, "tts_requests": 0}
+    stats = {"status": "running", "language": language, "model": model, "voice_cache_hit": False, "clone_requests": 0, "tts_requests": 0}
     log_event(logs / "events.jsonl", "tts_stage_started")
     try:
         audio_path = str(prepared_audio_path) if prepared_audio_path else extract_audio(str(source), str(intermediate / "voice_sample.mp3"))
         voice_id = get_or_create_voice(user_id, audio_path, noisy_environment, client=client, cache_path=cache_path, stats=stats)
         stats["tts_requests"] += 1
-        result = generate_gt_speech(voice_id, improved_script, str(directory / "reference_speech.mp3"), client=client, language=language, accent=accent)
+        result = generate_gt_speech(voice_id, improved_script, str(directory / "reference_speech.mp3"), client=client, language=language)
         stats["status"] = "success"
         return result
     except Exception as exc:

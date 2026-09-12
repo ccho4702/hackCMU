@@ -17,7 +17,6 @@ export default function StreamingPage() {
   const router = useRouter();
   const { videoRef, status: cameraStatus, error: cameraError, start: startCamera, stop: stopCamera } = useWebcam();
   const [language, setLanguage] = useState("en");
-  const [accent, setAccent] = useState("original");
   const [scriptStyle, setScriptStyle] = useState("presentation");
   const [recordError, setRecordError] = useState("");
   const [uploading, setUploading] = useState(false);
@@ -51,7 +50,7 @@ export default function StreamingPage() {
       if(!file.size) throw new Error("The recording was empty. Please try again.");
       if(file.size>MAX_UPLOAD_BYTES) throw new Error("Please upload a recording smaller than 100 MB.");
       const userId=pipelineUserId();
-      const job=await startPipeline(file,userId,language,accent,scriptStyle);
+      const job=await startPipeline(file,userId,language,scriptStyle);
       localStorage.setItem("rehearse.lastRun",job.run_id);
       if(alive.current) router.push(`/evaluation?run=${job.run_id}`);
     } catch(e) {
@@ -133,7 +132,7 @@ export default function StreamingPage() {
       </header>
 
       <main className="mx-auto grid max-w-7xl gap-6 px-4 py-6 sm:px-6 lg:grid-cols-[minmax(0,1fr)_320px]">
-        <div className="lg:col-span-2"><LanguageSelect value={language} onChange={setLanguage} accent={accent} onAccentChange={setAccent} scriptStyle={scriptStyle} onScriptStyleChange={setScriptStyle} disabled={live || uploading || cameraStatus === "starting"} /></div>
+        <div className="lg:col-span-2"><LanguageSelect value={language} onChange={setLanguage} scriptStyle={scriptStyle} onScriptStyleChange={setScriptStyle} disabled={live || uploading || cameraStatus === "starting"} /></div>
         {/* ---------- Camera stage ---------- */}
         <section className="relative aspect-video overflow-hidden rounded-3xl bg-slate-950 shadow-lg shadow-slate-900/10">
           {/* Mirrored like a selfie view; video and mask flip together so they stay aligned */}

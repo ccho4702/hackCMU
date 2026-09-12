@@ -332,43 +332,6 @@ a maximum. Widths and labels follow reference timing during guided practice and
 the selected trial's alignment during trial playback. Existing active-word tracking
 and click-to-seek behavior are retained.
 
-## Target accent for vocal feedback and TTS
-
-The frontend accepts a user-selected `accent` with English (`language=en`):
-`original` (default), `american`, `british`, `indian`, or `australian`. The same
-value is sent to Gemini's vocal analysis and the reference TTS stage. Gemini uses
-the selected accent as a practice target for pronunciation, stress, rhythm and
-intonation; it distinguishes intelligibility issues from optional differences to
-the target. It does not apply this target to visual/nonverbal feedback or rewrite
-the original transcript. Korean uses `original`; other combinations are rejected
-before generation. Selection is stored in run manifests and survives frontend retries.
-
-`original` keeps the configured TTS model and the clone's existing accent. An explicit
-English accent uses **Eleven v3 (`eleven_v3`)** with the same cached IVC voice ID and
-one of the provider's documented accent tags. V3 uses Natural stability (0.5), and
-its 5,000-character input limit includes the tag. No extra cloning or alignment
-request is introduced for an already cached voice. The saved improved script stays
-unchanged: only the TTS input receives the accent tag. An injected leading tag is
-removed from returned character alignment, without shifting audio timestamps, so it
-never appears as a word in Practice.
-
-Accent cues guide generation; their strength and voice similarity vary by source
-voice. Selecting an accent does not mean changing the speaker's nationality or
-judging their native accent as wrong. V3 model availability and charges follow the
-existing ElevenLabs account; Google Cloud credits do not cover ElevenLabs.
-Metadata records `accent`, `target_accent`, and the TTS model/requested accent.
-Existing saved speech is not regenerated when the selection changes.
-
-```bash
-curl http://localhost:8000/api/pipeline \
-  -F 'file=@test-input.mov' -F 'user_id=demo-user' \
-  -F 'language=en' -F 'accent=british'
-```
-
-`POST /api/video/analyze` and `POST /api/tts/generate` also accept `accent`.
-[ElevenLabs accent tags](https://elevenlabs.io/blog/eleven-v3-audio-tags-emulating-accents-with-precision)
-explain the supported direction and its voice-dependent behavior.
-
 ## Script scenarios and overall practice progress
 
 The setup controls appear above recording/upload and accept `script_style`:
@@ -376,7 +339,7 @@ The setup controls appear above recording/upload and accept `script_style`:
 The selected scenario guides the Gemini script revision while the original transcript
 stays verbatim and source facts remain unchanged. Interview/pitch prompts explicitly
 forbid inventing experience, results, metrics or promises. Style controls apply in
-English and Korean, alongside the existing independent target-accent selection.
+English and Korean, with the existing language selection.
 The revised text is passed to TTS; no additional model request is added.
 
 `POST /api/pipeline` and `POST /api/script/analyze-video` accept the field as multipart
@@ -386,7 +349,7 @@ manifest and script logs, retained on retries, and shown beside the reviewed tra
 ```bash
 curl http://localhost:8000/api/pipeline \
   -F 'file=@test-input.mov' -F 'user_id=demo-user' \
-  -F 'language=en' -F 'accent=british' -F 'script_style=interview'
+  -F 'language=en' -F 'script_style=interview'
 ```
 
 Practice now shows elapsed time and total audio duration in one continuous progress
@@ -394,3 +357,11 @@ bar. It uses the full TTS recording during reference playback or the silent reco
 guide, and the selected trial's full duration during trial playback. The reference
 guide stops at 100% if the user continues recording. Word highlighting and timing
 boxes remain available, but no longer reset the progress bar at each word boundary.
+
+## Natural voice delivery
+
+Accent selection has been removed. New Gemini vocal analyses assess clarity, pace,
+pauses, articulation and intonation without a regional-accent target. TTS reads the
+improved script with the cached voice and configured model (default
+`eleven_multilingual_v2`), without injected accent tags or automatic model switching.
+Existing saved audio and PoC artifacts are unchanged.
